@@ -12,40 +12,177 @@ body {
     font-family: 'Roboto', sans-serif;
 }
 
-.counter-ui {
-    width: fit-content;
-    margin: 40px auto;
-    text-align: center;
-}
-
-.counter-ui button {
-    padding: 8px 12px;
-    margin: 25px;
+button {
     background: transparent;
     border: 2px solid #eee;
     color: #eee;
-    width: 100px;
     border-radius: 5px;
-    transition: 0.2s;
-    font-weight: bold;
-    cursor: pointer;
+    padding: 8px 12px;
 }
 
-.counter-ui button:hover {
+button:hover {
     background: #eee !important;
     color: #222 !important;
 }
 
-.counter-ui .button-container {
+input {
+    background: transparent;
+    border: 2px solid #eee;
+    width: 100%;
+    color: #eee;
+    border-radius: 5px;
+    padding: 8px 12px;
+}
+
+select {
+    background: transparent;
+    border: 2px solid #eee;
+    color: #eee;
+    border-radius: 5px;
+    padding: 8px 12px;
+}
+
+.payments-ui {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin: 40px auto;
+    text-align: center;
+}
+
+.payments-ui .button-container {
     display: flex;
     justify-content: space-around;
     margin-bottom: 20px;
 }
 
-.counter-ui .game {
+.payments-ui .game {
     display: flex;
     justify-content: space-around;
     gap: 10px;
+}
+
+.deposit-ui {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    justify-content: center;
+    align-items: center;
+    min-width: max-content;
+    height: 100%;
+    text-align: center;
+    border: 2px solid #eee;
+    border-radius: 5px;
+    padding: 10px;
+}
+
+.deposit-container {
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+    align-items: stretch;
+    min-height: 100%;
+}
+
+.deposit-box {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    flex: 1;
+    border: 2px solid #eee;
+    border-radius: 5px;
+    padding: 10px;
+    align-items: stretch;
+    justify-content: space-between
+}
+
+.deposit-box button {
+    width: 100%;
+    padding: 8px 12px;
+    background: transparent;
+}
+
+.deposit-box select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 2px solid #eee;
+    border-radius: 5px;
+}
+
+.tokens-ui {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    justify-content: center;
+    align-items: stretch;
+    min-width: max-content;
+    text-align: center;
+}
+
+.token-select {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    justify-content: start;
+    align-items: start;
+}
+
+.token-select select {
+    width: fit-content;
+    padding: 8px 12px;
+    background: transparent;
+    border: 2px solid #eee;
+    border-radius: 5px;
+    color: #eee;
+}
+
+.token-creator {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+    border: 2px solid #eee;
+    border-radius: 5px;
+    padding: 10px;
+}
+
+.token-creator button {
+    width: 100%;
+    padding: 8px 12px;
+    background: transparent;
+    border: 2px solid #eee;
+    color: #eee;
+}
+
+.token-creator-inputs {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    gap: 5px;
+    justify-content: start;
+    align-items: start;
+}
+
+.token-creator-inputs label {
+    color: #eee;
+    font-size: 12px;
+}
+
+.amount-input {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    justify-content: start;
+    align-items: stretch;
+}
+
+.amount-input label {
+    display: flex;
+    align-items: start;
 }
 
 .counters {

@@ -146,8 +146,8 @@ pub mod private_payments {
 pub struct InitializeDeposit<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
-    #[account(mut)]
-    pub user: Signer<'info>,
+    /// CHECK: Anyone can initialize the deposit
+    pub user: UncheckedAccount<'info>,
     #[account(
         init_if_needed,
         payer = payer,
@@ -171,7 +171,6 @@ pub struct ModifyDepositArgs {
 pub struct ModifyDeposit<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
-    #[account(mut)]
     pub user: Signer<'info>,
     #[account(
         mut,
@@ -235,8 +234,8 @@ pub struct TransferDeposit<'info> {
 pub struct CreatePermission<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
-    #[account(mut)]
-    pub user: Signer<'info>,
+    /// CHECK: Anyone can create the permission
+    pub user: UncheckedAccount<'info>,
     #[account(
         seeds = [DEPOSIT_PDA_SEED, user.key().as_ref(), deposit.token_mint.as_ref()],
         bump
