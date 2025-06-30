@@ -2,13 +2,16 @@ import React, { useCallback, useState } from 'react';
 
 import { useAddressBook } from './hooks/use-address-book';
 import { shortKey } from './libs';
+import { useAnchorWallet } from '@solana/wallet-adapter-react';
+import { Spinner } from './components/Spinner';
 
 interface AddressBookProps {
   setSelectedAddress: (address: string) => void;
 }
 
 const AddressBook: React.FC<AddressBookProps> = ({ setSelectedAddress }) => {
-  const { addressBook, addAddress } = useAddressBook();
+  const wallet = useAnchorWallet();
+  const { addressBook, addAddress } = useAddressBook(wallet?.publicKey);
   const [address, setAddress] = useState('');
 
   const handleAddAddress = useCallback(() => {
@@ -16,6 +19,13 @@ const AddressBook: React.FC<AddressBookProps> = ({ setSelectedAddress }) => {
     addAddress(address);
     setAddress('');
   }, [address, addAddress]);
+
+  if (!wallet?.publicKey)
+    return (
+      <div>
+        <Spinner />
+      </div>
+    );
 
   return (
     <div className='deposit-box'>

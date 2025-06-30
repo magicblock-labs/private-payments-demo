@@ -1,6 +1,6 @@
 import { DELEGATION_PROGRAM_ID } from '@magicblock-labs/ephemeral-rollups-sdk';
 import { useConnection } from '@solana/wallet-adapter-react';
-import { PublicKey } from '@solana/web3.js';
+import { AccountInfo, PublicKey } from '@solana/web3.js';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { DEPOSIT_PDA_SEED } from '../constants';
@@ -30,6 +30,7 @@ export function useDeposit(user?: PublicKey | string, tokenMint?: PublicKey | st
   }, [program, user, tokenMint]);
 
   const getDeposit = useCallback(async () => {
+    setDeposit(null);
     if (!tokenMint || !user || !program || !depositPda) return;
     try {
       let depositAccount = await connection.getAccountInfo(depositPda);
@@ -55,34 +56,37 @@ export function useDeposit(user?: PublicKey | string, tokenMint?: PublicKey | st
         setDeposit(null);
       }
     } catch (error) {
-      setDeposit(null);
+      console.log('getDeposit error', error);
     }
   }, [tokenMint, user, program, depositPda, connection, ephemeralConnection]);
 
-  useSubscription(connection, depositPda, notification => {
-    console.log('Received notification', notification);
-    if (notification.owner.equals(new PublicKey(DELEGATION_PROGRAM_ID))) {
-      setIsDelegated(true);
-    } else {
-      setIsDelegated(false);
-      const decoded = program?.coder.accounts.decode('deposit', notification.data);
-      if (decoded) {
-        setDeposit(decoded);
+  const handleDepositChange = useCallback(
+    (notification: AccountInfo<Buffer>) => {
+      if (notification.owner.equals(new PublicKey(DELEGATION_PROGRAM_ID))) {
+        setIsDelegated(true);
+      } else {
+        setIsDelegated(false);
+        const decoded = program?.coder.accounts.decode('deposit', notification.data);
+        if (decoded) {
+          setDeposit(decoded);
+        }
       }
-    }
-  });
+    },
+    [program],
+  );
 
-  try {
-    useSubscription(ephemeralConnection, depositPda, notification => {
-      console.log('Received ephemeral notification', notification);
+  const handleEphemeralDepositChange = useCallback(
+    (notification: AccountInfo<Buffer>) => {
       const decoded = program?.coder.accounts.decode('deposit', notification.data);
       if (decoded) {
         setDeposit(decoded);
       }
-    });
-  } catch (error) {
-    console.error(error);
-  }
+    },
+    [program],
+  );
+
+  useSubscription(connection, depositPda, handleDepositChange);
+  useSubscription(ephemeralConnection, depositPda, handleEphemeralDepositChange);
 
   // Initialize the deposit
   useEffect(() => {

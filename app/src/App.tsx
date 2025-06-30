@@ -4,9 +4,11 @@ import React, { useState } from 'react';
 import Deposit, { TokenListEntry } from './Deposit';
 import Tokens from './Tokens';
 import VerificationToast from './VerificationToast';
+import { useAnchorWallet } from '@solana/wallet-adapter-react';
 
 const App: React.FC = () => {
   const [selectedToken, setSelectedToken] = useState<TokenListEntry | null>(null);
+  const wallet = useAnchorWallet();
 
   return (
     <div className='payments-ui'>
@@ -14,7 +16,7 @@ const App: React.FC = () => {
         <WalletMultiButton />
       </div>
 
-      {selectedToken && <Deposit token={selectedToken} />}
+      {selectedToken && wallet?.publicKey && <Deposit token={selectedToken} />}
       <Tokens setSelected={setSelectedToken} />
 
       <VerificationToast />

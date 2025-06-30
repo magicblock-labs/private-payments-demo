@@ -44,3 +44,12 @@
   border: 2px solid #eee;
   border-radius: 5px;
 }
+
+.access-denied-container {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  align-items: center;
+  justify-content: center;
+  margin: auto;
+}

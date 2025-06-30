@@ -5,6 +5,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { useDeposit } from './hooks/use-deposit';
 import { useProgram } from './hooks/use-program';
 import { Spinner } from './components/Spinner';
+import { Ban } from 'lucide-react';
 
 export interface TokenListEntry {
   mint: string;
@@ -76,7 +77,10 @@ const ManageDeposit: React.FC<DepositProps> = ({ user, token }) => {
     return (
       <div className='deposit-container'>
         <div className='deposit-box'>
-          <h3>Access denied</h3>
+          <div className='access-denied-container'>
+            <h3>Access denied</h3>
+            <Ban />
+          </div>
         </div>
       </div>
     );
@@ -88,10 +92,13 @@ const ManageDeposit: React.FC<DepositProps> = ({ user, token }) => {
         {!deposit && (
           <>
             <h3>Initialize deposit</h3>
-            <button onClick={handleCreateDeposit} disabled={isCreating}>
-              {isCreating ? 'Creating...' : 'Create'}
-            </button>
-            <Spinner />
+            {!isCreating ? (
+              <button onClick={handleCreateDeposit} disabled={isCreating}>
+                Create
+              </button>
+            ) : (
+              <Spinner />
+            )}
           </>
         )}
         {deposit && (

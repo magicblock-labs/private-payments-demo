@@ -7,6 +7,7 @@ import { usePrivateRollupAuth } from './hooks/use-private-rollup-auth';
 import ManageDeposit from './ManageDeposit';
 import Transfer from './Transfer';
 import './Deposit.css';
+import { useAnchorWallet } from '@solana/wallet-adapter-react';
 
 export interface TokenListEntry {
   mint: string;
@@ -19,7 +20,8 @@ interface DepositProps {
 
 const Deposit: React.FC<DepositProps> = ({ token }) => {
   const { authToken, getToken } = usePrivateRollupAuth();
-  const { addressBook } = useAddressBook();
+  const wallet = useAnchorWallet();
+  const { addressBook } = useAddressBook(wallet?.publicKey);
   const [selectedAddress, setSelectedAddress] = useState<string | undefined>(addressBook[0]);
 
   return (
