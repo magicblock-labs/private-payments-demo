@@ -41,9 +41,7 @@ export function useProgram() {
 
       const deposit = getDepositPda(user, tokenMint)!;
 
-      const blockhash = (await program.provider.connection.getLatestBlockhash()).blockhash;
-
-      const initTx = await program.methods
+      const initIx = await program.methods
         .initializeDeposit()
         .accountsPartial({
           payer: program.provider.publicKey,
@@ -52,9 +50,7 @@ export function useProgram() {
           tokenMint,
           tokenProgram: TOKEN_PROGRAM_ID,
         })
-        .transaction();
-      initTx.recentBlockhash = blockhash;
-      initTx.feePayer = program.provider.publicKey;
+        .instruction();
 
       const id = Keypair.generate().publicKey;
       const permission = PublicKey.findProgramAddressSync(
@@ -66,7 +62,7 @@ export function useProgram() {
         PERMISSION_PROGRAM_ID,
       )[0];
 
-      const permissionTx = await program.methods
+      await program.methods
         .createPermission(id)
         .accountsPartial({
           payer: program.provider.publicKey,
@@ -76,21 +72,8 @@ export function useProgram() {
           group,
           permissionProgram: PERMISSION_PROGRAM_ID,
         })
-        .transaction();
-      permissionTx.recentBlockhash = blockhash;
-      permissionTx.feePayer = program.provider.publicKey;
-
-      const signedTxs = await wallet.signAllTransactions([permissionTx]);
-
-      const sigs = [];
-      for (const tx of signedTxs) {
-        const signature = await program.provider.connection.sendRawTransaction(tx.serialize());
-        sigs.push(signature);
-      }
-
-      await Promise.all(sigs).then(sigs => {
-        program.provider.connection.confirmTransaction(sigs[0]);
-      });
+        .preInstructions([initIx])
+        .rpc();
 
       return deposit;
     },
