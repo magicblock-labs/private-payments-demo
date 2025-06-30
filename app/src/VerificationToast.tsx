@@ -3,6 +3,7 @@ import './VerificationToast.css';
 import React, { useState } from 'react';
 
 import { useTdxQuoteVerification } from './hooks/use-tdx-quote-verification';
+import { Check, Cross } from 'lucide-react';
 
 const VerificationToast: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -22,9 +23,17 @@ const VerificationToast: React.FC = () => {
     if (isLoading) {
       return <div className='status-icon-pending'>?</div>;
     } else if (isVerified) {
-      return <div className='status-icon-success'>✓</div>;
+      return (
+        <div className='status-icon-success'>
+          <Check />
+        </div>
+      );
     } else {
-      return <div className='status-icon-error'>✗</div>;
+      return (
+        <div className='status-icon-error'>
+          <Cross />
+        </div>
+      );
     }
   };
 

@@ -6,6 +6,7 @@ import { useAddressBook } from './hooks/use-address-book';
 import { usePrivateRollupAuth } from './hooks/use-private-rollup-auth';
 import ManageDeposit from './ManageDeposit';
 import Transfer from './Transfer';
+import './Deposit.css';
 
 export interface TokenListEntry {
   mint: string;

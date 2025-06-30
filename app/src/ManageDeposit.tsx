@@ -4,6 +4,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { useDeposit } from './hooks/use-deposit';
 import { useProgram } from './hooks/use-program';
+import { Spinner } from './components/Spinner';
 
 export interface TokenListEntry {
   mint: string;
@@ -90,6 +91,7 @@ const ManageDeposit: React.FC<DepositProps> = ({ user, token }) => {
             <button onClick={handleCreateDeposit} disabled={isCreating}>
               {isCreating ? 'Creating...' : 'Create'}
             </button>
+            <Spinner />
           </>
         )}
         {deposit && (

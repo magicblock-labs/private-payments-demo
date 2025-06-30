@@ -1,0 +1,46 @@
+.deposit-ui {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  justify-content: center;
+  align-items: center;
+  min-width: max-content;
+  height: 100%;
+  text-align: center;
+  border: 2px solid #eee;
+  border-radius: 5px;
+  padding: 10px;
+}
+
+.deposit-container {
+  display: flex;
+  flex-direction: row;
+  gap: 15px;
+  align-items: stretch;
+  min-height: 100%;
+}
+
+.deposit-box {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  flex: 1;
+  border: 2px solid #eee;
+  border-radius: 5px;
+  padding: 10px;
+  align-items: stretch;
+  justify-content: space-between;
+}
+
+.deposit-box button {
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+}
+
+.deposit-box select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 2px solid #eee;
+  border-radius: 5px;
+}

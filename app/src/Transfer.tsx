@@ -3,6 +3,7 @@ import React, { useCallback, useState } from 'react';
 
 import { TokenListEntry } from './Deposit';
 import { useProgram } from './hooks/use-program';
+import { Spinner } from './components/Spinner';
 
 interface TransferProps {
   token?: TokenListEntry;
@@ -42,12 +43,18 @@ const Transfer: React.FC<TransferProps> = ({ token, address }) => {
             />
           </div>
           <div className='amount-input'>
-            <button onClick={() => handleTransfer(false)} disabled={isTransferring}>
-              {isTransferring ? 'Transferring...' : 'Transfer'}
-            </button>
-            <button onClick={() => handleTransfer(true)} disabled={isTransferring}>
-              {isTransferring ? 'Transferring...' : 'Delegated transfer'}
-            </button>
+            {isTransferring ? (
+              <Spinner />
+            ) : (
+              <>
+                <button onClick={() => handleTransfer(false)} disabled={isTransferring}>
+                  Transfer
+                </button>
+                <button onClick={() => handleTransfer(true)} disabled={isTransferring}>
+                  Delegated transfer
+                </button>
+              </>
+            )}
           </div>
         </>
       ) : (
