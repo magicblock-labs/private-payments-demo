@@ -21,3 +21,10 @@ app/react-counter-ui/npm-debug.log*
 app/react-counter-ui/yarn-debug.log*
 app/react-counter-ui/yarn-error.log*
 app/react-counter-ui/.idea
+
+# next.js
+.next/
+out/
+
+# production
+/build
