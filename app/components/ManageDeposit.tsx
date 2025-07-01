@@ -2,15 +2,15 @@ import { useAnchorWallet } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useDeposit } from '../hooks/use-deposit';
-import { useProgram } from '../hooks/use-program';
-import { Spinner } from './ui/spinner';
+import { useDeposit } from '@/hooks/use-deposit';
+import { useProgram } from '@/hooks/use-program';
 import { Ban, Loader2Icon } from 'lucide-react';
-import { Card, CardContent, CardFooter, CardHeader } from './ui/card';
-import { H3, Large } from './ui/typography';
-import { Button } from './ui/button';
-import { Label } from './ui/label';
-import { Input } from './ui/input';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { H3, Large } from '@/components/ui/typography';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
 
 export interface TokenListEntry {
   mint: string;
@@ -43,6 +43,7 @@ const ManageDeposit: React.FC<DepositProps> = ({ user, token }) => {
     setIsCreating(true);
     try {
       await initializeDeposit(depositUser, new PublicKey(token.mint));
+      toast.success(`Deposit initialized for ${depositUser.toBase58()}`);
     } finally {
       setIsCreating(false);
     }
@@ -53,6 +54,7 @@ const ManageDeposit: React.FC<DepositProps> = ({ user, token }) => {
     setIsDepositing(true);
     try {
       await depositTokens(depositUser, new PublicKey(token.mint), amount);
+      toast.success(`Deposited ${amount} tokens to ${depositUser.toBase58()}`);
     } finally {
       setIsDepositing(false);
     }
@@ -63,6 +65,7 @@ const ManageDeposit: React.FC<DepositProps> = ({ user, token }) => {
     setIsDelegating(true);
     try {
       await delegate(depositUser, new PublicKey(token.mint));
+      toast.success(`Delegated successfully`);
     } finally {
       setIsDelegating(false);
     }
@@ -73,6 +76,7 @@ const ManageDeposit: React.FC<DepositProps> = ({ user, token }) => {
     setIsUndelegating(true);
     try {
       await undelegate(new PublicKey(token.mint));
+      toast.success(`Undelegated successfully`);
     } finally {
       setIsUndelegating(false);
     }

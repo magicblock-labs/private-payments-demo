@@ -33,6 +33,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Loader2Icon } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface TokenProps {
   setSelected: (entry: TokenListEntry) => void;
@@ -134,6 +135,7 @@ const Tokens: React.FC<TokenProps> = ({ setSelected }) => {
           creator: wallet.publicKey.toString(),
         },
       ]);
+      toast.success(`Token ${mintKp.publicKey.toString()} created successfully`);
     } finally {
       setIsCreating(false);
     }

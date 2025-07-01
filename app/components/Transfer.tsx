@@ -11,6 +11,7 @@ import { H3 } from './ui/typography';
 import { Label } from './ui/label';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
+import { toast } from 'sonner';
 
 interface TransferProps {
   token?: TokenListEntry;
@@ -28,6 +29,7 @@ const Transfer: React.FC<TransferProps> = ({ token, address }) => {
       setIsTransferring(true);
       try {
         await transfer(new PublicKey(token.mint), amount, new PublicKey(address), delegated);
+        toast.success(`Transferred ${amount} tokens to ${address}`);
       } finally {
         setIsTransferring(false);
       }

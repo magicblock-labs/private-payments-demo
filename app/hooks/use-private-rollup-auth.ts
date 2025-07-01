@@ -3,6 +3,7 @@ import { useAnchorWallet, useLocalStorage, useWallet } from '@solana/wallet-adap
 import { useCallback, useMemo, useState } from 'react';
 
 import { EPHEMERAL_RPC_URL } from '../lib/constants';
+import { toast } from 'sonner';
 
 const SESSION_DURATION = 1000 * 60 * 60 * 24 * 30; // 30 days
 
@@ -51,6 +52,7 @@ export function usePrivateRollupAuth() {
         ...tokens,
         [wallet.publicKey.toBase58()]: authJson.token,
       });
+      toast.success(`Authenticated ${wallet.publicKey.toBase58()} successfully`);
     } catch (error) {
       console.error('Error getting token:', error);
     } finally {

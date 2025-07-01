@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from './ui/select';
+import { toast } from 'sonner';
 
 interface AddressBookProps {
   setSelectedAddress: (address: string) => void;
@@ -32,6 +33,7 @@ const AddressBook: React.FC<AddressBookProps> = ({ setSelectedAddress }) => {
     if (!address) return;
     addAddress(address);
     setAddress('');
+    toast.success(`Address ${address} added to address book`);
   }, [address, addAddress]);
 
   if (!wallet?.publicKey)

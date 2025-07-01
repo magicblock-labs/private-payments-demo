@@ -17,6 +17,7 @@ import { useAnchorWallet, useConnection } from '@solana/wallet-adapter-react';
 import { Loader2Icon } from 'lucide-react';
 import useSimpleTransfer from '@/hooks/use-simple-transfer';
 import { useDeposit } from '@/hooks/use-deposit';
+import { toast } from 'sonner';
 
 interface TransferProps {
   token?: TokenListEntry;
@@ -72,6 +73,7 @@ export default function SimpleTransfer({ token, address }: TransferProps) {
     setIsTransferring(true);
     try {
       await transfer(address, token.mint, amount);
+      toast.success(`Transferred ${amount} tokens to ${address}`);
     } finally {
       setIsTransferring(false);
     }

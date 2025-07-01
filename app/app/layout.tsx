@@ -1,4 +1,5 @@
 import { ThemeProvider } from '@/components/theme-provider';
+import { Toaster } from '@/components/ui/sonner';
 import '@/styles/index.css';
 
 export const metadata = {
@@ -20,6 +21,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           >
             {children}
           </ThemeProvider>
+          <Toaster richColors closeButton position='top-center' />
         </body>
       </html>
     </>
