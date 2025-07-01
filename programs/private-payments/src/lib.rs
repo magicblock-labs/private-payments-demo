@@ -181,7 +181,8 @@ pub struct ModifyDeposit<'info> {
     )]
     pub deposit: Account<'info, Deposit>,
     #[account(
-        mut,
+        init_if_needed,
+        payer = payer,
         associated_token::mint = token_mint,
         associated_token::authority = user,
     )]

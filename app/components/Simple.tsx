@@ -1,26 +1,24 @@
 'use client';
 
-import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
-
 import React, { useState } from 'react';
 
-import Deposit, { TokenListEntry } from '@/components/Deposit';
+import { TokenListEntry } from '@/components/Deposit';
 import Tokens from '@/components/Tokens';
 import VerificationToast from '@/components/VerificationToast';
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
 import magicBlockLogo from '@/public/magicblock_white.png';
+import Navbar from './Navbar';
+import SimpleDeposit from './SimpleDeposit';
 
-export default function HomePage() {
+export default function SimplePage() {
   const [selectedToken, setSelectedToken] = useState<TokenListEntry | null>(null);
   const wallet = useAnchorWallet();
 
   return (
     <div className='container flex flex-col gap-4 mx-auto mt-5 justify-center items-center'>
-      <div className='w-fit'>
-        <WalletMultiButton />
-      </div>
+      <Navbar />
 
-      {selectedToken && wallet?.publicKey && <Deposit token={selectedToken} />}
+      {selectedToken && wallet?.publicKey && <SimpleDeposit token={selectedToken} />}
       <Tokens setSelected={setSelectedToken} />
 
       <VerificationToast />

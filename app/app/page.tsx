@@ -1,5 +1,5 @@
-import Home from '@/pages/home';
+import Advanced from '@/views/advanced';
 
-export default function HomePage() {
-  return <Home />;
+export default function AdvancedPage() {
+  return <Advanced />;
 }

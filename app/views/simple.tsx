@@ -1,12 +1,12 @@
 'use client';
 
 import { Wallet } from '@/components/Wallet';
-import HomePage from '@/components/Home';
+import SimplePage from '@/components/Simple';
 
-export default function Home() {
+export default function Simple() {
   return (
     <Wallet>
-      <HomePage />
+      <SimplePage />
     </Wallet>
   );
 }

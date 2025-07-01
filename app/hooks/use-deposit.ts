@@ -6,9 +6,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { DEPOSIT_PDA_SEED } from '@/lib/constants';
 import { DepositAccount } from '@/lib/types';
 
-import { useEphemeralConnection } from './use-ephemeral-connection';
-import { useProgram } from './use-program';
-import { useSubscription } from './use-subscription';
+import { useEphemeralConnection } from '@/hooks/use-ephemeral-connection';
+import { useProgram } from '@/hooks/use-program';
+import { useSubscription } from '@/hooks/use-subscription';
 
 export function useDeposit(user?: PublicKey | string, tokenMint?: PublicKey | string) {
   const { program } = useProgram();
@@ -30,8 +30,9 @@ export function useDeposit(user?: PublicKey | string, tokenMint?: PublicKey | st
   }, [program, user, tokenMint]);
 
   const getDeposit = useCallback(async () => {
-    setDeposit(null);
     if (!tokenMint || !user || !program || !depositPda) return;
+    setDeposit(null);
+
     try {
       let depositAccount = await connection.getAccountInfo(depositPda);
 
