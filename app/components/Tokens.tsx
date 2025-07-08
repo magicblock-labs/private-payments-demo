@@ -49,6 +49,7 @@ const Tokens: React.FC<TokenProps> = ({ setSelected }) => {
   const [isCreating, setIsCreating] = useState(false);
   const userTokenAccount = useMemo(() => {
     if (!selectedToken || !wallet?.publicKey) return;
+    console.log('selectedToken', selectedToken.mint);
     return getAssociatedTokenAddressSync(
       new PublicKey(selectedToken?.mint),
       wallet.publicKey,
@@ -186,7 +187,16 @@ const Tokens: React.FC<TokenProps> = ({ setSelected }) => {
     if (tokenList.length > 0) {
       return (
         <div className='token-select'>
-          <Select defaultValue={selectedToken?.mint}>
+          <Select
+            defaultValue={selectedToken?.mint}
+            onValueChange={value => {
+              const token = tokenList.find(token => token.mint === value);
+              if (token) {
+                setSelected(token);
+                setSelectedToken(token);
+              }
+            }}
+          >
             <SelectTrigger className='w-[180px]'>
               <SelectValue placeholder='Select a fruit' />
             </SelectTrigger>
@@ -194,14 +204,7 @@ const Tokens: React.FC<TokenProps> = ({ setSelected }) => {
               <SelectGroup>
                 <SelectLabel>Tokens</SelectLabel>
                 {tokenList.map(token => (
-                  <SelectItem
-                    key={token.mint}
-                    value={token.mint}
-                    onClick={() => {
-                      setSelected(token);
-                      setSelectedToken(token);
-                    }}
-                  >
+                  <SelectItem key={token.mint} value={token.mint}>
                     {shortKey(token.mint)} ({shortKey(token.creator)})
                   </SelectItem>
                 ))}
