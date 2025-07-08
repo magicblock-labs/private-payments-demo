@@ -9,6 +9,7 @@ import { H2 } from '@/components/ui/typography';
 import { Button } from '@/components/ui/button';
 import { Loader2Icon } from 'lucide-react';
 import SimpleTransfer from '@/components/SimpleTransfer';
+import { Separator } from './ui/separator';
 
 export interface TokenListEntry {
   mint: string;
@@ -29,6 +30,7 @@ export default function SimpleDeposit({ token }: SimpleDepositProps) {
     <Card>
       <CardHeader>
         <H2>Transfer</H2>
+        <Separator />
       </CardHeader>
       <CardContent className='flex flex-col gap-4'>
         {!authToken && (

@@ -40,7 +40,11 @@ const Deposit: React.FC<DepositProps> = ({ token }) => {
           </Button>
         )}
         <div className='flex gap-4'>
-          <ManageDeposit token={token} />
+          {wallet?.publicKey ? (
+            <ManageDeposit token={token} />
+          ) : (
+            <Loader2Icon className='animate-spin' />
+          )}
           <AddressBook setSelectedAddress={setSelectedAddress} />
           <Transfer token={token} address={selectedAddress} />
           {selectedAddress ? (

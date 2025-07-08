@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from './ui/select';
 import { toast } from 'sonner';
+import { Separator } from './ui/separator';
 
 interface AddressBookProps {
   setSelectedAddress: (address: string) => void;
@@ -47,6 +48,7 @@ const AddressBook: React.FC<AddressBookProps> = ({ setSelectedAddress }) => {
     <Card>
       <CardHeader>
         <H3>Address book</H3>
+        <Separator />
       </CardHeader>
       <CardContent>
         <div className='mb-4 mt-[-10px]'>

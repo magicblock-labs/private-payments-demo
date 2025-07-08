@@ -4,7 +4,7 @@ import { AccountInfo } from '@solana/web3.js';
 import { useEffect, useRef } from 'react';
 
 export function useSubscription(
-  connection?: Connection,
+  connection: Connection | null,
   account?: PublicKey | string,
   onAccountChange?: (accountInfo: AccountInfo<Buffer>) => void,
 ) {

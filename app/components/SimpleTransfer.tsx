@@ -18,6 +18,7 @@ import { Loader2Icon } from 'lucide-react';
 import useSimpleTransfer from '@/hooks/use-simple-transfer';
 import { useDeposit } from '@/hooks/use-deposit';
 import { toast } from 'sonner';
+import { Separator } from './ui/separator';
 
 interface TransferProps {
   token?: TokenListEntry;
@@ -85,6 +86,7 @@ export default function SimpleTransfer({ token, address }: TransferProps) {
     <Card>
       <CardHeader>
         <H3>Transfer</H3>
+        <Separator />
       </CardHeader>
       {address ? (
         <>

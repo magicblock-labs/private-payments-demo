@@ -43,7 +43,7 @@ const Tokens: React.FC<TokenProps> = ({ setSelected }) => {
   const { connection } = useConnection();
   const wallet = useAnchorWallet();
   const [amount, setAmount] = useState(1000);
-  const [balance, setBalance] = useState<number | undefined>();
+  const [balance, setBalance] = useState<number | null>(null);
   const [tokenList, setTokenList] = useLocalStorage<TokenListEntry[]>('token-list', []);
   const [selectedToken, setSelectedToken] = useState<TokenListEntry | undefined>();
   const [isCreating, setIsCreating] = useState(false);
@@ -176,6 +176,12 @@ const Tokens: React.FC<TokenProps> = ({ setSelected }) => {
     setBalance(Number(account.amount) / Math.pow(10, 6));
   });
 
+  useEffect(() => {
+    if (wallet?.publicKey) {
+      setBalance(null);
+    }
+  }, [wallet?.publicKey]);
+
   const TokenSelect = () => {
     if (tokenList.length > 0) {
       return (
@@ -202,7 +208,7 @@ const Tokens: React.FC<TokenProps> = ({ setSelected }) => {
               </SelectGroup>
             </SelectContent>
           </Select>
-          <Muted>Current balance: {balance ?? 'Loading...'}</Muted>
+          {balance !== null && <Muted>Current balance: {balance}</Muted>}
         </div>
       );
     } else {

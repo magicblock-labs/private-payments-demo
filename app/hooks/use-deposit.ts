@@ -3,7 +3,7 @@ import { useConnection } from '@solana/wallet-adapter-react';
 import { AccountInfo, PublicKey } from '@solana/web3.js';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DEPOSIT_PDA_SEED } from '@/lib/constants';
+import { DEPOSIT_PDA_SEED, PERMISSION_PROGRAM_ID, PERMISSION_SEED } from '@/lib/constants';
 import { DepositAccount } from '@/lib/types';
 
 import { useEphemeralConnection } from '@/hooks/use-ephemeral-connection';
@@ -28,6 +28,14 @@ export function useDeposit(user?: PublicKey | string, tokenMint?: PublicKey | st
       program.programId,
     )[0];
   }, [program, user, tokenMint]);
+
+  const permissionPda = useMemo(() => {
+    if (!depositPda) return;
+    return PublicKey.findProgramAddressSync(
+      [PERMISSION_SEED, depositPda.toBuffer()],
+      PERMISSION_PROGRAM_ID,
+    )[0];
+  }, [depositPda]);
 
   const getDeposit = useCallback(async () => {
     if (!tokenMint || !user || !program || !depositPda) return;
@@ -96,6 +104,8 @@ export function useDeposit(user?: PublicKey | string, tokenMint?: PublicKey | st
 
   return {
     deposit,
+    depositPda,
+    permissionPda,
     isDelegated,
     accessDenied: isDelegated && !deposit,
   };

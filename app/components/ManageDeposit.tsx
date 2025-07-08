@@ -4,13 +4,22 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { useDeposit } from '@/hooks/use-deposit';
 import { useProgram } from '@/hooks/use-program';
-import { Ban, Loader2Icon } from 'lucide-react';
+import { Ban, CopyIcon, Loader2Icon, LucideCircleQuestionMark } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { H3, Large } from '@/components/ui/typography';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { Separator } from './ui/separator';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from './ui/dialog';
 
 export interface TokenListEntry {
   mint: string;
@@ -36,7 +45,10 @@ const ManageDeposit: React.FC<DepositProps> = ({ user, token }) => {
   const isWalletOwner = useMemo(() => {
     return depositUser && wallet?.publicKey?.equals(depositUser);
   }, [wallet, depositUser]);
-  const { deposit, isDelegated, accessDenied } = useDeposit(depositUser, token?.mint);
+  const { deposit, depositPda, permissionPda, isDelegated, accessDenied } = useDeposit(
+    depositUser,
+    token?.mint,
+  );
 
   const handleCreateDeposit = useCallback(async () => {
     if (!token || !depositUser) return;
@@ -82,39 +94,137 @@ const ManageDeposit: React.FC<DepositProps> = ({ user, token }) => {
     }
   }, [token, undelegate]);
 
-  if (accessDenied) {
-    return (
-      <Card>
-        <CardHeader>
-          <H3>Access denied</H3>
-        </CardHeader>
-        <CardContent className='flex flex-row items-center justify-center h-full min-w-48'>
-          <Ban className='h-auto w-16' />
-        </CardContent>
-      </Card>
-    );
-  }
+  const title = useMemo(() => {
+    if (accessDenied) return 'Access denied';
+    if (!deposit) return 'Create deposit';
+    if (isWalletOwner) return 'Deposit tokens';
+    return 'View deposit';
+  }, [accessDenied, deposit, isWalletOwner]);
 
   return (
     <Card>
-      {!deposit && (
+      <CardHeader>
+        <div className='w-full flex flex-row'>
+          <div className='w-full'>
+            <H3>{title}</H3>
+          </div>
+          <Dialog>
+            <form>
+              <DialogTrigger asChild>
+                <Button variant='ghost'>
+                  <LucideCircleQuestionMark />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className='sm:max-w-[425px]'>
+                <DialogHeader>
+                  <DialogTitle>Deposit information</DialogTitle>
+                  <DialogDescription>Addresses of the related accounts.</DialogDescription>
+                </DialogHeader>
+                <div className='grid gap-4'>
+                  <div className='grid gap-3'>
+                    <Label htmlFor='deposit-address'>Deposit address</Label>
+                    <div className='flex flex-row'>
+                      <Input
+                        id='deposit-address'
+                        name='name'
+                        className='rounded-r-none'
+                        defaultValue={depositPda?.toBase58() ?? '???'}
+                        disabled
+                      />
+                      <Button
+                        variant='outline'
+                        className='rounded-l-none'
+                        onClick={() => {
+                          navigator.clipboard.writeText(depositPda?.toBase58() ?? '');
+                          toast.info('Copied to clipboard');
+                        }}
+                      >
+                        <CopyIcon />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className='grid gap-3'>
+                    <Label htmlFor='token'>Token</Label>
+                    <div className='flex flex-row'>
+                      <Input id='token' name='token' defaultValue={token?.mint} disabled />
+                      <Button
+                        variant='outline'
+                        className='rounded-l-none'
+                        onClick={() => {
+                          navigator.clipboard.writeText(token?.mint ?? '');
+                          toast.info('Copied to clipboard');
+                        }}
+                      >
+                        <CopyIcon />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className='grid gap-3'>
+                    <Label htmlFor='username'>Deposit owner</Label>
+                    <div className='flex flex-row'>
+                      <Input
+                        id='username'
+                        name='username'
+                        className='rounded-r-none'
+                        defaultValue={depositUser?.toBase58()}
+                        disabled
+                      />
+                      <Button
+                        variant='outline'
+                        className='rounded-l-none'
+                        onClick={() => {
+                          navigator.clipboard.writeText(depositUser?.toBase58() ?? '');
+                          toast.info('Copied to clipboard');
+                        }}
+                      >
+                        <CopyIcon />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className='grid gap-3'>
+                    <Label htmlFor='permission'>Permission</Label>
+                    <div className='flex flex-row'>
+                      <Input
+                        id='permission'
+                        name='name'
+                        className='rounded-r-none'
+                        defaultValue={permissionPda?.toBase58() ?? '???'}
+                        disabled
+                      />
+                      <Button
+                        variant='outline'
+                        className='rounded-l-none'
+                        onClick={() => {
+                          navigator.clipboard.writeText(permissionPda?.toBase58() ?? '');
+                          toast.info('Copied to clipboard');
+                        }}
+                      >
+                        <CopyIcon />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </DialogContent>
+            </form>
+          </Dialog>
+        </div>
+        <Separator />
+      </CardHeader>
+      {!deposit && !accessDenied ? (
+        <CardContent>
+          <Button className='w-full' onClick={handleCreateDeposit} disabled={isCreating}>
+            Create
+            {isCreating && <Loader2Icon className='animate-spin' />}
+          </Button>
+        </CardContent>
+      ) : !deposit && accessDenied ? (
+        <CardContent className='flex flex-row items-center justify-center h-full min-w-56'>
+          <Ban className='h-auto w-16' />
+        </CardContent>
+      ) : (
         <>
-          <CardHeader>
-            <H3>Initialize deposit</H3>
-          </CardHeader>
-          <CardContent>
-            <Button className='w-full' onClick={handleCreateDeposit} disabled={isCreating}>
-              Create
-              {isCreating && <Loader2Icon className='animate-spin' />}
-            </Button>
-          </CardContent>
-        </>
-      )}
-      {deposit && (
-        <>
-          <CardHeader>{isWalletOwner ? <H3>Deposit tokens</H3> : <H3>View deposit</H3>}</CardHeader>
           <CardContent className='flex flex-col gap-4'>
-            <Large>Current balance: {deposit.amount.toNumber() / Math.pow(10, 6)}</Large>
+            <Large>Current balance: {deposit!.amount.toNumber() / Math.pow(10, 6)}</Large>
 
             <div className='flex flex-col gap-2 mb-4'>
               <Label htmlFor='amount'>Amount</Label>

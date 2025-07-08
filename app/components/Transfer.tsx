@@ -5,13 +5,14 @@ import React, { useCallback, useState } from 'react';
 
 import { TokenListEntry } from './Deposit';
 import { useProgram } from '../hooks/use-program';
-import { Spinner } from './ui/spinner';
 import { Card, CardContent, CardFooter, CardHeader } from './ui/card';
 import { H3 } from './ui/typography';
 import { Label } from './ui/label';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { toast } from 'sonner';
+import { Separator } from './ui/separator';
+import { Loader2Icon } from 'lucide-react';
 
 interface TransferProps {
   token?: TokenListEntry;
@@ -41,6 +42,7 @@ const Transfer: React.FC<TransferProps> = ({ token, address }) => {
     <Card>
       <CardHeader>
         <H3>Transfer</H3>
+        <Separator />
       </CardHeader>
       {address ? (
         <>
@@ -56,26 +58,22 @@ const Transfer: React.FC<TransferProps> = ({ token, address }) => {
             </div>
           </CardContent>
           <CardFooter className='flex flex-col gap-2 w-full'>
-            {isTransferring ? (
-              <Spinner />
-            ) : (
-              <>
-                <Button
-                  className='w-full'
-                  onClick={() => handleTransfer(false)}
-                  disabled={isTransferring}
-                >
-                  Transfer
-                </Button>
-                <Button
-                  className='w-full'
-                  onClick={() => handleTransfer(true)}
-                  disabled={isTransferring}
-                >
-                  Delegated transfer
-                </Button>
-              </>
-            )}
+            <Button
+              className='w-full'
+              onClick={() => handleTransfer(false)}
+              disabled={isTransferring}
+            >
+              Transfer
+              {isTransferring && <Loader2Icon className='animate-spin' />}
+            </Button>
+            <Button
+              className='w-full'
+              onClick={() => handleTransfer(true)}
+              disabled={isTransferring}
+            >
+              Delegated transfer
+              {isTransferring && <Loader2Icon className='animate-spin' />}
+            </Button>
           </CardFooter>
         </>
       ) : (

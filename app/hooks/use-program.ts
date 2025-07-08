@@ -119,14 +119,14 @@ export function useProgram() {
 
   const deposit = useCallback(
     async (user: PublicKey, tokenMint: PublicKey, amount: number) => {
-      modifyDeposit(user, tokenMint, amount, true);
+      return modifyDeposit(user, tokenMint, amount, true);
     },
     [modifyDeposit],
   );
 
   const withdraw = useCallback(
     async (user: PublicKey, tokenMint: PublicKey, amount: number) => {
-      modifyDeposit(user, tokenMint, amount, false);
+      return modifyDeposit(user, tokenMint, amount, false);
     },
     [modifyDeposit],
   );

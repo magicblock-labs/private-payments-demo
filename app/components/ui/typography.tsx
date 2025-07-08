@@ -16,9 +16,7 @@ export function H2({ children }: { children: React.ReactNode }) {
 
 export function H3({ children }: { children: React.ReactNode }) {
   return (
-    <h3 className='scroll-m-20 border-b pb-2 text-xl font-semibold tracking-tight first:mt-0'>
-      {children}
-    </h3>
+    <h3 className='scroll-m-20 py-1 text-xl font-semibold tracking-tight first:mt-0'>{children}</h3>
   );
 }
 
