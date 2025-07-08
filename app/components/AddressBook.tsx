@@ -34,6 +34,11 @@ const AddressBook: React.FC<AddressBookProps> = ({ setSelectedAddress }) => {
     if (!address) return;
     addAddress(address);
     setAddress('');
+
+    if (addressBook.length === 0) {
+      setSelectedAddress(address);
+    }
+
     toast.success(`Address ${address} added to address book`);
   }, [address, addAddress]);
 
@@ -51,7 +56,7 @@ const AddressBook: React.FC<AddressBookProps> = ({ setSelectedAddress }) => {
         <Separator />
       </CardHeader>
       <CardContent>
-        <div className='mb-4 mt-[-10px]'>
+        <div className='mt-[-10px]'>
           {addressBook.length > 0 ? (
             <div className='flex flex-col items-stretch'>
               <Label htmlFor='address-book' className='m-1'>
@@ -80,18 +85,19 @@ const AddressBook: React.FC<AddressBookProps> = ({ setSelectedAddress }) => {
             <Muted>No addresses in the address book</Muted>
           )}
         </div>
-
-        <Label htmlFor='address' className='m-1'>
-          Address
-        </Label>
-        <Input
-          id='address'
-          type='text'
-          value={address}
-          onChange={e => setAddress(e.target.value)}
-        />
       </CardContent>
-      <CardFooter>
+      <CardFooter className='flex flex-col gap-2'>
+        <div className='w-full'>
+          <Label htmlFor='address' className='m-1'>
+            Address
+          </Label>
+          <Input
+            id='address'
+            type='text'
+            value={address}
+            onChange={e => setAddress(e.target.value)}
+          />
+        </div>
         <Button className='w-full' onClick={handleAddAddress}>
           Add address
         </Button>

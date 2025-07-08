@@ -4,8 +4,6 @@ import { PublicKey } from '@solana/web3.js';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { TokenListEntry } from '@/components/Deposit';
-import { useProgram } from '@/hooks/use-program';
-import { Spinner } from '@/components/ui/spinner';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { H3, Large, Muted } from '@/components/ui/typography';
 import { Label } from '@/components/ui/label';
@@ -79,8 +77,6 @@ export default function SimpleTransfer({ token, address }: TransferProps) {
       setIsTransferring(false);
     }
   }, [token, transfer, amount, address]);
-
-  console.log(address);
 
   return (
     <Card>

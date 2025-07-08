@@ -33,9 +33,16 @@ interface DepositProps {
 
 const ManageDeposit: React.FC<DepositProps> = ({ user, token }) => {
   const wallet = useAnchorWallet();
-  const { initializeDeposit, deposit: depositTokens, delegate, undelegate } = useProgram();
+  const {
+    initializeDeposit,
+    deposit: depositTokens,
+    withdraw,
+    delegate,
+    undelegate,
+  } = useProgram();
   const [isCreating, setIsCreating] = useState(false);
   const [isDepositing, setIsDepositing] = useState(false);
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [isDelegating, setIsDelegating] = useState(false);
   const [isUndelegating, setIsUndelegating] = useState(false);
   const [amount, setAmount] = useState(0);
@@ -69,6 +76,17 @@ const ManageDeposit: React.FC<DepositProps> = ({ user, token }) => {
       toast.success(`Deposited ${amount} tokens to ${depositUser.toBase58()}`);
     } finally {
       setIsDepositing(false);
+    }
+  }, [token, depositUser, amount, depositTokens]);
+
+  const handleWithdraw = useCallback(async () => {
+    if (!token || !depositUser) return;
+    setIsWithdrawing(true);
+    try {
+      await withdraw(depositUser, new PublicKey(token.mint), amount);
+      toast.success(`Withdrawn ${amount} tokens from ${depositUser.toBase58()}`);
+    } finally {
+      setIsWithdrawing(false);
     }
   }, [token, depositUser, amount, depositTokens]);
 
@@ -240,6 +258,10 @@ const ManageDeposit: React.FC<DepositProps> = ({ user, token }) => {
             <Button className='w-full' onClick={handleDeposit} disabled={isDepositing}>
               Deposit
               {isDepositing && <Loader2Icon className='animate-spin' />}
+            </Button>
+            <Button className='w-full' onClick={handleWithdraw} disabled={isWithdrawing}>
+              Withdraw
+              {isWithdrawing && <Loader2Icon className='animate-spin' />}
             </Button>
             {!isDelegated && (
               <Button className='w-full' onClick={handleDelegate} disabled={isDelegating}>

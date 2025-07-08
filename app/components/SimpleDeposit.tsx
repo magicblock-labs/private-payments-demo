@@ -5,9 +5,9 @@ import { useAddressBook } from '@/hooks/use-address-book';
 import { usePrivateRollupAuth } from '@/hooks/use-private-rollup-auth';
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { H2 } from '@/components/ui/typography';
+import { H2, Muted } from '@/components/ui/typography';
 import { Button } from '@/components/ui/button';
-import { Loader2Icon } from 'lucide-react';
+import { CircleQuestionMark, Loader2Icon } from 'lucide-react';
 import SimpleTransfer from '@/components/SimpleTransfer';
 import { Separator } from './ui/separator';
 
@@ -30,9 +30,14 @@ export default function SimpleDeposit({ token }: SimpleDepositProps) {
     <Card>
       <CardHeader>
         <H2>Transfer</H2>
-        <Separator />
       </CardHeader>
-      <CardContent className='flex flex-col gap-4'>
+      <CardContent className='flex flex-col gap-4 items-center max-w-5xl mx-auto'>
+        <div className='flex flex-col gap-4'>
+          <Muted>
+            In this simplified version, you just select an address you want to send tokens to, the
+            amount you want to send, and all the underlying details are handled seamlessly.
+          </Muted>
+        </div>
         {!authToken && (
           <Button className='w-full' onClick={getToken} disabled={isAuthenticating}>
             Authenticate
@@ -44,7 +49,15 @@ export default function SimpleDeposit({ token }: SimpleDepositProps) {
           {selectedAddress ? (
             <SimpleTransfer token={token} address={selectedAddress} />
           ) : (
-            <Loader2Icon className='animate-spin' />
+            <Card>
+              <CardHeader>
+                <H2>Select an address</H2>
+              </CardHeader>
+              <CardContent className='flex flex-col gap-4 items-center my-auto text-center'>
+                <CircleQuestionMark />
+                <Muted>Select an address to continue.</Muted>
+              </CardContent>
+            </Card>
           )}
         </div>
       </CardContent>

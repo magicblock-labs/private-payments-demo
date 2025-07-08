@@ -8,9 +8,9 @@ import ManageDeposit from './ManageDeposit';
 import Transfer from './Transfer';
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
 import { Card, CardContent, CardHeader } from './ui/card';
-import { H2 } from '@/components/ui/typography';
+import { H2, Muted } from '@/components/ui/typography';
 import { Button } from './ui/button';
-import { Loader2Icon } from 'lucide-react';
+import { CircleQuestionMark, Loader2Icon } from 'lucide-react';
 
 export interface TokenListEntry {
   mint: string;
@@ -32,7 +32,14 @@ const Deposit: React.FC<DepositProps> = ({ token }) => {
       <CardHeader>
         <H2>Your deposit</H2>
       </CardHeader>
-      <CardContent className='flex flex-col gap-4'>
+      <CardContent className='flex flex-col gap-4 items-center max-w-5xl mx-auto'>
+        <div className='flex flex-col gap-4'>
+          <Muted>
+            From left to right: view your deposit, pick an address you want to send tokens, select
+            the amount and execute the transfer, and view the recipient's deposit (if available). To
+            interact with the private ephemeral rollup, you need to authenticate using your wallet.
+          </Muted>
+        </div>
         {!authToken && (
           <Button className='w-full' onClick={getToken} disabled={isAuthenticating}>
             Authenticate
@@ -50,7 +57,15 @@ const Deposit: React.FC<DepositProps> = ({ token }) => {
           {selectedAddress ? (
             <ManageDeposit token={token} user={new PublicKey(selectedAddress)} />
           ) : (
-            <Loader2Icon className='animate-spin' />
+            <Card>
+              <CardHeader>
+                <H2>Select an address</H2>
+              </CardHeader>
+              <CardContent className='flex flex-col gap-4 items-center my-auto text-center'>
+                <CircleQuestionMark />
+                <Muted>Select an address to continue.</Muted>
+              </CardContent>
+            </Card>
           )}
         </div>
       </CardContent>

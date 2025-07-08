@@ -236,13 +236,6 @@ export default function useSimpleTransfer() {
       ephemeralTx.recentBlockhash = ephemeralBlockhash;
       ephemeralTx.feePayer = program.provider.publicKey;
 
-      console.log({
-        user: program.provider.publicKey,
-        sourceDeposit: senderDepositPda,
-        destinationDeposit: recipientDepositPda,
-        tokenMint: tokenMintPk,
-      });
-      console.log([preliminaryTx, mainnetTx, ephemeralTx]);
       if (preliminaryTx && mainnetTx) {
         preliminaryTx.recentBlockhash = ephemeralBlockhash;
         preliminaryTx.feePayer = program.provider.publicKey;
@@ -258,6 +251,9 @@ export default function useSimpleTransfer() {
         );
         await ephemeralConnection.confirmTransaction(signature);
         await GetCommitmentSignature(signature, ephemeralConnection);
+
+        // Timeout to be sure undelegation is complete
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
         signature = await connection.sendRawTransaction(signedMainnetTx.serialize());
         await connection.confirmTransaction(signature);

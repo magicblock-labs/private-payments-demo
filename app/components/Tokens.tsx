@@ -221,13 +221,17 @@ const Tokens: React.FC<TokenProps> = ({ setSelected }) => {
       <CardHeader>
         <H2>Tokens</H2>
       </CardHeader>
-      <CardContent className='flex flex-col gap-8'>
+      <CardContent className='flex flex-col gap-4'>
+        <div className='flex flex-col'>
+          <Muted>Create a new token to use in the app.</Muted>
+        </div>
         <TokenSelect />
-
-        <div className='flex flex-col gap-2'>
+      </CardContent>
+      <CardFooter>
+        <div className='flex flex-col gap-2 w-full'>
           <H3>Create a new token</H3>
           <div className='flex flex-col gap-2'>
-            <Label htmlFor='amount'>Amount</Label>
+            <Label htmlFor='amount'>Supply</Label>
             <Input
               id='amount'
               type='number'
@@ -240,7 +244,7 @@ const Tokens: React.FC<TokenProps> = ({ setSelected }) => {
             {isCreating && <Loader2Icon className='animate-spin' />}
           </Button>
         </div>
-      </CardContent>
+      </CardFooter>
     </Card>
   );
 };
