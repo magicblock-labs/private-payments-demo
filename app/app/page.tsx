@@ -1,5 +1,5 @@
-import Advanced from '@/views/advanced';
+import Simple from '@/views/simple';
 
-export default function AdvancedPage() {
-  return <Advanced />;
+export default function SimplePage() {
+  return <Simple />;
 }

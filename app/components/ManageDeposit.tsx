@@ -120,7 +120,7 @@ const ManageDeposit: React.FC<DepositProps> = ({ user, token }) => {
   }, [accessDenied, deposit, isWalletOwner]);
 
   return (
-    <Card>
+    <Card className='min-w-56'>
       <CardHeader>
         <div className='w-full flex flex-row'>
           <div className='w-full'>
@@ -229,7 +229,7 @@ const ManageDeposit: React.FC<DepositProps> = ({ user, token }) => {
         <Separator />
       </CardHeader>
       {!deposit && !accessDenied ? (
-        <CardContent>
+        <CardContent className='flex flex-row items-center justify-center h-full '>
           <Button className='w-full' onClick={handleCreateDeposit} disabled={isCreating}>
             Create
             {isCreating && <Loader2Icon className='animate-spin' />}
