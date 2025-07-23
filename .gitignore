@@ -7,21 +7,6 @@ node_modules
 test-ledger
 .yarn
 
-# React .gitingore
-app/react-counter-ui/node_modules
-app/react-counter-ui/.pnp
-app/react-counter-ui/react-counter-ui/.pnp.js
-app/react-counter-ui/coverage
-app/react-counter-ui/build
-app/react-counter-ui/.env.local
-app/react-counter-ui/.env.development.local
-app/react-counter-ui/.env.test.local
-app/react-counter-ui/.env.production.local
-app/react-counter-ui/npm-debug.log*
-app/react-counter-ui/yarn-debug.log*
-app/react-counter-ui/yarn-error.log*
-app/react-counter-ui/.idea
-
 # next.js
 .next/
 out/

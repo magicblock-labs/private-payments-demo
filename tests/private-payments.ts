@@ -6,7 +6,7 @@ import {
   PERMISSION_PROGRAM_ID,
   PERMISSION_SEED,
   GROUP_SEED,
-} from "../app/src/constants";
+} from "../frontend/lib/constants";
 import {
   createAssociatedTokenAccountIdempotent,
   createMint,
@@ -56,7 +56,6 @@ describe("private-payments", () => {
   let depositPda: PublicKey, otherDepositPda: PublicKey;
 
   before(async () => {
-    console.log("Airdropping", user.toBase58(), otherUser.toBase58());
     const faucet = anchor.Wallet.local();
 
     for (const kp of [userKp, otherUserKp]) {
@@ -76,14 +75,6 @@ describe("private-payments", () => {
       let sig = await provider.connection.sendRawTransaction(rawTx);
       await provider.connection.confirmTransaction(sig);
     }
-    // await provider.connection.requestAirdrop(
-    //   userKp.publicKey,
-    //   100 * LAMPORTS_PER_SOL
-    // );
-    // await provider.connection.requestAirdrop(
-    //   otherUserKp.publicKey,
-    //   10 * LAMPORTS_PER_SOL
-    // );
 
     let balance = await provider.connection.getBalance(userKp.publicKey);
     console.log("Balance", balance);
@@ -94,7 +85,6 @@ describe("private-payments", () => {
     }
     if (balance === 0) throw new Error("airdrop failed...");
 
-    console.log("Creating mint");
     tokenMint = await createMint(provider.connection, userKp, user, null, 6);
 
     depositPda = PublicKey.findProgramAddressSync(
@@ -106,14 +96,12 @@ describe("private-payments", () => {
       program.programId
     )[0];
 
-    console.log("Creating associated token account");
     userTokenAccount = await createAssociatedTokenAccountIdempotent(
       provider.connection,
       userKp,
       tokenMint,
       user
     );
-    console.log("Getting associated token address");
     depositTokenAccount = await createAssociatedTokenAccountIdempotent(
       provider.connection,
       userKp,
@@ -125,7 +113,6 @@ describe("private-payments", () => {
       true
     );
 
-    console.log("Minting to associated token account");
     await mintToChecked(
       provider.connection,
       userKp,
@@ -261,7 +248,6 @@ describe("private-payments", () => {
         .accountsPartial({ payer: kp.publicKey, deposit })
         .signers([kp])
         .rpc({ skipPreflight: true });
-      console.log("Your transaction signature", tx);
     }
   });
 
