@@ -19,6 +19,9 @@ pub mod private_payments {
 
     use super::*;
 
+    /// Initializes a deposit account for a user and token mint if it does not exist.
+    ///
+    /// Sets up a new deposit account with zero balance for the user and token mint.
     pub fn initialize_deposit(ctx: Context<InitializeDeposit>) -> Result<()> {
         let deposit = &mut ctx.accounts.deposit;
         deposit.set_inner(Deposit {
@@ -30,6 +33,10 @@ pub mod private_payments {
         Ok(())
     }
 
+    /// Modifies the balance of a user's deposit account by transferring tokens in or out.
+    ///
+    /// If `args.increase` is true, tokens are transferred from the user's token account to the deposit account.
+    /// If false, tokens are transferred from the deposit account back to the user's token account.
     pub fn modify_balance(ctx: Context<ModifyDeposit>, args: ModifyDepositArgs) -> Result<()> {
         let deposit = &mut ctx.accounts.deposit;
 
@@ -76,6 +83,9 @@ pub mod private_payments {
         Ok(())
     }
 
+    /// Transfers a specified amount from one user's deposit account to another's for the same token mint.
+    ///
+    /// Only updates the internal accounting; does not move actual tokens.
     pub fn transfer_deposit(ctx: Context<TransferDeposit>, amount: u64) -> Result<()> {
         let source_deposit = &mut ctx.accounts.source_deposit;
         let destination_deposit = &mut ctx.accounts.destination_deposit;
@@ -86,6 +96,9 @@ pub mod private_payments {
         Ok(())
     }
 
+    /// Creates a permission group and permission for a deposit account using the external permission program.
+    ///
+    /// Calls out to the permission program to create a group and permission for the deposit account.
     pub fn create_permission(ctx: Context<CreatePermission>, id: Pubkey) -> Result<()> {
         let CreatePermission {
             payer,
@@ -122,6 +135,9 @@ pub mod private_payments {
         Ok(())
     }
 
+    /// Delegates the deposit account to the ephemeral rollups delegate program.
+    ///
+    /// Uses the ephemeral rollups delegate CPI to delegate the deposit account.
     pub fn delegate(ctx: Context<DelegateDeposit>, user: Pubkey, token_mint: Pubkey) -> Result<()> {
         ctx.accounts.delegate_deposit(
             &ctx.accounts.payer,
@@ -131,6 +147,9 @@ pub mod private_payments {
         Ok(())
     }
 
+    /// Commits and undelegates the deposit account from the ephemeral rollups program.
+    ///
+    /// Uses the ephemeral rollups SDK to commit and undelegate the deposit account.
     pub fn undelegate(ctx: Context<UndelegateDeposit>) -> Result<()> {
         commit_and_undelegate_accounts(
             &ctx.accounts.payer,
@@ -259,7 +278,7 @@ pub struct CreatePermission<'info> {
 pub struct DelegateDeposit<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
-    /// CHECK: Checked counter account
+    /// CHECK: Checked counter accountby the delegate program
     #[account(
         mut,
         del,
@@ -284,6 +303,7 @@ pub struct UndelegateDeposit<'info> {
     pub deposit: Account<'info, Deposit>,
 }
 
+/// A deposit account for a user and token mint.
 #[account]
 #[derive(InitSpace)]
 pub struct Deposit {

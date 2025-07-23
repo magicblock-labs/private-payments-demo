@@ -20,10 +20,10 @@ custom-heap = []
 custom-panic = []
 
 [dependencies]
-anchor-lang = { version = "0.31.1", features = ["init-if-needed"] }
-anchor-spl = { version = "0.31.1" }
-ephemeral-rollups-sdk = { version = "0.2.5", features = ["anchor"] }
-magicblock-permission-client = { path = "../../../permission-program/clients/rust" }
+anchor-lang = { workspace = true, features = ["init-if-needed"] }
+anchor-spl = { workspace = true }
+ephemeral-rollups-sdk = { workspace = true, features = ["anchor"] }
+magicblock-permission-client = { workspace = true }
 
 [lints.rust.unexpected_cfgs]
 level = "warn"
