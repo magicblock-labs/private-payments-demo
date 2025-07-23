@@ -6,8 +6,11 @@ import {
   PERMISSION_PROGRAM_ID,
   PERMISSION_SEED,
   GROUP_SEED,
+  DEPOSIT_PDA_SEED,
 } from "../frontend/lib/constants";
+import privatePaymentsIdl from "../frontend/program/private_payments.json";
 import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
   createAssociatedTokenAccountIdempotent,
   createMint,
   mintToChecked,
@@ -24,25 +27,22 @@ describe("private-payments", () => {
   const otherUserKp = Keypair.generate();
 
   const provider = new anchor.AnchorProvider(
-    new anchor.web3.Connection("http://localhost:8899", {
-      wsEndpoint: "ws://localhost:8900",
+    new anchor.web3.Connection("https://api.devnet.solana.com", {
+      wsEndpoint: "wss://api.devnet.solana.com",
     }),
     wallet
   );
   const ephemeralProvider = new anchor.AnchorProvider(
-    new anchor.web3.Connection("http://localhost:7799", {
-      wsEndpoint: "ws://localhost:7800",
+    new anchor.web3.Connection("http://0.0.0.0:8899", {
+      wsEndpoint: "ws://0.0.0.0:8900",
     }),
     wallet
   );
   anchor.setProvider(provider);
 
-  const program = new Program<PrivatePayments>(
-    anchor.workspace.privatePayments.idl,
-    provider
-  );
+  const program = new Program<PrivatePayments>(privatePaymentsIdl, provider);
   const ephemeralProgram = new Program<PrivatePayments>(
-    anchor.workspace.privatePayments.idl,
+    privatePaymentsIdl,
     ephemeralProvider
   );
   const user = userKp.publicKey;
@@ -58,12 +58,13 @@ describe("private-payments", () => {
   before(async () => {
     const faucet = anchor.Wallet.local();
 
+    // Airdrop SOL to the users
     for (const kp of [userKp, otherUserKp]) {
       const tx = new Transaction().add(
         SystemProgram.transfer({
           fromPubkey: faucet.publicKey,
           toPubkey: kp.publicKey,
-          lamports: LAMPORTS_PER_SOL,
+          lamports: 0.1 * LAMPORTS_PER_SOL,
         })
       );
       tx.recentBlockhash = (
@@ -85,14 +86,27 @@ describe("private-payments", () => {
     }
     if (balance === 0) throw new Error("airdrop failed...");
 
-    tokenMint = await createMint(provider.connection, userKp, user, null, 6);
+    tokenMint = await createMint(
+      provider.connection,
+      userKp,
+      user,
+      null,
+      6,
+      undefined,
+      undefined,
+      TOKEN_PROGRAM_ID
+    );
 
     depositPda = PublicKey.findProgramAddressSync(
-      [Buffer.from("deposit"), user.toBuffer(), tokenMint.toBuffer()],
+      [Buffer.from(DEPOSIT_PDA_SEED), user.toBuffer(), tokenMint.toBuffer()],
       program.programId
     )[0];
     otherDepositPda = PublicKey.findProgramAddressSync(
-      [Buffer.from("deposit"), otherUser.toBuffer(), tokenMint.toBuffer()],
+      [
+        Buffer.from(DEPOSIT_PDA_SEED),
+        otherUser.toBuffer(),
+        tokenMint.toBuffer(),
+      ],
       program.programId
     )[0];
 
@@ -100,19 +114,14 @@ describe("private-payments", () => {
       provider.connection,
       userKp,
       tokenMint,
-      user
-    );
-    depositTokenAccount = await createAssociatedTokenAccountIdempotent(
-      provider.connection,
-      userKp,
-      tokenMint,
-      depositPda,
+      user,
       undefined,
       TOKEN_PROGRAM_ID,
-      undefined,
+      ASSOCIATED_TOKEN_PROGRAM_ID,
       true
     );
 
+    // Mint tokens to the user
     await mintToChecked(
       provider.connection,
       userKp,
@@ -125,9 +134,19 @@ describe("private-payments", () => {
       undefined,
       TOKEN_PROGRAM_ID
     );
+
+    console.log("User token account", userTokenAccount.toBase58());
+    console.log("Deposit token account", depositTokenAccount.toBase58());
+    console.log("Deposit PDA", depositPda.toBase58());
+    console.log("Other deposit PDA", otherDepositPda.toBase58());
+    console.log("User", user.toBase58());
+    console.log("Other user", otherUser.toBase58());
+    console.log("Token mint", tokenMint.toBase58());
+    console.log("Group ID", groupId.toBase58());
+    console.log("Other group ID", otherGroupId.toBase58());
   });
 
-  it("Deposits initialized", async () => {
+  it("Initialize deposits", async () => {
     await program.methods
       .initializeDeposit()
       .accountsPartial({
@@ -137,20 +156,16 @@ describe("private-payments", () => {
         tokenProgram: TOKEN_PROGRAM_ID,
       })
       .rpc({ skipPreflight: true });
-    await program.account.deposit.fetch(depositPda);
 
     await program.methods
       .initializeDeposit()
       .accountsPartial({
-        payer: user,
         user: otherUser,
         deposit: otherDepositPda,
         tokenMint,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
-      .signers([otherUserKp])
       .rpc({ skipPreflight: true });
-    await program.account.deposit.fetch(otherDepositPda);
   });
 
   it("Modify balance", async () => {
@@ -160,7 +175,6 @@ describe("private-payments", () => {
         increase: true,
       })
       .accountsPartial({
-        payer: user,
         user,
         deposit: depositPda,
         userTokenAccount,
@@ -168,7 +182,6 @@ describe("private-payments", () => {
         tokenMint,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
-      .signers([userKp])
       .rpc({ skipPreflight: true });
 
     let deposit = await program.account.deposit.fetch(depositPda);
@@ -226,7 +239,6 @@ describe("private-payments", () => {
       await program.methods
         .createPermission(id)
         .accountsPartial({
-          payer: user,
           user: kp.publicKey,
           deposit,
           permission,

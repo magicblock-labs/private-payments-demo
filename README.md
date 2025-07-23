@@ -1,6 +1,6 @@
 # Private Payments
 
-A simple payments that works in a private ephemeral rollup.
+A simple payments that works in a Private Ephemeral Rollup.
 
 ## Installation
 
@@ -19,9 +19,9 @@ yarn install
 ## Test
 
 You must have a MagicBlock validator and a test validator running locally: 
-1. In MagicBlock validator's repo: `cargo run -- --accounts-remote-custom http://localhost:8899 --accounts-remote-custom-with-ws ws://localhost:8900 --rpc-addr 0.0.0.0 --rpc-port 7799`
+1. In MagicBlock validator's repo: `cargo run -- --remote-url http://localhost:8899 --remote-ws-url ws://localhost:8900 --rpc-addr 0.0.0.0 --rpc-port 7799`
 2. `solana-test-validator`
 
 ```bash
-anchor test --skip-local-validator
+anchor test --skip-local-validator --skip-deploy
 ```

@@ -26,9 +26,3 @@ pub enum MagicblockPermissionProgramError {
     #[error("Invalid Owner")]
     InvalidOwner,
 }
-
-impl solana_program::program_error::PrintProgramError for MagicblockPermissionProgramError {
-    fn print<E>(&self) {
-        solana_program::msg!(&self.to_string());
-    }
-}
