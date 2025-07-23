@@ -81,13 +81,21 @@ yarn dev
 The program is already deployed on devnet.
 
 1. Create a test
+
 ![Create token](./docs/create-token.png)
+
 2. Identify as a user
+
 ![Authenticate](./docs/authenticate.png)
+
 3. Add the address of the recipient
+
 ![Add Address](./docs/add-address.png)
+
 4. Transfer an amount of token
+
 ![Transfer](./docs/transfer.png)
+
 
 Clicking the transfer button automatically handles creating deposits, depositing the amount, delegating and making the private transfer.
 
