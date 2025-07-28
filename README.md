@@ -1,6 +1,6 @@
 # Private Payments
 
-A simple payments that works in a Private Ephemeral Rollup.
+A simple payment app that works in a Private Ephemeral Rollup.
 
 ## Summary
 
@@ -26,11 +26,11 @@ It introduces a middleware that handles:
 - **User identification** by making the user sign a challenge before interacting with the PER.
 - **Query filtering** based on the identification and onchain permission metadata defined by the program.
 
-The API of the PER is made to be as transparent as possible for developers: after identifying the user, the middleware returns a token to use in the URL and then simply interact with the PER as if it was a normal RPC (except unauthorized requests will fail).
+The API of the PER is made to be as transparent as possible for developers: after identifying the user, the middleware returns a token to use in the URL and then simply interact with the PER as if it were a normal RPC (except unauthorized requests will fail).
 
 ### Onchain Demonstration Program
 
-This simple onchain program lets user:
+This simple onchain program lets users:
 1. **Create deposit** accounts for anyone
 2. **Deposit and withdraw** from their own deposit account
 3. **Delegate and undelegate** to a private ephemeral rollup
@@ -48,11 +48,11 @@ A typical interaction will go as follows (illustrated below):
 
 ![How it works](./docs/how-it-works.png)
 
-*NOTE: this program is for demonstration purpose and can further tailored to the developers need.*
+*NOTE: this program is for demonstration purposes and can be further tailored to the developer's needs.*
 
 ## Payments provider use-case
 
-A crypto payments provider can have clients (e.g. merchants) be paid in the PER: user send the payments from mainnet to the provider in the PER, that can then settle payments to the merchant privately. Any subsequent payment can happen directly on the PER.
+A crypto payments provider can have clients (e.g. merchants) be paid in the PER: users send the payments from mainnet to the provider in the PER, who can then settle payments to the merchant privately. Any subsequent payment can happen directly on the PER.
 
 Benefits:
 - No information is leaked regarding which merchant the user is buying from
