@@ -17,18 +17,18 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: "21"
-          working-directory: app
+          working-directory: frontend
 
       - name: Install dependencies
         run: npm install --legacy-peer-deps
-        working-directory: app
+        working-directory: frontend
 
       - name: Build the project
         run: npm run build
-        working-directory: app
+        working-directory: frontend
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./app/build
+          publish_dir: ./frontend/build
