@@ -1,6 +1,6 @@
-# Private Payments
+# Private Payments on Private Epehmeral Rollups (PER)
 
-A simple payment app that works in a Private Ephemeral Rollup.
+A simple payment app that works on Solana with Private Ephemeral Rollup (PER).
 
 ## Summary
 
@@ -8,7 +8,7 @@ A simple payment app that works in a Private Ephemeral Rollup.
   - [Summary](#summary)
   - [How it works](#how-it-works)
     - [Private Ephemeral Rollup](#private-ephemeral-rollup)
-    - [Onchain Demonstration Program](#onchain-demonstration-program)
+    - [How does private transfers work on PER?](#how-do-private-transfers-work-on-PER?)
   - [Payments provider use-case](#payments-provider-use-case)
   - [Running the demo](#running-the-demo)
     - [Installation](#installation)
@@ -20,31 +20,40 @@ A simple payment app that works in a Private Ephemeral Rollup.
 
 ### Private Ephemeral Rollup
 
-A Private Ephemeral Rollup is a variant of MagicBlock [Ephemeral Rollup](https://docs.magicblock.gg/pages/get-started/introduction/why-magicblock) (ER), that runs the validator inside a Trusted Execution Environment (TEE), specifically Intel Trust Domain Extension (TDX), to provide privacy and auditability.
+A Private Ephemeral Rollup (PER) is a variant of MagicBlock [Ephemeral Rollup](https://docs.magicblock.gg/pages/get-started/introduction/why-magicblock) (ER), that runs the validator inside a Trusted Execution Environment (TEE), specifically Intel Trust Domain Extension (TDX), to provide privacy and auditability.
 
-It introduces a middleware that handles:
-- **User identification** by making the user sign a challenge before interacting with the PER.
-- **Query filtering** based on the identification and onchain permission metadata defined by the program.
+PER operaters can configure a middleware that enable user-specific READ/WRITE permissions on Solana account level:
+- **Fine-grained Privacy Control** on individual Solana accounts and account groups
+- **Simple Authentication via Session Keys** after signing challenge with private key
+- **Customizable Permissions** are stored, enforced, modifiable through on-chain permission program and metadata accounts.
 
-The API of the PER is made to be as transparent as possible for developers: after identifying the user, the middleware returns a token to use in the URL and then simply interact with the PER as if it were a normal RPC (except unauthorized requests will fail).
 
-### Onchain Demonstration Program
+### How do private transfers work on PER?
 
-This simple onchain program lets users:
-1. **Create deposit** accounts for anyone
-2. **Deposit and withdraw** from their own deposit account
-3. **Delegate and undelegate** to a private ephemeral rollup
-4. **Make a transfer** between the user's deposit and any other deposit
-5. **Create the permission** account to prevent other users from accessing the delegated deposit account
+For operators:
+1. **Configure READ/WRITE permission settings** through on-chain Permission Program
+2. **Manage groups** for role-based access control
+3. **Apply permissions** to specific program instructions and on individual accounts
 
-Using a **Private Ephemeral Rollup** ensures that only permissioned users can view the balance of an account, but still enables anybody to transfer to any other existing deposit.
+For users:
+1. **Deposit** token amount into deposit account on Solana
+3. **Delegate** deposit account to private ephemeral rollup
+4. **Make a private transfer** to any address on private ephemeral rollup
+5. **Undelegate and withdraw** token amount into deposit account on Solana
+
+User Authentication Flow:
+1. User signs a challenge using their private key for authentication.
+2. Middleware verifies the signature and then generates a session key.
+3. PER authorize subsequent READ/WRITE requests based on validity of the session key.
+
+A **Private Ephemeral Rollup** ensures only permissioned users can view and debit an account’s balance, while still allowing anyone to credit it.
 
 A typical interaction will go as follows (illustrated below):
-1. Bob creates his and Alice's deposit accounts
-2. Bob deposits 100 USDC into his deposit account
-3. Bob delegates both his and Alice's deposits
-4. Bob makes the transfer from his deposit to Alice's
-5. Whenever she wants, Alice can undelegate and withdraw the funds to mainnet. Alice can also choose to stay in the Private Ephemeral Rollup and make more transfers.
+1. Bob deposits 100 USDC into his deposit account on Solana
+2. Bob conceals his deposit account by delegating to PER
+4. Bob makes private transfer to Alice on PER
+5. Alice can continue receiving and sending transfers privately on PER until she decides to undelegate and reveal her balance on Solana.
+
 
 ![How it works](./docs/how-it-works.png)
 
@@ -52,11 +61,11 @@ A typical interaction will go as follows (illustrated below):
 
 ## Payments provider use-case
 
-A crypto payments provider can have clients (e.g. merchants) be paid in the PER: users send the payments from mainnet to the provider in the PER, who can then settle payments to the merchant privately. Any subsequent payment can happen directly on the PER.
+A crypto payments provider can enable private payments for its clients (e.g. merchants). These transactions are executed on the blockchain and compatible to Solana. Users can make payments from Solana to the provider's PER, who can then settle payments to the merchant privately. Any subsequent payment can happen directly on the PER.
 
 Benefits:
 - No information is leaked regarding which merchant the user is buying from
-- Reduced fees for merchants as the transfers are all done using an Ephemeral Rollup
+- Reduced fees for merchants as the transfers are executed using an Ephemeral Rollup
 - Using on-ramps and abstracted wallets can make the transactions even more seamless and cheap for the user
 
 ## Running the demo
@@ -80,7 +89,7 @@ yarn dev
 
 The program is already deployed on devnet.
 
-1. Create a test
+1. Create a test token account
 
 ![Create token](./docs/create-token.png)
 
