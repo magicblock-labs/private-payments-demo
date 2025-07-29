@@ -49,6 +49,13 @@ User Authentication Flow:
 A **Private Ephemeral Rollup** ensures only permissioned users can view and debit an account’s balance, while still allowing anyone to credit it.
 
 A typical interaction will go as follows (illustrated below):
+
+For operators:
+1. Payment provider configure READ/WRITE permission settings for internal team, merchants (clients) and users.
+2. Payment provider creates internal team group and merchant-specific groups on PER.
+3. Payment provider enable READ permission on delegated accounts for internal team group and merchant-specific group, while users maintain READ/WRITE permission on their delegated accounts.
+
+For users:
 1. Bob deposits 100 USDC into his deposit account on Solana
 2. Bob conceals his deposit account by delegating to PER
 4. Bob makes private transfer to Alice on PER
