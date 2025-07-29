@@ -52,8 +52,8 @@ A typical interaction will go as follows (illustrated below):
 
 For operators:
 1. Payment provider configures on-chain READ/WRITE permission settings for internal team, merchants (clients) and users.
-2. Payment provider creates internal team group and merchant-specific groups on PER.
-3. Payment provider enable READ permission on delegated accounts for internal team group and merchant-specific group, while users maintain READ/WRITE permission on their delegated accounts.
+2. Payment provider creates on-chain roles on PER such as internal team group and merchant-specific groups.
+3. Payment provider enable READ permissions on delegated accounts for specific roles, while users retain READ/WRITE permission on their own delegated accounts.
 
 For users:
 1. Bob deposits 100 USDC into his deposit account on Solana
