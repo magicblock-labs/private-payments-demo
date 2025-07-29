@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { usePrivateRollupAuth } from '@/hooks/use-private-rollup-auth';
-import { useAnchorWallet } from '@solana/wallet-adapter-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { H2, Muted } from '@/components/ui/typography';
 import { Button } from '@/components/ui/button';
 import { CircleQuestionMark, Loader2Icon } from 'lucide-react';
 import SimpleTransfer from '@/components/SimpleTransfer';
 import { TokenListEntry } from '@/lib/types';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { PublicKey } from '@solana/web3.js';
+import { toast } from 'sonner';
 
 interface SimpleDepositProps {
   token?: TokenListEntry;
@@ -15,20 +18,35 @@ interface SimpleDepositProps {
 
 export default function SimpleDeposit({ token }: SimpleDepositProps) {
   const { authToken, isAuthenticating, getToken } = usePrivateRollupAuth();
-  const wallet = useAnchorWallet();
   const [selectedAddress, setSelectedAddress] = useState<string | undefined>();
+
+  const handleAddressChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      try {
+        new PublicKey(e.target.value);
+        setSelectedAddress?.(e.target.value);
+      } catch (error) {
+        toast.error('Invalid address');
+      }
+    },
+    [setSelectedAddress],
+  );
 
   return (
     <Card>
       <CardHeader>
         <H2>Transfer</H2>
       </CardHeader>
-      <CardContent className='flex flex-col gap-4 items-center max-w-5xl mx-auto'>
+      <CardContent className='flex flex-col gap-4 items-center w-3xl mx-auto'>
         <div className='flex flex-col gap-4'>
           <Muted>
             In this simplified version, you just select an address you want to send tokens to, the
             amount you want to send, and all the underlying details are handled seamlessly.
           </Muted>
+        </div>
+        <div className='flex flex-col gap-2'>
+          <Label htmlFor='address'>Address</Label>
+          <Input id='address' type='text' onChange={handleAddressChange} />
         </div>
         {!authToken && (
           <Button className='w-full' onClick={getToken} disabled={isAuthenticating}>

@@ -3,7 +3,6 @@
 import { PublicKey } from '@solana/web3.js';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { TokenListEntry } from '@/components/Deposit';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { H3, Large, Muted } from '@/components/ui/typography';
 import { Label } from '@/components/ui/label';
@@ -17,6 +16,7 @@ import useSimpleTransfer from '@/hooks/use-simple-transfer';
 import { useDeposit } from '@/hooks/use-deposit';
 import { toast } from 'sonner';
 import { Separator } from './ui/separator';
+import { TokenListEntry } from '@/lib/types';
 
 interface TransferProps {
   token?: TokenListEntry;
