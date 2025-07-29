@@ -3,9 +3,8 @@
 import { PublicKey } from '@solana/web3.js';
 import React, { useCallback, useState } from 'react';
 
-import { TokenListEntry } from './Deposit';
 import { useProgram } from '../hooks/use-program';
-import { Card, CardContent, CardFooter, CardHeader } from './ui/card';
+import { Card, CardContent, CardHeader } from './ui/card';
 import { H3 } from './ui/typography';
 import { Label } from './ui/label';
 import { Input } from './ui/input';
@@ -13,16 +12,32 @@ import { Button } from './ui/button';
 import { toast } from 'sonner';
 import { Separator } from './ui/separator';
 import { Loader2Icon } from 'lucide-react';
+import { TokenListEntry } from '@/lib/types';
 
 interface TransferProps {
   token?: TokenListEntry;
-  address?: string;
+  setSelectedAddress?: (address: string) => void;
+  isMainnet?: boolean;
 }
 
-const Transfer: React.FC<TransferProps> = ({ token, address }) => {
+const Transfer: React.FC<TransferProps> = ({ token, setSelectedAddress, isMainnet }) => {
   const { transfer } = useProgram();
   const [isTransferring, setIsTransferring] = useState(false);
   const [amount, setAmount] = useState(0);
+  const [address, setAddress] = useState<string | undefined>(undefined);
+
+  const handleAddressChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      try {
+        new PublicKey(e.target.value);
+        setAddress(e.target.value);
+        setSelectedAddress?.(e.target.value);
+      } catch (error) {
+        toast.error('Invalid address');
+      }
+    },
+    [setSelectedAddress],
+  );
 
   const handleTransfer = useCallback(
     async (delegated: boolean) => {
@@ -44,43 +59,40 @@ const Transfer: React.FC<TransferProps> = ({ token, address }) => {
         <H3>Transfer</H3>
         <Separator />
       </CardHeader>
-      {address ? (
-        <>
-          <CardContent>
-            <div className='flex flex-col gap-2 mb-4'>
-              <Label htmlFor='amount'>Amount</Label>
-              <Input
-                id='amount'
-                type='number'
-                defaultValue={amount}
-                onChange={e => setAmount(Number(e.target.value))}
-              />
-            </div>
-          </CardContent>
-          <CardFooter className='flex flex-col gap-2 w-full'>
-            <Button
-              className='w-full'
-              onClick={() => handleTransfer(false)}
-              disabled={isTransferring}
-            >
-              Transfer
-              {isTransferring && <Loader2Icon className='animate-spin' />}
-            </Button>
-            <Button
-              className='w-full'
-              onClick={() => handleTransfer(true)}
-              disabled={isTransferring}
-            >
-              Delegated transfer
-              {isTransferring && <Loader2Icon className='animate-spin' />}
-            </Button>
-          </CardFooter>
-        </>
-      ) : (
-        <CardContent>
-          <H3>No address selected</H3>
-        </CardContent>
-      )}
+      <CardContent className='flex flex-col gap-4'>
+        <div className='flex flex-col gap-2'>
+          <Label htmlFor='address'>Address</Label>
+          <Input id='address' type='text' onChange={handleAddressChange} />
+        </div>
+        <div className='flex flex-col gap-2'>
+          <Label htmlFor='amount'>Amount</Label>
+          <Input
+            id='amount'
+            type='number'
+            defaultValue={amount}
+            onChange={e => setAmount(Number(e.target.value))}
+          />
+        </div>
+        {isMainnet ? (
+          <Button
+            className='w-full'
+            onClick={() => handleTransfer(false)}
+            disabled={isTransferring || !address}
+          >
+            Transfer
+            {isTransferring && <Loader2Icon className='animate-spin' />}
+          </Button>
+        ) : (
+          <Button
+            className='w-full'
+            onClick={() => handleTransfer(true)}
+            disabled={isTransferring || !address}
+          >
+            Delegated transfer
+            {isTransferring && <Loader2Icon className='animate-spin' />}
+          </Button>
+        )}
+      </CardContent>
     </Card>
   );
 };

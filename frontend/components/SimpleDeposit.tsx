@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 
-import AddressBook from '@/components/AddressBook';
-import { useAddressBook } from '@/hooks/use-address-book';
 import { usePrivateRollupAuth } from '@/hooks/use-private-rollup-auth';
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -9,12 +7,7 @@ import { H2, Muted } from '@/components/ui/typography';
 import { Button } from '@/components/ui/button';
 import { CircleQuestionMark, Loader2Icon } from 'lucide-react';
 import SimpleTransfer from '@/components/SimpleTransfer';
-import { Separator } from './ui/separator';
-
-export interface TokenListEntry {
-  mint: string;
-  creator: string;
-}
+import { TokenListEntry } from '@/lib/types';
 
 interface SimpleDepositProps {
   token?: TokenListEntry;
@@ -23,8 +16,7 @@ interface SimpleDepositProps {
 export default function SimpleDeposit({ token }: SimpleDepositProps) {
   const { authToken, isAuthenticating, getToken } = usePrivateRollupAuth();
   const wallet = useAnchorWallet();
-  const { addressBook } = useAddressBook(wallet?.publicKey);
-  const [selectedAddress, setSelectedAddress] = useState<string | undefined>(addressBook[0]);
+  const [selectedAddress, setSelectedAddress] = useState<string | undefined>();
 
   return (
     <Card>
@@ -45,7 +37,6 @@ export default function SimpleDeposit({ token }: SimpleDepositProps) {
           </Button>
         )}
         <div className='flex gap-4'>
-          <AddressBook setSelectedAddress={setSelectedAddress} />
           {selectedAddress ? (
             <SimpleTransfer token={token} address={selectedAddress} />
           ) : (

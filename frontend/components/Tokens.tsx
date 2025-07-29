@@ -15,11 +15,10 @@ import { Keypair, SystemProgram, Transaction } from '@solana/web3.js';
 import { PublicKey } from '@solana/web3.js';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { TokenListEntry } from '@/components/Deposit';
 import { useSubscription } from '@/hooks/use-subscription';
 import { shortKey } from '@/lib/utils';
-import { Card, CardContent, CardFooter, CardHeader } from './ui/card';
-import { H2, H3, Muted } from '@/components/ui/typography';
+import { Card, CardContent, CardHeader } from './ui/card';
+import { H2, Muted } from '@/components/ui/typography';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -34,6 +33,7 @@ import {
 } from '@/components/ui/select';
 import { Loader2Icon } from 'lucide-react';
 import { toast } from 'sonner';
+import { TokenListEntry } from '@/lib/types';
 
 interface TokenProps {
   setSelected: (entry: TokenListEntry) => void;
@@ -49,7 +49,6 @@ const Tokens: React.FC<TokenProps> = ({ setSelected }) => {
   const [isCreating, setIsCreating] = useState(false);
   const userTokenAccount = useMemo(() => {
     if (!selectedToken || !wallet?.publicKey) return;
-    console.log('selectedToken', selectedToken.mint);
     return getAssociatedTokenAddressSync(
       new PublicKey(selectedToken?.mint),
       wallet.publicKey,
@@ -186,7 +185,10 @@ const Tokens: React.FC<TokenProps> = ({ setSelected }) => {
   const TokenSelect = () => {
     if (tokenList.length > 0) {
       return (
-        <div className='token-select'>
+        <div className='flex flex-col gap-2'>
+          <Label>
+            Select a token {balance !== null && <Muted>(Current balance: {balance})</Muted>}
+          </Label>
           <Select
             defaultValue={selectedToken?.mint}
             onValueChange={value => {
@@ -211,7 +213,6 @@ const Tokens: React.FC<TokenProps> = ({ setSelected }) => {
               </SelectGroup>
             </SelectContent>
           </Select>
-          {balance !== null && <Muted>Current balance: {balance}</Muted>}
         </div>
       );
     } else {
@@ -224,15 +225,11 @@ const Tokens: React.FC<TokenProps> = ({ setSelected }) => {
       <CardHeader>
         <H2>Tokens</H2>
       </CardHeader>
-      <CardContent className='flex flex-col gap-4'>
-        <div className='flex flex-col'>
-          <Muted>Create a new token to use in the app.</Muted>
-        </div>
-        <TokenSelect />
-      </CardContent>
-      <CardFooter>
-        <div className='flex flex-col gap-2 w-full'>
-          <H3>Create a new token</H3>
+      <CardContent className='flex flex-col gap-4 w-3xl mx-auto my-[-10px]'>
+        <div className='flex flex-row w-full items-end justify-between'>
+          <div className='flex flex-col'>
+            <TokenSelect />
+          </div>
           <div className='flex flex-col gap-2'>
             <Label htmlFor='amount'>Supply</Label>
             <Input
@@ -242,12 +239,12 @@ const Tokens: React.FC<TokenProps> = ({ setSelected }) => {
               onChange={e => setAmount(Number(e.target.value))}
             />
           </div>
-          <Button className='w-full' onClick={createToken} disabled={isCreating}>
+          <Button onClick={createToken} disabled={isCreating}>
             Create Token
             {isCreating && <Loader2Icon className='animate-spin' />}
           </Button>
         </div>
-      </CardFooter>
+      </CardContent>
     </Card>
   );
 };

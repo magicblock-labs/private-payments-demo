@@ -15,6 +15,8 @@ export function useDeposit(user?: PublicKey | string, tokenMint?: PublicKey | st
   const { connection } = useConnection();
   const { ephemeralConnection } = useEphemeralConnection();
   const [deposit, setDeposit] = useState<DepositAccount | null>(null);
+  const [ephemeralDeposit, setEphemeralDeposit] = useState<DepositAccount | null>(null);
+  const [mainnetDeposit, setMainnetDeposit] = useState<DepositAccount | null>(null);
   const [isDelegated, setIsDelegated] = useState(false);
 
   const depositPda = useMemo(() => {
@@ -40,20 +42,25 @@ export function useDeposit(user?: PublicKey | string, tokenMint?: PublicKey | st
   const getDeposit = useCallback(async () => {
     if (!tokenMint || !user || !program || !depositPda) return;
     setDeposit(null);
+    setEphemeralDeposit(null);
+    setMainnetDeposit(null);
 
     try {
       let depositAccount = await connection.getAccountInfo(depositPda);
 
       if (depositAccount) {
+        setMainnetDeposit(program.coder.accounts.decode('deposit', depositAccount?.data));
         if (depositAccount.owner.equals(new PublicKey(DELEGATION_PROGRAM_ID))) {
           setIsDelegated(true);
 
           depositAccount = (await ephemeralConnection?.getAccountInfo(depositPda)) ?? null;
           if (depositAccount) {
             const deposit = program.coder.accounts.decode('deposit', depositAccount?.data);
+            setEphemeralDeposit(deposit);
             setDeposit(deposit);
           } else {
             setDeposit(null);
+            setEphemeralDeposit(null);
           }
         } else {
           setIsDelegated(false);
@@ -61,8 +68,6 @@ export function useDeposit(user?: PublicKey | string, tokenMint?: PublicKey | st
           const deposit = program.coder.accounts.decode('deposit', depositAccount?.data);
           setDeposit(deposit);
         }
-      } else {
-        setDeposit(null);
       }
     } catch (error) {
       console.log('getDeposit error', error);
@@ -78,6 +83,7 @@ export function useDeposit(user?: PublicKey | string, tokenMint?: PublicKey | st
         const decoded = program?.coder.accounts.decode('deposit', notification.data);
         if (decoded) {
           setDeposit(decoded);
+          setMainnetDeposit(decoded);
         }
       }
     },
@@ -89,6 +95,7 @@ export function useDeposit(user?: PublicKey | string, tokenMint?: PublicKey | st
       const decoded = program?.coder.accounts.decode('deposit', notification.data);
       if (decoded) {
         setDeposit(decoded);
+        setEphemeralDeposit(decoded);
       }
     },
     [program],
@@ -104,6 +111,8 @@ export function useDeposit(user?: PublicKey | string, tokenMint?: PublicKey | st
 
   return {
     deposit,
+    mainnetDeposit,
+    ephemeralDeposit,
     depositPda,
     permissionPda,
     isDelegated,
