@@ -51,7 +51,7 @@ A **Private Ephemeral Rollup** ensures only permissioned users can view and debi
 A typical interaction will go as follows (illustrated below):
 
 For operators:
-1. Payment provider configure READ/WRITE permission settings for internal team, merchants (clients) and users.
+1. Payment provider configures on-chain READ/WRITE permission settings for internal team, merchants (clients) and users.
 2. Payment provider creates internal team group and merchant-specific groups on PER.
 3. Payment provider enable READ permission on delegated accounts for internal team group and merchant-specific group, while users maintain READ/WRITE permission on their delegated accounts.
 
