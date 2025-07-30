@@ -45,7 +45,10 @@ const Tokens: React.FC<TokenProps> = ({ setSelected }) => {
   const [amount, setAmount] = useState(1000);
   const [balance, setBalance] = useState<number | null>(null);
   const [tokenList, setTokenList] = useLocalStorage<TokenListEntry[]>('token-list', []);
-  const [selectedToken, setSelectedToken] = useState<TokenListEntry | undefined>();
+  const [selectedToken, setSelectedToken] = useLocalStorage<TokenListEntry | undefined>(
+    'selected-token',
+    tokenList[0],
+  );
   const [isCreating, setIsCreating] = useState(false);
   const userTokenAccount = useMemo(() => {
     if (!selectedToken || !wallet?.publicKey) return;
@@ -135,11 +138,15 @@ const Tokens: React.FC<TokenProps> = ({ setSelected }) => {
           creator: wallet.publicKey.toString(),
         },
       ]);
+      setSelectedToken({
+        mint: mintKp.publicKey.toString(),
+        creator: wallet.publicKey.toString(),
+      });
       toast.success(`Token ${mintKp.publicKey.toString()} created successfully`);
     } finally {
       setIsCreating(false);
     }
-  }, [amount, wallet, connection, tokenList, setTokenList]);
+  }, [amount, wallet, connection, tokenList, setTokenList, setSelectedToken]);
 
   useEffect(() => {
     const getBalance = async () => {
@@ -164,11 +171,11 @@ const Tokens: React.FC<TokenProps> = ({ setSelected }) => {
 
   // Set default selected token
   useEffect(() => {
-    if (tokenList.length > 0) {
+    if (tokenList.length > 0 && !selectedToken) {
       setSelected(tokenList[0]);
       setSelectedToken(tokenList[0]);
     }
-  }, [tokenList, setSelected]);
+  }, [tokenList, setSelected, selectedToken]);
 
   useSubscription(connection, userTokenAccount, notification => {
     console.log('Received notification', notification);
