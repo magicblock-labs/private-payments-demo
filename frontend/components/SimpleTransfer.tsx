@@ -17,19 +17,33 @@ import { useDeposit } from '@/hooks/use-deposit';
 import { toast } from 'sonner';
 import { Separator } from './ui/separator';
 import { TokenListEntry } from '@/lib/types';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 
 interface TransferProps {
   token?: TokenListEntry;
+  selectedAddress?: string;
+  setSelectedAddress: (address: string | undefined) => void;
 }
 
-export default function SimpleTransfer({ token }: TransferProps) {
+export default function SimpleTransfer({
+  token,
+  selectedAddress,
+  setSelectedAddress,
+}: TransferProps) {
   const { transfer } = useSimpleTransfer();
   const { connection } = useConnection();
   const wallet = useAnchorWallet();
   const [isTransferring, setIsTransferring] = useState(false);
   const [amount, setAmount] = useState(0);
   const [balance, setBalance] = useState<number | undefined>();
-  const { deposit, isDelegated } = useDeposit(wallet?.publicKey, token?.mint);
+  const { mainnetDeposit, ephemeralDeposit, isDelegated } = useDeposit(
+    wallet?.publicKey,
+    token?.mint,
+  );
+  const deposit = useMemo(() => {
+    if (isDelegated) return ephemeralDeposit;
+    return mainnetDeposit;
+  }, [isDelegated, ephemeralDeposit, mainnetDeposit]);
   const userTokenAccount = useMemo(() => {
     if (!token || !wallet?.publicKey) return;
     return getAssociatedTokenAddressSync(
@@ -39,14 +53,15 @@ export default function SimpleTransfer({ token }: TransferProps) {
       TOKEN_PROGRAM_ID,
     );
   }, [token, wallet]);
-  const [selectedAddress, setSelectedAddress] = useState<string | undefined>();
 
   const handleAddressChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
+      setSelectedAddress?.(undefined);
       try {
         new PublicKey(e.target.value);
         setSelectedAddress?.(e.target.value);
       } catch (error) {
+        setSelectedAddress?.(undefined);
         toast.error('Invalid address');
       }
     },
@@ -98,11 +113,21 @@ export default function SimpleTransfer({ token }: TransferProps) {
       </CardHeader>
       <CardContent className='flex flex-col gap-4'>
         <div>
-          <Large>Balance: {balance ?? '???'}</Large>
-          <Muted>
-            {isDelegated ? 'Delegated balance: ' : 'Deposit balance: '}{' '}
-            {deposit ? deposit.amount.toNumber() / Math.pow(10, 6) : '???'}
-          </Muted>
+          <Large>Balances</Large>
+          <Accordion type='multiple' className='w-full' defaultValue={['item-1', 'item-2']}>
+            <AccordionItem value='item-1'>
+              <AccordionTrigger>Mainnet SPL Balance</AccordionTrigger>
+              <AccordionContent className='flex flex-col gap-4 text-center text-2xl font-semibold'>
+                {balance ?? 0}
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value='item-2'>
+              <AccordionTrigger>Deposit balance</AccordionTrigger>
+              <AccordionContent className='flex flex-col gap-4 text-center text-2xl font-semibold'>
+                {deposit ? Number(deposit?.amount.toNumber()) / Math.pow(10, 6) : 'Not created'}
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
         <div className='flex flex-col gap-2'>
           <Label htmlFor='address'>Address</Label>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 import { usePrivateRollupAuth } from '@/hooks/use-private-rollup-auth';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -7,10 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Loader2Icon } from 'lucide-react';
 import SimpleTransfer from '@/components/SimpleTransfer';
 import { useTokens } from '@/hooks/use-tokens';
+import SimpleRecipient from './SimpleRecipient';
 
 export default function SimpleDeposit() {
   const { authToken, isAuthenticating, getToken } = usePrivateRollupAuth();
   const { selectedToken: token } = useTokens();
+  const [selectedAddress, setSelectedAddress] = useState<string | undefined>();
 
   return (
     <Card>
@@ -31,7 +33,12 @@ export default function SimpleDeposit() {
           </Button>
         )}
         <div className='flex gap-4'>
-          <SimpleTransfer token={token} />
+          <SimpleTransfer
+            token={token}
+            selectedAddress={selectedAddress}
+            setSelectedAddress={setSelectedAddress}
+          />
+          {selectedAddress && <SimpleRecipient user={selectedAddress} token={token} />}
         </div>
       </CardContent>
     </Card>

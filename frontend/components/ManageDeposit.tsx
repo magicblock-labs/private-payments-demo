@@ -48,8 +48,7 @@ const ManageDeposit: React.FC<DepositProps> = ({ user, token, isMainnet }) => {
   }, [token, depositUser, initializeDeposit]);
 
   const title = useMemo(() => {
-    if (accessDenied) return 'Access denied';
-    if (!deposit) return 'Create deposit';
+    if (!deposit && !accessDenied) return 'Create deposit';
     if (isWalletOwner) return 'My deposit';
     return 'Recipient';
   }, [accessDenied, deposit, isWalletOwner]);

@@ -5,7 +5,7 @@ import { useConnection } from '@solana/wallet-adapter-react';
 import { useEphemeralConnection } from './use-ephemeral-connection';
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { GROUP_SEED } from '@/lib/constants';
+import { EPHEMERAL_RPC_URL, GROUP_SEED } from '@/lib/constants';
 import { PERMISSION_PROGRAM_ID } from '@/lib/constants';
 import { PERMISSION_SEED } from '@/lib/constants';
 import { BN, Program } from '@coral-xyz/anchor';
@@ -148,7 +148,6 @@ export default function useSimpleTransfer() {
       const recipientDepositPda = getDepositPda(recipientPk, tokenMintPk)!;
       const recipientDepositAccount = await connection.getAccountInfo(recipientDepositPda);
       if (!recipientDepositAccount) {
-        console.log('Initializing recipient deposit');
         mainnetTx = await initializeDeposit({
           program,
           user: recipientPk,
@@ -158,9 +157,7 @@ export default function useSimpleTransfer() {
         });
       }
 
-      console.log('amountToDeposit', amountToDeposit.toString());
       if (amountToDeposit.gt(new BN(0))) {
-        console.log('Increasing balance:', amountToDeposit.toString());
         let depositIx = await program.methods
           .modifyBalance({ amount: amountToDeposit, increase: true })
           .accountsPartial({
@@ -188,12 +185,10 @@ export default function useSimpleTransfer() {
       }
 
       // Make sure both deposits are delegated
-      console.log('senderDepositAccount', senderDepositAccount);
       if (
         !senderDepositAccount?.owner.equals(new PublicKey(DELEGATION_PROGRAM_ID)) ||
         preliminaryTx
       ) {
-        console.log('Delegating sender deposit');
         let delegateIx = await program.methods
           .delegate(wallet.publicKey, tokenMintPk)
           .accountsPartial({
@@ -206,7 +201,6 @@ export default function useSimpleTransfer() {
       }
 
       if (!recipientDepositAccount?.owner.equals(new PublicKey(DELEGATION_PROGRAM_ID))) {
-        console.log('Delegating recipient deposit');
         let delegateIx = await program.methods
           .delegate(recipientPk, tokenMintPk)
           .accountsPartial({
@@ -250,6 +244,18 @@ export default function useSimpleTransfer() {
           signedPreliminaryTx.serialize(),
         );
         await ephemeralConnection.confirmTransaction(signature);
+
+        // Manually check permissions
+        // Wait for the permission to be caught by the RPC
+        await new Promise(resolve => setTimeout(resolve, 4000));
+        console.log(
+          await fetch(`${EPHEMERAL_RPC_URL}/permission?pubkey=${senderDepositPda.toString()}`),
+        );
+        console.log(
+          await fetch(`${EPHEMERAL_RPC_URL}/permission?pubkey=${recipientDepositPda.toString()}`),
+        );
+
+        // Wait for the delegation
         await GetCommitmentSignature(signature, ephemeralConnection);
 
         // Timeout to be sure undelegation is complete
@@ -270,6 +276,17 @@ export default function useSimpleTransfer() {
 
         let signature = await connection.sendRawTransaction(signedMainnetTx.serialize());
         await connection.confirmTransaction(signature);
+
+        // Manually check permissions
+        // Wait for the permission to be caught by the RPC
+        await new Promise(resolve => setTimeout(resolve, 4000));
+        console.log(
+          await fetch(`${EPHEMERAL_RPC_URL}/permission?pubkey=${senderDepositPda.toString()}`),
+        );
+        console.log(
+          await fetch(`${EPHEMERAL_RPC_URL}/permission?pubkey=${recipientDepositPda.toString()}`),
+        );
+
         signature = await ephemeralConnection.sendRawTransaction(signedEphemeralTx.serialize());
         await ephemeralConnection.confirmTransaction(signature);
       } else if (!preliminaryTx && !mainnetTx) {
