@@ -169,7 +169,6 @@ const Tokens: React.FC = () => {
   }, [tokenList, setToken, selectedToken]);
 
   useSubscription(connection, userTokenAccount, notification => {
-    console.log('Received notification', notification);
     const account = AccountLayout.decode(Uint8Array.from(notification.data));
     setBalance(Number(account.amount) / Math.pow(10, 6));
   });

@@ -72,7 +72,7 @@ async function initializeDeposit({
 export default function useSimpleTransfer() {
   const { connection } = useConnection();
   const { ephemeralConnection } = useEphemeralConnection();
-  const { program, ephemeralProgram, getDepositPda } = useProgram();
+  const { program, ephemeralProgram, getDepositPda, getVaultPda } = useProgram();
   const wallet = useAnchorWallet();
 
   const transfer = useCallback(
@@ -90,13 +90,11 @@ export default function useSimpleTransfer() {
       const recipientPk = new PublicKey(recipient);
       const tokenMintPk = new PublicKey(tokenMint);
 
-      console.log(
-        `transfer from ${wallet.publicKey} to ${recipientPk} for ${amount} ${tokenMintPk}`,
-      );
-
       let preliminaryTx: Transaction | undefined;
       let mainnetTx: Transaction | undefined;
       const ephemeralTx = new Transaction();
+
+      const vaultPda = getVaultPda(tokenMintPk)!;
 
       // Check if the sender has a deposit, create one if not
       const senderDepositPda = getDepositPda(wallet.publicKey, tokenMintPk)!;
@@ -115,7 +113,6 @@ export default function useSimpleTransfer() {
       }
 
       if (!senderDepositAccount) {
-        console.log('Initializing sender deposit');
         mainnetTx = await initializeDeposit({
           program,
           user: wallet.publicKey,
@@ -126,10 +123,7 @@ export default function useSimpleTransfer() {
       } else {
         // If the sender has a deposit, we need to undelegate to transfer more tokens to it
         if (senderDepositAccount.owner.equals(new PublicKey(DELEGATION_PROGRAM_ID))) {
-          if (amountToDeposit.lte(new BN(0))) {
-            console.log('Sender deposit has enough tokens');
-          } else {
-            console.log('Undelegate sender deposit');
+          if (amountToDeposit.gt(new BN(0))) {
             let undelegateIx = await program.methods
               .undelegate()
               .accountsPartial({
@@ -163,6 +157,7 @@ export default function useSimpleTransfer() {
           .accountsPartial({
             payer: program.provider.publicKey,
             user: wallet.publicKey,
+            vault: vaultPda,
             deposit: senderDepositPda,
             userTokenAccount: getAssociatedTokenAddressSync(
               tokenMintPk,
@@ -170,9 +165,9 @@ export default function useSimpleTransfer() {
               true,
               TOKEN_PROGRAM_ID,
             ),
-            depositTokenAccount: getAssociatedTokenAddressSync(
+            vaultTokenAccount: getAssociatedTokenAddressSync(
               tokenMintPk,
-              senderDepositPda,
+              vaultPda,
               true,
               TOKEN_PROGRAM_ID,
             ),
@@ -248,12 +243,8 @@ export default function useSimpleTransfer() {
         // Manually check permissions
         // Wait for the permission to be caught by the RPC
         await new Promise(resolve => setTimeout(resolve, 4000));
-        console.log(
-          await fetch(`${EPHEMERAL_RPC_URL}/permission?pubkey=${senderDepositPda.toString()}`),
-        );
-        console.log(
-          await fetch(`${EPHEMERAL_RPC_URL}/permission?pubkey=${recipientDepositPda.toString()}`),
-        );
+        await fetch(`${EPHEMERAL_RPC_URL}/permission?pubkey=${senderDepositPda.toString()}`);
+        await fetch(`${EPHEMERAL_RPC_URL}/permission?pubkey=${recipientDepositPda.toString()}`);
 
         // Wait for the delegation
         await GetCommitmentSignature(signature, ephemeralConnection);
@@ -280,12 +271,8 @@ export default function useSimpleTransfer() {
         // Manually check permissions
         // Wait for the permission to be caught by the RPC
         await new Promise(resolve => setTimeout(resolve, 4000));
-        console.log(
-          await fetch(`${EPHEMERAL_RPC_URL}/permission?pubkey=${senderDepositPda.toString()}`),
-        );
-        console.log(
-          await fetch(`${EPHEMERAL_RPC_URL}/permission?pubkey=${recipientDepositPda.toString()}`),
-        );
+        await fetch(`${EPHEMERAL_RPC_URL}/permission?pubkey=${senderDepositPda.toString()}`);
+        await fetch(`${EPHEMERAL_RPC_URL}/permission?pubkey=${recipientDepositPda.toString()}`);
 
         signature = await ephemeralConnection.sendRawTransaction(signedEphemeralTx.serialize());
         await ephemeralConnection.confirmTransaction(signature);
@@ -298,7 +285,118 @@ export default function useSimpleTransfer() {
     [wallet, program, ephemeralProgram, connection, ephemeralConnection, getDepositPda],
   );
 
+  const withdraw = useCallback(
+    async (tokenMint: string, amount: number) => {
+      if (
+        !wallet?.publicKey ||
+        !program ||
+        !ephemeralProgram ||
+        !connection ||
+        !ephemeralConnection
+      )
+        return;
+
+      let tokenMintPk = new PublicKey(tokenMint);
+      const vaultPda = getVaultPda(tokenMintPk)!;
+      let tokenAmount = new BN(Math.pow(10, 6) * amount);
+
+      let withdrawerDepositPda = getDepositPda(wallet.publicKey, tokenMintPk)!;
+      let withdrawerDepositAccount = await connection.getAccountInfo(withdrawerDepositPda);
+      let ephemeralWithdrawerDepositAccount =
+        await ephemeralConnection.getAccountInfo(withdrawerDepositPda);
+      let ephemeralDepositAmount = ephemeralWithdrawerDepositAccount
+        ? (
+            (await ephemeralProgram.coder.accounts.decode(
+              'deposit',
+              ephemeralWithdrawerDepositAccount?.data,
+            )) as DepositAccount
+          ).amount
+        : new BN(0);
+
+      if (ephemeralDepositAmount.lt(tokenAmount)) {
+        throw new Error('Not enough tokens to withdraw');
+      }
+
+      let undelegateTx: Transaction | undefined;
+      if (withdrawerDepositAccount?.owner.equals(new PublicKey(DELEGATION_PROGRAM_ID))) {
+        let undelegateIx = await ephemeralProgram.methods
+          .undelegate()
+          .accountsPartial({
+            payer: wallet.publicKey,
+            user: wallet.publicKey,
+            deposit: withdrawerDepositPda,
+          })
+          .instruction();
+
+        undelegateTx = new Transaction();
+        undelegateTx.add(undelegateIx);
+      }
+
+      let withdrawIx = await program.methods
+        .modifyBalance({ amount: tokenAmount, increase: false })
+        .accountsPartial({
+          payer: program.provider.publicKey,
+          user: wallet.publicKey,
+          vault: vaultPda,
+          deposit: withdrawerDepositPda,
+          userTokenAccount: getAssociatedTokenAddressSync(
+            tokenMintPk,
+            wallet.publicKey,
+            true,
+            TOKEN_PROGRAM_ID,
+          ),
+          vaultTokenAccount: getAssociatedTokenAddressSync(
+            tokenMintPk,
+            vaultPda,
+            true,
+            TOKEN_PROGRAM_ID,
+          ),
+          tokenMint,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        })
+        .instruction();
+      let withdrawTx = new Transaction();
+      withdrawTx.add(withdrawIx);
+
+      let blockhash = (await connection.getLatestBlockhash()).blockhash;
+      let ephemeralBlockhash = (await ephemeralConnection.getLatestBlockhash()).blockhash;
+
+      withdrawTx.recentBlockhash = blockhash;
+      withdrawTx.feePayer = program.provider.publicKey;
+
+      if (undelegateTx) {
+        undelegateTx.recentBlockhash = ephemeralBlockhash;
+        undelegateTx.feePayer = program.provider.publicKey;
+
+        let [signedUndelegateTx, signedWithdrawTx] = await wallet.signAllTransactions([
+          undelegateTx,
+          withdrawTx,
+        ]);
+
+        let signature = await ephemeralConnection.sendRawTransaction(
+          signedUndelegateTx.serialize(),
+        );
+        await ephemeralConnection.confirmTransaction(signature);
+
+        // Wait for the delegation
+        await GetCommitmentSignature(signature, ephemeralConnection);
+
+        // Timeout to be sure undelegation is complete
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        signature = await connection.sendRawTransaction(signedWithdrawTx.serialize());
+        await connection.confirmTransaction(signature);
+      } else {
+        let [signedWithdrawTx] = await wallet.signAllTransactions([withdrawTx]);
+        let signature = await connection.sendRawTransaction(signedWithdrawTx.serialize());
+        await connection.confirmTransaction(signature);
+      }
+    },
+    [wallet, program, ephemeralProgram, connection, ephemeralConnection, getDepositPda],
+  );
+
   return {
     transfer,
+    withdraw,
   };
 }

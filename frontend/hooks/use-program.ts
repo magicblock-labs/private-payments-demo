@@ -5,7 +5,7 @@ import { Keypair } from '@solana/web3.js';
 import { PublicKey } from '@solana/web3.js';
 import { useCallback, useMemo } from 'react';
 
-import { GROUP_SEED, PERMISSION_PROGRAM_ID } from '../lib/constants';
+import { GROUP_SEED, PERMISSION_PROGRAM_ID, VAULT_PDA_SEED } from '../lib/constants';
 import { DEPOSIT_PDA_SEED, PERMISSION_SEED } from '../lib/constants';
 import { PrivatePayments } from '../program/private_payments';
 import PrivatePaymentsIdl from '../program/private_payments.json';
@@ -29,6 +29,17 @@ export function useProgram() {
       if (!program?.provider.publicKey) return;
       return PublicKey.findProgramAddressSync(
         [Buffer.from(DEPOSIT_PDA_SEED), user.toBuffer(), tokenMint.toBuffer()],
+        program.programId,
+      )[0];
+    },
+    [program],
+  );
+
+  const getVaultPda = useCallback(
+    (tokenMint: PublicKey) => {
+      if (!program?.provider.publicKey) return;
+      return PublicKey.findProgramAddressSync(
+        [Buffer.from(VAULT_PDA_SEED), tokenMint.toBuffer()],
         program.programId,
       )[0];
     },
@@ -85,6 +96,7 @@ export function useProgram() {
       if (!program?.provider.publicKey) return;
 
       const deposit = getDepositPda(user, tokenMint)!;
+      const vault = getVaultPda(tokenMint)!;
 
       await program.methods
         .modifyBalance({
@@ -94,6 +106,7 @@ export function useProgram() {
         .accountsPartial({
           payer: program.provider.publicKey,
           user,
+          vault,
           deposit: deposit,
           userTokenAccount: getAssociatedTokenAddressSync(
             tokenMint,
@@ -101,9 +114,9 @@ export function useProgram() {
             true,
             TOKEN_PROGRAM_ID,
           ),
-          depositTokenAccount: getAssociatedTokenAddressSync(
+          vaultTokenAccount: getAssociatedTokenAddressSync(
             tokenMint,
-            deposit,
+            vault,
             true,
             TOKEN_PROGRAM_ID,
           ),
@@ -197,6 +210,7 @@ export function useProgram() {
     program,
     ephemeralProgram,
     getDepositPda,
+    getVaultPda,
     initializeDeposit,
     deposit,
     withdraw,

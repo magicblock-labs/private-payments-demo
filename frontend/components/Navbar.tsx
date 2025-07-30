@@ -7,12 +7,11 @@ import {
   navigationMenuTriggerStyle,
 } from './ui/navigation-menu';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
 export default function Navbar() {
   const pathname = usePathname();
-  console.log(pathname);
   return (
     <NavigationMenu>
       <NavigationMenuList>

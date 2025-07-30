@@ -11,6 +11,7 @@ use magicblock_permission_client::instructions::{
 declare_id!("EnhkomtzKms55jXi3ijn9XsMKYpMT4BJjmbuDQmPo3YS");
 
 pub const DEPOSIT_PDA_SEED: &[u8] = b"deposit";
+pub const VAULT_PDA_SEED: &[u8] = b"vault";
 
 #[ephemeral]
 #[program]
@@ -47,7 +48,7 @@ pub mod private_payments {
                     TransferChecked {
                         from: ctx.accounts.user_token_account.to_account_info(),
                         mint: ctx.accounts.token_mint.to_account_info(),
-                        to: ctx.accounts.deposit_token_account.to_account_info(),
+                        to: ctx.accounts.vault_token_account.to_account_info(),
                         authority: ctx.accounts.user.to_account_info(),
                     },
                 ),
@@ -57,20 +58,19 @@ pub mod private_payments {
             deposit.amount += args.amount;
         } else {
             let seeds = [
-                DEPOSIT_PDA_SEED,
-                &ctx.accounts.user.key().to_bytes(),
+                VAULT_PDA_SEED,
                 &ctx.accounts.token_mint.key().to_bytes(),
-                &[ctx.bumps.deposit]
+                &[ctx.bumps.vault]
             ];
             let signer_seeds = &[&seeds[..]];
             transfer_checked(
                 CpiContext::new_with_signer(
                     ctx.accounts.token_program.to_account_info(),
                     TransferChecked {
-                        from: ctx.accounts.deposit_token_account.to_account_info(),
+                        from: ctx.accounts.vault_token_account.to_account_info(),
                         mint: ctx.accounts.token_mint.to_account_info(),
                         to: ctx.accounts.user_token_account.to_account_info(),
-                        authority: deposit.to_account_info(),
+                        authority: ctx.accounts.vault.to_account_info(),
                     },
                     signer_seeds,
                 ),
@@ -192,6 +192,14 @@ pub struct ModifyDeposit<'info> {
     pub payer: Signer<'info>,
     pub user: Signer<'info>,
     #[account(
+        init_if_needed,
+        payer = payer,
+        space = 8 + Vault::INIT_SPACE,
+        seeds = [VAULT_PDA_SEED, deposit.token_mint.as_ref()],
+        bump,
+    )]
+    pub vault: Account<'info, Vault>,
+    #[account(
         mut,
         seeds = [DEPOSIT_PDA_SEED, deposit.user.as_ref(), deposit.token_mint.as_ref()],
         bump,
@@ -210,9 +218,9 @@ pub struct ModifyDeposit<'info> {
         init_if_needed,
         payer = payer,
         associated_token::mint = token_mint,
-        associated_token::authority = deposit,
+        associated_token::authority = vault,
     )]
-    pub deposit_token_account: Account<'info, TokenAccount>,
+    pub vault_token_account: Account<'info, TokenAccount>,
     pub token_mint: Account<'info, Mint>,
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
@@ -311,3 +319,7 @@ pub struct Deposit {
     pub token_mint: Pubkey,
     pub amount: u64,
 }
+
+#[account]
+#[derive(InitSpace)]
+pub struct Vault;

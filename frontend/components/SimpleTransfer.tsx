@@ -30,11 +30,13 @@ export default function SimpleTransfer({
   selectedAddress,
   setSelectedAddress,
 }: TransferProps) {
-  const { transfer } = useSimpleTransfer();
+  const { transfer, withdraw } = useSimpleTransfer();
   const { connection } = useConnection();
   const wallet = useAnchorWallet();
   const [isTransferring, setIsTransferring] = useState(false);
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [amount, setAmount] = useState(0);
+  const [withdrawAmount, setWithdrawAmount] = useState(0);
   const [balance, setBalance] = useState<number | undefined>();
   const { mainnetDeposit, ephemeralDeposit, isDelegated } = useDeposit(
     wallet?.publicKey,
@@ -78,6 +80,17 @@ export default function SimpleTransfer({
       setIsTransferring(false);
     }
   }, [token, transfer, amount, selectedAddress]);
+
+  const handleWithdraw = useCallback(async () => {
+    if (!token) return;
+    setIsWithdrawing(true);
+    try {
+      await withdraw(token.mint, withdrawAmount);
+      toast.success(`Withdrawn ${withdrawAmount} tokens`);
+    } finally {
+      setIsWithdrawing(false);
+    }
+  }, [token, withdraw, withdrawAmount]);
 
   useEffect(() => {
     const getBalance = async () => {
@@ -124,35 +137,62 @@ export default function SimpleTransfer({
             <AccordionItem value='item-2'>
               <AccordionTrigger>Deposit balance</AccordionTrigger>
               <AccordionContent className='flex flex-col gap-4 text-center text-2xl font-semibold'>
-                {deposit ? Number(deposit?.amount.toNumber()) / Math.pow(10, 6) : 'Not created'}
+                {deposit
+                  ? Number(deposit?.amount.toNumber()) / Math.pow(10, 6)
+                  : isDelegated
+                    ? '***'
+                    : 'Not created'}
               </AccordionContent>
             </AccordionItem>
           </Accordion>
         </div>
         <div className='flex flex-col gap-2'>
-          <Label htmlFor='address'>Address</Label>
-          <Input id='address' type='text' onChange={handleAddressChange} />
+          <div className='flex flex-col gap-2'>
+            <Label htmlFor='address'>Address</Label>
+            <Input id='address' type='text' onChange={handleAddressChange} />
+          </div>
+          <div className='flex flex-col gap-1'>
+            <Label htmlFor='amount'>Amount</Label>
+            <Input
+              id='amount'
+              type='number'
+              defaultValue={amount}
+              onChange={e => setAmount(Number(e.target.value))}
+            />
+          </div>
+          <Button
+            className='w-full'
+            onClick={handleTransfer}
+            disabled={isTransferring || !selectedAddress}
+          >
+            Transfer
+            {isTransferring ? <Loader2Icon className='animate-spin' /> : null}
+          </Button>
         </div>
-        <div className='flex flex-col gap-1'>
-          <Label htmlFor='amount'>Amount</Label>
-          <Input
-            id='amount'
-            type='number'
-            defaultValue={amount}
-            onChange={e => setAmount(Number(e.target.value))}
-          />
+
+        <div className='flex flex-col gap-2'>
+          <div className='flex flex-col gap-2'>
+            <Label htmlFor='amount'>Amount</Label>
+            <Input
+              id='amount'
+              type='number'
+              onChange={e => setWithdrawAmount(Number(e.target.value))}
+            />
+          </div>
+          <Button
+            className='w-full'
+            onClick={handleWithdraw}
+            disabled={
+              isWithdrawing ||
+              withdrawAmount === 0 ||
+              withdrawAmount > (deposit ? Number(deposit?.amount.toNumber()) / Math.pow(10, 6) : 0)
+            }
+          >
+            Withdraw
+            {isWithdrawing ? <Loader2Icon className='animate-spin' /> : null}
+          </Button>
         </div>
       </CardContent>
-      <CardFooter className='flex flex-col gap-2 w-full'>
-        <Button
-          className='w-full'
-          onClick={handleTransfer}
-          disabled={isTransferring || !selectedAddress}
-        >
-          Transfer
-          {isTransferring ? <Loader2Icon className='animate-spin' /> : null}
-        </Button>
-      </CardFooter>
     </Card>
   );
 }

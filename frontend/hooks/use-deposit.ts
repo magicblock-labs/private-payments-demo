@@ -18,7 +18,6 @@ export function useDeposit(user?: PublicKey | string, tokenMint?: PublicKey | st
   const [ephemeralDeposit, setEphemeralDeposit] = useState<DepositAccount | null>(null);
   const [mainnetDeposit, setMainnetDeposit] = useState<DepositAccount | null>(null);
   const [isDelegated, setIsDelegated] = useState(false);
-  console.log('isDelegated', isDelegated, user?.toString());
 
   const depositPda = useMemo(() => {
     if (!program || !user || !tokenMint) return;
