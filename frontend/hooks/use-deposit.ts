@@ -56,7 +56,6 @@ export function useDeposit(user?: PublicKey | string, tokenMint?: PublicKey | st
           depositAccount = (await ephemeralConnection?.getAccountInfo(depositPda)) ?? null;
           if (depositAccount) {
             const deposit = program.coder.accounts.decode('deposit', depositAccount?.data);
-            console.log('deposit', depositAccount);
             setEphemeralDeposit(deposit);
             setDeposit(deposit);
           } else {

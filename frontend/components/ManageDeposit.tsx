@@ -48,7 +48,7 @@ const ManageDeposit: React.FC<DepositProps> = ({ user, token, isMainnet }) => {
   }, [token, depositUser, initializeDeposit]);
 
   const title = useMemo(() => {
-    if (!deposit && !accessDenied) return 'Create deposit';
+    if (!deposit && !accessDenied && (isWalletOwner || isMainnet)) return 'Create deposit';
     if (isWalletOwner) return 'My deposit';
     return 'Recipient';
   }, [accessDenied, deposit, isWalletOwner]);
@@ -71,7 +71,7 @@ const ManageDeposit: React.FC<DepositProps> = ({ user, token, isMainnet }) => {
         </div>
         <Separator />
       </CardHeader>
-      {!deposit && !accessDenied ? (
+      {!deposit && !accessDenied && (isWalletOwner || isMainnet) ? (
         <CardContent className='flex flex-row items-center justify-center h-full '>
           <Button className='w-full' onClick={handleCreateDeposit} disabled={isCreating}>
             Create

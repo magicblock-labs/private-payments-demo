@@ -81,7 +81,7 @@ export default function DepositActions({
       <AccordionItem value='item-1'>
         <AccordionTrigger>Actions</AccordionTrigger>
         <AccordionContent className='flex flex-col gap-2'>
-          {isMainnet && isWalletOwner && (
+          {isMainnet && isWalletOwner && !isDelegated && (
             <>
               <div className='flex flex-col gap-2'>
                 <Label htmlFor='amount'>Amount</Label>
@@ -102,13 +102,13 @@ export default function DepositActions({
               </Button>
             </>
           )}
-          {!isDelegated && (
+          {!isDelegated && isMainnet && (
             <Button className='w-full' onClick={handleDelegate} disabled={isDelegating}>
               Delegate
               {isDelegating && <Loader2Icon className='animate-spin' />}
             </Button>
           )}
-          {isDelegated && isWalletOwner && (
+          {isDelegated && isWalletOwner && !isMainnet && (
             <Button className='w-full' onClick={handleUndelegate} disabled={isUndelegating}>
               Undelegate
               {isUndelegating && <Loader2Icon className='animate-spin' />}
