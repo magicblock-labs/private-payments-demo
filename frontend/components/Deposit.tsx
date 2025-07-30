@@ -9,14 +9,11 @@ import { Card, CardContent, CardHeader } from './ui/card';
 import { H2, Muted } from '@/components/ui/typography';
 import { Button } from './ui/button';
 import { CircleQuestionMark, Loader2Icon } from 'lucide-react';
-import { TokenListEntry } from '@/lib/types';
+import { useTokens } from '@/hooks/use-tokens';
 
-interface DepositProps {
-  token?: TokenListEntry;
-}
-
-const Deposit: React.FC<DepositProps> = ({ token }) => {
+const Deposit: React.FC = () => {
   const { authToken, isAuthenticating, getToken } = usePrivateRollupAuth();
+  const { selectedToken: token } = useTokens();
   const wallet = useAnchorWallet();
   const [selectedAddress, setSelectedAddress] = useState<string | undefined>();
 

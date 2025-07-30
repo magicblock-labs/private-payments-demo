@@ -20,10 +20,9 @@ import { TokenListEntry } from '@/lib/types';
 
 interface TransferProps {
   token?: TokenListEntry;
-  address?: string;
 }
 
-export default function SimpleTransfer({ token, address }: TransferProps) {
+export default function SimpleTransfer({ token }: TransferProps) {
   const { transfer } = useSimpleTransfer();
   const { connection } = useConnection();
   const wallet = useAnchorWallet();
@@ -40,6 +39,30 @@ export default function SimpleTransfer({ token, address }: TransferProps) {
       TOKEN_PROGRAM_ID,
     );
   }, [token, wallet]);
+  const [selectedAddress, setSelectedAddress] = useState<string | undefined>();
+
+  const handleAddressChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      try {
+        new PublicKey(e.target.value);
+        setSelectedAddress?.(e.target.value);
+      } catch (error) {
+        toast.error('Invalid address');
+      }
+    },
+    [setSelectedAddress],
+  );
+
+  const handleTransfer = useCallback(async () => {
+    if (!token || !selectedAddress) return;
+    setIsTransferring(true);
+    try {
+      await transfer(selectedAddress, token.mint, amount);
+      toast.success(`Transferred ${amount} tokens to ${selectedAddress}`);
+    } finally {
+      setIsTransferring(false);
+    }
+  }, [token, transfer, amount, selectedAddress]);
 
   useEffect(() => {
     const getBalance = async () => {
@@ -67,55 +90,44 @@ export default function SimpleTransfer({ token, address }: TransferProps) {
     setBalance(Number(account.amount) / Math.pow(10, 6));
   });
 
-  const handleTransfer = useCallback(async () => {
-    if (!token || !address) return;
-    setIsTransferring(true);
-    try {
-      await transfer(address, token.mint, amount);
-      toast.success(`Transferred ${amount} tokens to ${address}`);
-    } finally {
-      setIsTransferring(false);
-    }
-  }, [token, transfer, amount, address]);
-
   return (
     <Card>
       <CardHeader>
         <H3>Transfer</H3>
         <Separator />
       </CardHeader>
-      {address ? (
-        <>
-          <CardContent className='flex flex-col gap-4'>
-            <div>
-              <Large>Balance: {balance ?? '???'}</Large>
-              <Muted>
-                {isDelegated ? 'Delegated balance: ' : 'Deposit balance: '}{' '}
-                {deposit ? deposit.amount.toNumber() / Math.pow(10, 6) : '???'}
-              </Muted>
-            </div>
-            <div className='flex flex-col gap-1'>
-              <Label htmlFor='amount'>Amount</Label>
-              <Input
-                id='amount'
-                type='number'
-                defaultValue={amount}
-                onChange={e => setAmount(Number(e.target.value))}
-              />
-            </div>
-          </CardContent>
-          <CardFooter className='flex flex-col gap-2 w-full'>
-            <Button className='w-full' onClick={handleTransfer} disabled={isTransferring}>
-              Transfer
-              {isTransferring ? <Loader2Icon className='animate-spin' /> : null}
-            </Button>
-          </CardFooter>
-        </>
-      ) : (
-        <CardContent>
-          <H3>No address selected</H3>
-        </CardContent>
-      )}
+      <CardContent className='flex flex-col gap-4'>
+        <div>
+          <Large>Balance: {balance ?? '???'}</Large>
+          <Muted>
+            {isDelegated ? 'Delegated balance: ' : 'Deposit balance: '}{' '}
+            {deposit ? deposit.amount.toNumber() / Math.pow(10, 6) : '???'}
+          </Muted>
+        </div>
+        <div className='flex flex-col gap-2'>
+          <Label htmlFor='address'>Address</Label>
+          <Input id='address' type='text' onChange={handleAddressChange} />
+        </div>
+        <div className='flex flex-col gap-1'>
+          <Label htmlFor='amount'>Amount</Label>
+          <Input
+            id='amount'
+            type='number'
+            defaultValue={amount}
+            onChange={e => setAmount(Number(e.target.value))}
+          />
+        </div>
+      </CardContent>
+      <CardFooter className='flex flex-col gap-2 w-full'>
+        <Button
+          className='w-full'
+          onClick={handleTransfer}
+          disabled={isTransferring || !selectedAddress}
+        >
+          Transfer
+          {isTransferring ? <Loader2Icon className='animate-spin' /> : null}
+        </Button>
+      </CardFooter>
     </Card>
   );
 }

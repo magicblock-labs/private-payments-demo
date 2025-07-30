@@ -11,15 +11,14 @@ import Navbar from './Navbar';
 import { TokenListEntry } from '@/lib/types';
 
 export default function HomePage() {
-  const [selectedToken, setSelectedToken] = useState<TokenListEntry | null>(null);
   const wallet = useAnchorWallet();
 
   return (
     <div className='container flex flex-col gap-4 mx-auto mt-5 justify-center items-center'>
       <Navbar />
 
-      <Tokens setSelected={setSelectedToken} />
-      {selectedToken && wallet?.publicKey && <Deposit token={selectedToken} />}
+      <Tokens />
+      {wallet?.publicKey && <Deposit />}
 
       <VerificationToast />
 

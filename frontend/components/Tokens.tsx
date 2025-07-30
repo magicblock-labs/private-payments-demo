@@ -33,22 +33,14 @@ import {
 } from '@/components/ui/select';
 import { Loader2Icon } from 'lucide-react';
 import { toast } from 'sonner';
-import { TokenListEntry } from '@/lib/types';
+import { useTokens } from '@/hooks/use-tokens';
 
-interface TokenProps {
-  setSelected: (entry: TokenListEntry) => void;
-}
-
-const Tokens: React.FC<TokenProps> = ({ setSelected }) => {
+const Tokens: React.FC = () => {
   const { connection } = useConnection();
   const wallet = useAnchorWallet();
   const [amount, setAmount] = useState(1000);
   const [balance, setBalance] = useState<number | null>(null);
-  const [tokenList, setTokenList] = useLocalStorage<TokenListEntry[]>('token-list', []);
-  const [selectedToken, setSelectedToken] = useLocalStorage<TokenListEntry | undefined>(
-    'selected-token',
-    tokenList[0],
-  );
+  const { tokenList, setTokens, selectedToken, setToken } = useTokens();
   const [isCreating, setIsCreating] = useState(false);
   const userTokenAccount = useMemo(() => {
     if (!selectedToken || !wallet?.publicKey) return;
@@ -131,14 +123,14 @@ const Tokens: React.FC<TokenProps> = ({ setSelected }) => {
         }),
       );
 
-      setTokenList([
+      setTokens([
         ...tokenList,
         {
           mint: mintKp.publicKey.toString(),
           creator: wallet.publicKey.toString(),
         },
       ]);
-      setSelectedToken({
+      setToken({
         mint: mintKp.publicKey.toString(),
         creator: wallet.publicKey.toString(),
       });
@@ -146,7 +138,7 @@ const Tokens: React.FC<TokenProps> = ({ setSelected }) => {
     } finally {
       setIsCreating(false);
     }
-  }, [amount, wallet, connection, tokenList, setTokenList, setSelectedToken]);
+  }, [amount, wallet, connection, tokenList, setTokens, setToken]);
 
   useEffect(() => {
     const getBalance = async () => {
@@ -172,10 +164,9 @@ const Tokens: React.FC<TokenProps> = ({ setSelected }) => {
   // Set default selected token
   useEffect(() => {
     if (tokenList.length > 0 && !selectedToken) {
-      setSelected(tokenList[0]);
-      setSelectedToken(tokenList[0]);
+      setToken(tokenList[0]);
     }
-  }, [tokenList, setSelected, selectedToken]);
+  }, [tokenList, setToken, selectedToken]);
 
   useSubscription(connection, userTokenAccount, notification => {
     console.log('Received notification', notification);
@@ -201,8 +192,7 @@ const Tokens: React.FC<TokenProps> = ({ setSelected }) => {
             onValueChange={value => {
               const token = tokenList.find(token => token.mint === value);
               if (token) {
-                setSelected(token);
-                setSelectedToken(token);
+                setToken(token);
               }
             }}
           >
