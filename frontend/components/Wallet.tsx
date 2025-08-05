@@ -26,7 +26,7 @@ export class SimpleProvider implements Provider {
 
 export const Wallet: FC<WalletProps> = ({ children }) => {
   // const endpoint = "https://rpc.magicblock.app/devnet";
-  const endpoint = 'https://api.devnet.solana.com';
+  const endpoint = 'https://rpc.magicblock.app/devnet';
 
   const wallets = useMemo(() => [new PhantomWalletAdapter(), new SolflareWalletAdapter()], []);
 

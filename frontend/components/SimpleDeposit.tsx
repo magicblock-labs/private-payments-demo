@@ -8,6 +8,7 @@ import { Loader2Icon } from 'lucide-react';
 import SimpleTransfer from '@/components/SimpleTransfer';
 import { useTokens } from '@/hooks/use-tokens';
 import SimpleRecipient from './SimpleRecipient';
+import MissingAddressCard from './MissingAddressCard';
 
 export default function SimpleDeposit() {
   const { authToken, isAuthenticating, getToken } = usePrivateRollupAuth();
@@ -38,7 +39,11 @@ export default function SimpleDeposit() {
             selectedAddress={selectedAddress}
             setSelectedAddress={setSelectedAddress}
           />
-          {selectedAddress && <SimpleRecipient user={selectedAddress} token={token} />}
+          {selectedAddress ? (
+            <SimpleRecipient user={selectedAddress} token={token} />
+          ) : (
+            <MissingAddressCard />
+          )}
         </div>
       </CardContent>
     </Card>

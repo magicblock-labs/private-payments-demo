@@ -6,10 +6,11 @@ import ManageDeposit from './ManageDeposit';
 import Transfer from './Transfer';
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
 import { Card, CardContent, CardHeader } from './ui/card';
-import { H2, Muted } from '@/components/ui/typography';
+import { H2, H3, Muted } from '@/components/ui/typography';
 import { Button } from './ui/button';
 import { CircleQuestionMark, Loader2Icon } from 'lucide-react';
 import { useTokens } from '@/hooks/use-tokens';
+import MissingAddressCard from './MissingAddressCard';
 
 const Deposit: React.FC = () => {
   const { authToken, isAuthenticating, getToken } = usePrivateRollupAuth();
@@ -30,13 +31,18 @@ const Deposit: React.FC = () => {
             ) : (
               <Loader2Icon className='animate-spin' />
             )}
-            <Transfer token={token} setSelectedAddress={setSelectedAddress} isMainnet />
+            <Transfer
+              token={token}
+              setSelectedAddress={setSelectedAddress}
+              user={wallet?.publicKey?.toBase58()}
+              isMainnet
+            />
             {selectedAddress ? (
               <ManageDeposit token={token} user={new PublicKey(selectedAddress)} isMainnet />
             ) : (
               <Card>
                 <CardHeader>
-                  <H2>Select an address</H2>
+                  <H3>Select an address</H3>
                 </CardHeader>
                 <CardContent className='flex flex-col gap-4 items-center my-auto text-center'>
                   <CircleQuestionMark />
@@ -68,15 +74,7 @@ const Deposit: React.FC = () => {
             {selectedAddress ? (
               <ManageDeposit token={token} user={new PublicKey(selectedAddress)} />
             ) : (
-              <Card>
-                <CardHeader>
-                  <H2>Select an address</H2>
-                </CardHeader>
-                <CardContent className='flex flex-col gap-4 items-center my-auto text-center'>
-                  <CircleQuestionMark />
-                  <Muted>Select an address to continue.</Muted>
-                </CardContent>
-              </Card>
+              <MissingAddressCard />
             )}
           </div>
         </CardContent>

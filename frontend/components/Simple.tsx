@@ -9,6 +9,8 @@ import magicBlockLogo from '@/public/magicblock_white.png';
 import Navbar from './Navbar';
 import SimpleDeposit from './SimpleDeposit';
 import { useTokens } from '@/hooks/use-tokens';
+import { Muted } from './ui/typography';
+import Link from 'next/link';
 
 export default function SimplePage() {
   const wallet = useAnchorWallet();
@@ -19,7 +21,14 @@ export default function SimplePage() {
       <Navbar />
 
       <Tokens />
-      {token && wallet?.publicKey && <SimpleDeposit />}
+      {token && wallet?.publicKey && (
+        <>
+          <SimpleDeposit />
+          <Link href='/advanced' className='mb-4'>
+            <Muted>Go to the advanced view</Muted>
+          </Link>
+        </>
+      )}
 
       <VerificationToast />
 

@@ -241,6 +241,7 @@ pub struct TransferDeposit<'info> {
         bump,
         has_one = user,
         has_one = token_mint,
+        constraint = source_deposit.user != destination_deposit.user,
     )]
     pub source_deposit: Account<'info, Deposit>,
     #[account(

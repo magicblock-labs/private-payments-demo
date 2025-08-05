@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { AccountLayout, getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { useSubscription } from '@/hooks/use-subscription';
 import { useAnchorWallet, useConnection } from '@solana/wallet-adapter-react';
-import { Loader2Icon } from 'lucide-react';
+import { Link, Loader2Icon } from 'lucide-react';
 import useSimpleTransfer from '@/hooks/use-simple-transfer';
 import { useDeposit } from '@/hooks/use-deposit';
 import { toast } from 'sonner';
@@ -76,6 +76,9 @@ export default function SimpleTransfer({
     try {
       await transfer(selectedAddress, token.mint, amount);
       toast.success(`Transferred ${amount} tokens to ${selectedAddress}`);
+    } catch (error) {
+      toast.error(`Error transferring tokens: ${error}`);
+      console.error('Error transferring tokens:', error);
     } finally {
       setIsTransferring(false);
     }
@@ -87,6 +90,9 @@ export default function SimpleTransfer({
     try {
       await withdraw(token.mint, withdrawAmount);
       toast.success(`Withdrawn ${withdrawAmount} tokens`);
+    } catch (error) {
+      toast.error(`Error withdrawing tokens: ${error}`);
+      console.error('Error withdrawing tokens:', error);
     } finally {
       setIsWithdrawing(false);
     }
@@ -135,13 +141,13 @@ export default function SimpleTransfer({
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value='item-2'>
-              <AccordionTrigger>Deposit balance</AccordionTrigger>
+              <AccordionTrigger>Private balance</AccordionTrigger>
               <AccordionContent className='flex flex-col gap-4 text-center text-2xl font-semibold'>
                 {deposit
                   ? Number(deposit?.amount.toNumber()) / Math.pow(10, 6)
                   : isDelegated
                     ? '***'
-                    : 'Not created'}
+                    : '0'}
               </AccordionContent>
             </AccordionItem>
           </Accordion>

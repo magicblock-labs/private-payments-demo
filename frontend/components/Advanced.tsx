@@ -9,6 +9,8 @@ import { useAnchorWallet } from '@solana/wallet-adapter-react';
 import magicBlockLogo from '@/public/magicblock_white.png';
 import Navbar from './Navbar';
 import { TokenListEntry } from '@/lib/types';
+import { Muted } from './ui/typography';
+import Link from 'next/link';
 
 export default function HomePage() {
   const wallet = useAnchorWallet();
@@ -18,7 +20,14 @@ export default function HomePage() {
       <Navbar />
 
       <Tokens />
-      {wallet?.publicKey && <Deposit />}
+      {wallet?.publicKey && (
+        <>
+          <Deposit />
+          <Link href='/' className='mb-4'>
+            <Muted>Go to the simple view</Muted>
+          </Link>
+        </>
+      )}
 
       <VerificationToast />
 

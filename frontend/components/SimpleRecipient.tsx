@@ -83,13 +83,13 @@ export default function SimpleRecipient({ user, token }: TransferProps) {
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value='item-2'>
-              <AccordionTrigger>Deposit balance</AccordionTrigger>
+              <AccordionTrigger>Private balance</AccordionTrigger>
               <AccordionContent className='flex flex-col gap-4 text-center text-2xl font-semibold'>
                 {isDelegated
                   ? '***'
                   : deposit
                     ? Number(deposit?.amount.toNumber()) / Math.pow(10, 6)
-                    : 'Not created'}
+                    : '0'}
               </AccordionContent>
             </AccordionItem>
           </Accordion>

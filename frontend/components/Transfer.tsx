@@ -5,7 +5,7 @@ import React, { useCallback, useState } from 'react';
 
 import { useProgram } from '../hooks/use-program';
 import { Card, CardContent, CardHeader } from './ui/card';
-import { H3 } from './ui/typography';
+import { H3, Muted } from './ui/typography';
 import { Label } from './ui/label';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
@@ -13,14 +13,16 @@ import { toast } from 'sonner';
 import { Separator } from './ui/separator';
 import { Loader2Icon } from 'lucide-react';
 import { TokenListEntry } from '@/lib/types';
+import Link from 'next/link';
 
 interface TransferProps {
   token?: TokenListEntry;
   setSelectedAddress?: (address: string) => void;
   isMainnet?: boolean;
+  user?: string;
 }
 
-const Transfer: React.FC<TransferProps> = ({ token, setSelectedAddress, isMainnet }) => {
+const Transfer: React.FC<TransferProps> = ({ token, setSelectedAddress, user, isMainnet }) => {
   const { transfer } = useProgram();
   const [isTransferring, setIsTransferring] = useState(false);
   const [amount, setAmount] = useState(0);
@@ -46,6 +48,8 @@ const Transfer: React.FC<TransferProps> = ({ token, setSelectedAddress, isMainne
       try {
         await transfer(new PublicKey(token.mint), amount, new PublicKey(address), delegated);
         toast.success(`Transferred ${amount} tokens to ${address}`);
+      } catch (error) {
+        toast.error(`Error transferring tokens: ${error}`);
       } finally {
         setIsTransferring(false);
       }
@@ -77,7 +81,7 @@ const Transfer: React.FC<TransferProps> = ({ token, setSelectedAddress, isMainne
           <Button
             className='w-full'
             onClick={() => handleTransfer(false)}
-            disabled={isTransferring || !address}
+            disabled={isTransferring || !address || user === address}
           >
             Transfer
             {isTransferring && <Loader2Icon className='animate-spin' />}
@@ -86,7 +90,7 @@ const Transfer: React.FC<TransferProps> = ({ token, setSelectedAddress, isMainne
           <Button
             className='w-full'
             onClick={() => handleTransfer(true)}
-            disabled={isTransferring || !address}
+            disabled={isTransferring || !address || user === address}
           >
             Delegated transfer
             {isTransferring && <Loader2Icon className='animate-spin' />}

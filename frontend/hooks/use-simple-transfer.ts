@@ -3,7 +3,7 @@ import { useProgram } from './use-program';
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
 import { useConnection } from '@solana/wallet-adapter-react';
 import { useEphemeralConnection } from './use-ephemeral-connection';
-import { Keypair, PublicKey, Transaction } from '@solana/web3.js';
+import { Connection, Keypair, PublicKey, Transaction } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { EPHEMERAL_RPC_URL, GROUP_SEED } from '@/lib/constants';
 import { PERMISSION_PROGRAM_ID } from '@/lib/constants';
@@ -96,7 +96,6 @@ export default function useSimpleTransfer() {
 
       const vaultPda = getVaultPda(tokenMintPk)!;
 
-      // Check if the sender has a deposit, create one if not
       const senderDepositPda = getDepositPda(wallet.publicKey, tokenMintPk)!;
       const senderDepositAccount = await connection.getAccountInfo(senderDepositPda);
       const ephemeralSenderDepositAccount =
@@ -141,13 +140,14 @@ export default function useSimpleTransfer() {
       // Check if the recipient has a deposit, create one if not
       const recipientDepositPda = getDepositPda(recipientPk, tokenMintPk)!;
       const recipientDepositAccount = await connection.getAccountInfo(recipientDepositPda);
+      let recipientInitTx: Transaction | undefined;
       if (!recipientDepositAccount) {
-        mainnetTx = await initializeDeposit({
+        recipientInitTx = await initializeDeposit({
           program,
           user: recipientPk,
           tokenMint: tokenMintPk,
           depositPda: recipientDepositPda,
-          transaction: mainnetTx || new Transaction(),
+          transaction: new Transaction(),
         });
       }
 
@@ -222,64 +222,61 @@ export default function useSimpleTransfer() {
       let blockhash = (await connection.getLatestBlockhash()).blockhash;
       let ephemeralBlockhash = (await ephemeralConnection.getLatestBlockhash()).blockhash;
 
-      ephemeralTx.recentBlockhash = ephemeralBlockhash;
-      ephemeralTx.feePayer = program.provider.publicKey;
+      let actions = [
+        {
+          name: 'recipientInitTx',
+          tx: recipientInitTx,
+          signedTx: recipientInitTx,
+          blockhash,
+          connection,
+          callback: () => new Promise(resolve => setTimeout(resolve, 3000)),
+        },
+        {
+          name: 'preliminaryTx',
+          tx: preliminaryTx,
+          signedTx: preliminaryTx,
+          blockhash: ephemeralBlockhash,
+          connection: ephemeralConnection,
+          callback: async (signature: string) => {
+            await GetCommitmentSignature(signature, ephemeralConnection);
+            return new Promise(resolve => setTimeout(resolve, 1000));
+          },
+        },
+        {
+          name: 'mainnetTx',
+          tx: mainnetTx,
+          signedTx: mainnetTx,
+          blockhash,
+          connection,
+        },
+        {
+          name: 'ephemeralTx',
+          tx: ephemeralTx,
+          signedTx: ephemeralTx,
+          blockhash: ephemeralBlockhash,
+          connection: ephemeralConnection,
+          callback: (signature: string) => ephemeralConnection.confirmTransaction(signature),
+        },
+      ]
+        .filter(action => action.tx)
+        .map(action => {
+          let tx = action.tx!;
+          tx.recentBlockhash = action.blockhash;
+          tx.feePayer = program.provider.publicKey;
+          return { ...action, tx };
+        });
 
-      if (preliminaryTx && mainnetTx) {
-        preliminaryTx.recentBlockhash = ephemeralBlockhash;
-        preliminaryTx.feePayer = program.provider.publicKey;
+      let txs = actions.map(action => action.tx!);
+      let signedTxs = await wallet.signAllTransactions(txs);
+      actions = actions.map((action, index) => {
+        return { ...action, signedTx: signedTxs[index] };
+      });
 
-        mainnetTx.recentBlockhash = blockhash;
-        mainnetTx.feePayer = program.provider.publicKey;
-
-        let [signedPreliminaryTx, signedMainnetTx, signedEphemeralTx] =
-          await wallet.signAllTransactions([preliminaryTx, mainnetTx, ephemeralTx]);
-
-        let signature = await ephemeralConnection.sendRawTransaction(
-          signedPreliminaryTx.serialize(),
-        );
-        await ephemeralConnection.confirmTransaction(signature);
-
-        // Manually check permissions
-        // Wait for the permission to be caught by the RPC
-        await new Promise(resolve => setTimeout(resolve, 4000));
-        await fetch(`${EPHEMERAL_RPC_URL}/permission?pubkey=${senderDepositPda.toString()}`);
-        await fetch(`${EPHEMERAL_RPC_URL}/permission?pubkey=${recipientDepositPda.toString()}`);
-
-        // Wait for the delegation
-        await GetCommitmentSignature(signature, ephemeralConnection);
-
-        // Timeout to be sure undelegation is complete
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        signature = await connection.sendRawTransaction(signedMainnetTx.serialize());
-        await connection.confirmTransaction(signature);
-        signature = await ephemeralConnection.sendRawTransaction(signedEphemeralTx.serialize());
-        await ephemeralConnection.confirmTransaction(signature);
-      } else if (!preliminaryTx && mainnetTx) {
-        mainnetTx.recentBlockhash = blockhash;
-        mainnetTx.feePayer = program.provider.publicKey;
-
-        let [signedMainnetTx, signedEphemeralTx] = await wallet.signAllTransactions([
-          mainnetTx,
-          ephemeralTx,
-        ]);
-
-        let signature = await connection.sendRawTransaction(signedMainnetTx.serialize());
-        await connection.confirmTransaction(signature);
-
-        // Manually check permissions
-        // Wait for the permission to be caught by the RPC
-        await new Promise(resolve => setTimeout(resolve, 4000));
-        await fetch(`${EPHEMERAL_RPC_URL}/permission?pubkey=${senderDepositPda.toString()}`);
-        await fetch(`${EPHEMERAL_RPC_URL}/permission?pubkey=${recipientDepositPda.toString()}`);
-
-        signature = await ephemeralConnection.sendRawTransaction(signedEphemeralTx.serialize());
-        await ephemeralConnection.confirmTransaction(signature);
-      } else if (!preliminaryTx && !mainnetTx) {
-        let [signedEphemeralTx] = await wallet.signAllTransactions([ephemeralTx]);
-        let signature = await ephemeralConnection.sendRawTransaction(signedEphemeralTx.serialize());
-        await ephemeralConnection.confirmTransaction(signature);
+      for (let action of actions) {
+        console.log(`Sending ${action.name} transaction`);
+        let signature = await action.connection.sendRawTransaction(action.signedTx!.serialize());
+        await action.connection.confirmTransaction(signature);
+        await action.callback?.(signature);
       }
     },
     [wallet, program, ephemeralProgram, connection, ephemeralConnection, getDepositPda],
