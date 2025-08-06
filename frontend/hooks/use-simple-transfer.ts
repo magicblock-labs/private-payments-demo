@@ -107,12 +107,27 @@ export default function useSimpleTransfer() {
 
       // Compute the amount of tokens to deposit
       let amountToDeposit = tokenAmount;
-      if (ephemeralSenderDepositAccount) {
-        let senderDeposit: DepositAccount = await program.coder.accounts.decode(
-          'deposit',
-          ephemeralSenderDepositAccount.data,
-        );
-        amountToDeposit = amountToDeposit.sub(senderDeposit.amount);
+      let mainnetSenderDepositAmount = senderDepositAccount
+        ? (
+            (await program.coder.accounts.decode(
+              'deposit',
+              senderDepositAccount.data,
+            )) as DepositAccount
+          ).amount
+        : new BN(0);
+      let ephemeralSenderDepositAmount = ephemeralSenderDepositAccount
+        ? (
+            (await program.coder.accounts.decode(
+              'deposit',
+              ephemeralSenderDepositAccount.data,
+            )) as DepositAccount
+          ).amount
+        : new BN(0);
+
+      if (senderIsDelegated) {
+        amountToDeposit = amountToDeposit.sub(ephemeralSenderDepositAmount);
+      } else {
+        amountToDeposit = amountToDeposit.sub(mainnetSenderDepositAmount);
       }
 
       if (!senderDepositAccount) {
@@ -159,6 +174,7 @@ export default function useSimpleTransfer() {
       }
 
       console.log('delegation status:', senderIsDelegated, recipientIsDelegated);
+      console.log('amountToDeposit:', amountToDeposit.toNumber() / Math.pow(10, 6));
 
       if (amountToDeposit.gt(new BN(0))) {
         let depositIx = await program.methods
