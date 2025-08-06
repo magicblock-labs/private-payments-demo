@@ -3,9 +3,9 @@ import { useProgram } from './use-program';
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
 import { useConnection } from '@solana/wallet-adapter-react';
 import { useEphemeralConnection } from './use-ephemeral-connection';
-import { Connection, Keypair, PublicKey, Transaction } from '@solana/web3.js';
+import { Keypair, PublicKey, Transaction } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { EPHEMERAL_RPC_URL, GROUP_SEED } from '@/lib/constants';
+import { GROUP_SEED } from '@/lib/constants';
 import { PERMISSION_PROGRAM_ID } from '@/lib/constants';
 import { PERMISSION_SEED } from '@/lib/constants';
 import { BN, Program } from '@coral-xyz/anchor';
@@ -101,6 +101,10 @@ export default function useSimpleTransfer() {
       const ephemeralSenderDepositAccount =
         await ephemeralConnection.getAccountInfo(senderDepositPda);
 
+      const senderIsDelegated = senderDepositAccount?.owner.equals(
+        new PublicKey(DELEGATION_PROGRAM_ID),
+      );
+
       // Compute the amount of tokens to deposit
       let amountToDeposit = tokenAmount;
       if (ephemeralSenderDepositAccount) {
@@ -121,7 +125,7 @@ export default function useSimpleTransfer() {
         });
       } else {
         // If the sender has a deposit, we need to undelegate to transfer more tokens to it
-        if (senderDepositAccount.owner.equals(new PublicKey(DELEGATION_PROGRAM_ID))) {
+        if (senderIsDelegated) {
           if (amountToDeposit.gt(new BN(0))) {
             let undelegateIx = await program.methods
               .undelegate()
@@ -140,6 +144,9 @@ export default function useSimpleTransfer() {
       // Check if the recipient has a deposit, create one if not
       const recipientDepositPda = getDepositPda(recipientPk, tokenMintPk)!;
       const recipientDepositAccount = await connection.getAccountInfo(recipientDepositPda);
+      const recipientIsDelegated = recipientDepositAccount?.owner.equals(
+        new PublicKey(DELEGATION_PROGRAM_ID),
+      );
       let recipientInitTx: Transaction | undefined;
       if (!recipientDepositAccount) {
         recipientInitTx = await initializeDeposit({
@@ -150,6 +157,8 @@ export default function useSimpleTransfer() {
           transaction: new Transaction(),
         });
       }
+
+      console.log('delegation status:', senderIsDelegated, recipientIsDelegated);
 
       if (amountToDeposit.gt(new BN(0))) {
         let depositIx = await program.methods
@@ -180,10 +189,7 @@ export default function useSimpleTransfer() {
       }
 
       // Make sure both deposits are delegated
-      if (
-        !senderDepositAccount?.owner.equals(new PublicKey(DELEGATION_PROGRAM_ID)) ||
-        preliminaryTx
-      ) {
+      if (!senderIsDelegated || preliminaryTx) {
         let delegateIx = await program.methods
           .delegate(wallet.publicKey, tokenMintPk)
           .accountsPartial({
@@ -195,7 +201,7 @@ export default function useSimpleTransfer() {
         mainnetTx.add(delegateIx);
       }
 
-      if (!recipientDepositAccount?.owner.equals(new PublicKey(DELEGATION_PROGRAM_ID))) {
+      if (!recipientIsDelegated) {
         let delegateIx = await program.methods
           .delegate(recipientPk, tokenMintPk)
           .accountsPartial({
@@ -299,6 +305,18 @@ export default function useSimpleTransfer() {
 
       let withdrawerDepositPda = getDepositPda(wallet.publicKey, tokenMintPk)!;
       let withdrawerDepositAccount = await connection.getAccountInfo(withdrawerDepositPda);
+      const isDelegated = withdrawerDepositAccount?.owner.equals(
+        new PublicKey(DELEGATION_PROGRAM_ID),
+      );
+      const withdrawerDepositAmount = withdrawerDepositAccount
+        ? (
+            (await ephemeralProgram.coder.accounts.decode(
+              'deposit',
+              withdrawerDepositAccount?.data,
+            )) as DepositAccount
+          ).amount
+        : new BN(0);
+
       let ephemeralWithdrawerDepositAccount =
         await ephemeralConnection.getAccountInfo(withdrawerDepositPda);
       let ephemeralDepositAmount = ephemeralWithdrawerDepositAccount
@@ -310,7 +328,9 @@ export default function useSimpleTransfer() {
           ).amount
         : new BN(0);
 
-      if (ephemeralDepositAmount.lt(tokenAmount)) {
+      const actualBalance = isDelegated ? ephemeralDepositAmount : withdrawerDepositAmount;
+
+      if (actualBalance.lt(tokenAmount)) {
         throw new Error('Not enough tokens to withdraw');
       }
 
@@ -381,11 +401,15 @@ export default function useSimpleTransfer() {
         // Timeout to be sure undelegation is complete
         await new Promise(resolve => setTimeout(resolve, 1000));
 
-        signature = await connection.sendRawTransaction(signedWithdrawTx.serialize());
+        signature = await connection.sendRawTransaction(signedWithdrawTx.serialize(), {
+          skipPreflight: true,
+        });
         await connection.confirmTransaction(signature);
       } else {
         let [signedWithdrawTx] = await wallet.signAllTransactions([withdrawTx]);
-        let signature = await connection.sendRawTransaction(signedWithdrawTx.serialize());
+        let signature = await connection.sendRawTransaction(signedWithdrawTx.serialize(), {
+          skipPreflight: true,
+        });
         await connection.confirmTransaction(signature);
       }
     },

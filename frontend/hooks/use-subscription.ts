@@ -14,21 +14,20 @@ export function useSubscription(
     if (!connection || !account || !onAccountChange) return;
 
     const subscribe = async () => {
+      // Clean up any existing subscription
+      if (subscriptionId.current) {
+        connection.removeAccountChangeListener(subscriptionId.current);
+        subscriptionId.current = null;
+      }
+
       // Try to get the account first to see if we have the permission to subscribe
       try {
         await connection.getAccountInfo(new PublicKey(account));
 
-        // Clean up any existing subscription
-        if (subscriptionId.current) {
-          connection.removeAccountChangeListener(subscriptionId.current);
-          subscriptionId.current = null;
-        }
-
         const publicKey = new PublicKey(account);
         subscriptionId.current = connection.onAccountChange(publicKey, onAccountChange);
       } catch (error) {
-        console.error('Error getting account info:', error);
-        return;
+        console.log(`Can't find account ${account}:`, error);
       }
     };
 

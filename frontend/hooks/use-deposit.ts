@@ -3,7 +3,12 @@ import { useConnection } from '@solana/wallet-adapter-react';
 import { AccountInfo, PublicKey } from '@solana/web3.js';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DEPOSIT_PDA_SEED, PERMISSION_PROGRAM_ID, PERMISSION_SEED } from '@/lib/constants';
+import {
+  DEPOSIT_PDA_SEED,
+  EPHEMERAL_RPC_URL,
+  PERMISSION_PROGRAM_ID,
+  PERMISSION_SEED,
+} from '@/lib/constants';
 import { DepositAccount } from '@/lib/types';
 
 import { useEphemeralConnection } from '@/hooks/use-ephemeral-connection';
@@ -14,10 +19,12 @@ export function useDeposit(user?: PublicKey | string, tokenMint?: PublicKey | st
   const { program } = useProgram();
   const { connection } = useConnection();
   const { ephemeralConnection } = useEphemeralConnection();
-  const [deposit, setDeposit] = useState<DepositAccount | null>(null);
   const [ephemeralDeposit, setEphemeralDeposit] = useState<DepositAccount | null>(null);
   const [mainnetDeposit, setMainnetDeposit] = useState<DepositAccount | null>(null);
   const [isDelegated, setIsDelegated] = useState(false);
+  const deposit = useMemo(() => {
+    return isDelegated ? ephemeralDeposit : mainnetDeposit;
+  }, [ephemeralDeposit, mainnetDeposit, isDelegated]);
 
   const depositPda = useMemo(() => {
     if (!program || !user || !tokenMint) return;
@@ -40,8 +47,7 @@ export function useDeposit(user?: PublicKey | string, tokenMint?: PublicKey | st
   }, [depositPda]);
 
   const getDeposit = useCallback(async () => {
-    if (!tokenMint || !user || !program || !depositPda) return;
-    setDeposit(null);
+    if (!user || !program || !depositPda) return;
     setEphemeralDeposit(null);
     setMainnetDeposit(null);
 
@@ -49,25 +55,29 @@ export function useDeposit(user?: PublicKey | string, tokenMint?: PublicKey | st
       let depositAccount = await connection.getAccountInfo(depositPda);
 
       if (depositAccount) {
-        setMainnetDeposit(program.coder.accounts.decode('deposit', depositAccount?.data));
+        const mainnetDeposit = program.coder.accounts.decode('deposit', depositAccount?.data);
+        setMainnetDeposit(mainnetDeposit);
         if (depositAccount.owner.equals(new PublicKey(DELEGATION_PROGRAM_ID))) {
           setIsDelegated(true);
 
-          depositAccount = (await ephemeralConnection?.getAccountInfo(depositPda)) ?? null;
+          depositAccount = null;
+          try {
+            depositAccount = (await ephemeralConnection?.getAccountInfo(depositPda)) ?? null;
+          } catch (error) {
+            console.log('ephemeral connection error', error);
+          }
           if (depositAccount) {
             const deposit = program.coder.accounts.decode('deposit', depositAccount?.data);
             setEphemeralDeposit(deposit);
-            setDeposit(deposit);
           } else {
-            setDeposit(null);
             setEphemeralDeposit(null);
           }
         } else {
           setIsDelegated(false);
-
-          const deposit = program.coder.accounts.decode('deposit', depositAccount?.data);
-          setDeposit(deposit);
         }
+      } else {
+        setMainnetDeposit(null);
+        setEphemeralDeposit(null);
       }
     } catch (error) {
       console.log('getDeposit error', error);
@@ -82,7 +92,6 @@ export function useDeposit(user?: PublicKey | string, tokenMint?: PublicKey | st
         setIsDelegated(false);
         const decoded = program?.coder.accounts.decode('deposit', notification.data);
         if (decoded) {
-          setDeposit(decoded);
           setMainnetDeposit(decoded);
         }
       }
@@ -94,7 +103,6 @@ export function useDeposit(user?: PublicKey | string, tokenMint?: PublicKey | st
     (notification: AccountInfo<Buffer>) => {
       const decoded = program?.coder.accounts.decode('deposit', notification.data);
       if (decoded) {
-        setDeposit(decoded);
         setEphemeralDeposit(decoded);
       }
     },
@@ -109,6 +117,12 @@ export function useDeposit(user?: PublicKey | string, tokenMint?: PublicKey | st
     getDeposit();
   }, [getDeposit]);
 
+  useEffect(() => {
+    if (isDelegated && depositPda) {
+      fetch(`${EPHEMERAL_RPC_URL}/permission?pubkey=${depositPda.toBase58()}`);
+    }
+  }, [depositPda, getDeposit]);
+
   return {
     deposit,
     mainnetDeposit,
@@ -116,6 +130,6 @@ export function useDeposit(user?: PublicKey | string, tokenMint?: PublicKey | st
     depositPda,
     permissionPda,
     isDelegated,
-    accessDenied: isDelegated && !deposit,
+    accessDenied: isDelegated && !!!ephemeralDeposit,
   };
 }

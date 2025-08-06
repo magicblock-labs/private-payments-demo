@@ -13,11 +13,10 @@ import { toast } from 'sonner';
 import { Separator } from './ui/separator';
 import { Loader2Icon } from 'lucide-react';
 import { TokenListEntry } from '@/lib/types';
-import Link from 'next/link';
 
 interface TransferProps {
   token?: TokenListEntry;
-  setSelectedAddress?: (address: string) => void;
+  setSelectedAddress?: (address: string | undefined) => void;
   isMainnet?: boolean;
   user?: string;
 }
@@ -35,6 +34,7 @@ const Transfer: React.FC<TransferProps> = ({ token, setSelectedAddress, user, is
         setAddress(e.target.value);
         setSelectedAddress?.(e.target.value);
       } catch (error) {
+        setSelectedAddress?.(undefined);
         toast.error('Invalid address');
       }
     },

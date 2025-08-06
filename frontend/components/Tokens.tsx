@@ -10,7 +10,7 @@ import {
   MINT_SIZE,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
-import { useAnchorWallet, useConnection, useLocalStorage } from '@solana/wallet-adapter-react';
+import { useAnchorWallet, useConnection } from '@solana/wallet-adapter-react';
 import { Keypair, SystemProgram, Transaction } from '@solana/web3.js';
 import { PublicKey } from '@solana/web3.js';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -34,10 +34,14 @@ import {
 import { Loader2Icon } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTokens } from '@/hooks/use-tokens';
+import { useProgram } from '@/hooks/use-program';
+import { GROUP_SEED, PERMISSION_PROGRAM_ID, PERMISSION_SEED } from '@/lib/constants';
+import { BN } from '@coral-xyz/anchor';
 
 const Tokens: React.FC = () => {
   const { connection } = useConnection();
   const wallet = useAnchorWallet();
+  const { program, getDepositPda, getVaultPda } = useProgram();
   const [amount, setAmount] = useState(1000);
   const [balance, setBalance] = useState<number | null>(null);
   const { tokenList, setTokens, selectedToken, setToken } = useTokens();
@@ -53,7 +57,7 @@ const Tokens: React.FC = () => {
   }, [selectedToken, wallet]);
 
   const createToken = useCallback(async () => {
-    if (!wallet?.publicKey) return;
+    if (!wallet?.publicKey || !program) return;
 
     setIsCreating(true);
 
@@ -102,7 +106,74 @@ const Tokens: React.FC = () => {
         TOKEN_PROGRAM_ID,
       );
 
-      const finalTx = new Transaction().add(createIx, createMintIx, createAccountIx, mintIx);
+      const depositPda = getDepositPda(wallet.publicKey, mintKp.publicKey)!;
+      const vaultPda = getVaultPda(mintKp.publicKey)!;
+      const initIx = await program.methods
+        .initializeDeposit()
+        .accountsPartial({
+          payer: program.provider.publicKey,
+          user: wallet.publicKey,
+          deposit: depositPda,
+          tokenMint: mintKp.publicKey,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        })
+        .instruction();
+
+      const id = Keypair.generate().publicKey;
+      const permission = PublicKey.findProgramAddressSync(
+        [PERMISSION_SEED, depositPda.toBuffer()],
+        PERMISSION_PROGRAM_ID,
+      )[0];
+      const group = PublicKey.findProgramAddressSync(
+        [GROUP_SEED, id.toBuffer()],
+        PERMISSION_PROGRAM_ID,
+      )[0];
+
+      const createPermissionIx = await program.methods
+        .createPermission(id)
+        .accountsPartial({
+          payer: program.provider.publicKey,
+          user: wallet.publicKey,
+          deposit: depositPda,
+          permission,
+          group,
+          permissionProgram: PERMISSION_PROGRAM_ID,
+        })
+        .instruction();
+
+      const depositIx = await program.methods
+        .modifyBalance({ amount: new BN(amount * Math.pow(10, 6)), increase: true })
+        .accountsPartial({
+          payer: program.provider.publicKey,
+          user: wallet.publicKey,
+          vault: vaultPda,
+          deposit: depositPda,
+          userTokenAccount: getAssociatedTokenAddressSync(
+            mintKp.publicKey,
+            wallet.publicKey,
+            true,
+            TOKEN_PROGRAM_ID,
+          ),
+          vaultTokenAccount: getAssociatedTokenAddressSync(
+            mintKp.publicKey,
+            vaultPda,
+            true,
+            TOKEN_PROGRAM_ID,
+          ),
+          tokenMint: mintKp.publicKey,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        })
+        .instruction();
+
+      const finalTx = new Transaction().add(
+        createIx,
+        createMintIx,
+        createAccountIx,
+        mintIx,
+        initIx,
+        createPermissionIx,
+        depositIx,
+      );
       finalTx.recentBlockhash = blockhash;
       finalTx.feePayer = wallet.publicKey;
       finalTx.partialSign(mintKp);
@@ -123,6 +194,8 @@ const Tokens: React.FC = () => {
         }),
       );
 
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
       setTokens([
         ...tokenList,
         {
@@ -130,6 +203,8 @@ const Tokens: React.FC = () => {
           creator: wallet.publicKey.toString(),
         },
       ]);
+      // Reset token to refresh components
+      setToken(undefined);
       setToken({
         mint: mintKp.publicKey.toString(),
         creator: wallet.publicKey.toString(),

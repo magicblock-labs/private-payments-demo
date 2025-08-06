@@ -37,7 +37,9 @@ export default function DepositActions({
     setIsDepositing(true);
     try {
       await depositTokens(depositUser, new PublicKey(token.mint), amount);
-      toast.success(`Deposited ${amount} tokens to ${depositUser.toBase58()}`);
+      toast.success(`Deposited ${amount} tokens`);
+    } catch (error) {
+      toast.error(`Failed to deposit ${amount} tokens: ${error}`);
     } finally {
       setIsDepositing(false);
     }
@@ -48,7 +50,9 @@ export default function DepositActions({
     setIsWithdrawing(true);
     try {
       await withdraw(depositUser, new PublicKey(token.mint), amount);
-      toast.success(`Withdrawn ${amount} tokens from ${depositUser.toBase58()}`);
+      toast.success(`Withdrawn ${amount} tokens`);
+    } catch (error) {
+      toast.error(`Failed to withdraw ${amount} tokens: ${error}`);
     } finally {
       setIsWithdrawing(false);
     }
@@ -60,6 +64,8 @@ export default function DepositActions({
     try {
       await delegate(depositUser, new PublicKey(token.mint));
       toast.success(`Delegated successfully`);
+    } catch (error) {
+      toast.error(`Failed to delegate: ${error}`);
     } finally {
       setIsDelegating(false);
     }
@@ -71,6 +77,8 @@ export default function DepositActions({
     try {
       await undelegate(new PublicKey(token.mint));
       toast.success(`Undelegated successfully`);
+    } catch (error) {
+      toast.error(`Failed to undelegate: ${error}`);
     } finally {
       setIsUndelegating(false);
     }

@@ -71,7 +71,7 @@ const ManageDeposit: React.FC<DepositProps> = ({ user, token, isMainnet }) => {
         </div>
         <Separator />
       </CardHeader>
-      {!deposit && !accessDenied && (isWalletOwner || isMainnet) ? (
+      {!deposit && isMainnet ? (
         <CardContent className='flex flex-row items-center justify-center h-full '>
           <Button className='w-full' onClick={handleCreateDeposit} disabled={isCreating}>
             Create
@@ -83,15 +83,9 @@ const ManageDeposit: React.FC<DepositProps> = ({ user, token, isMainnet }) => {
           <CardContent className='flex flex-col gap-4 h-full justify-between'>
             <div />
             <div className='flex flex-row gap-2 items-center justify-center-safe text-5xl font-bold text-center hyphens-auto'>
-              {!accessDenied || isMainnet ? (
-                deposit ? (
-                  deposit!.amount.toNumber() / Math.pow(10, 6)
-                ) : (
-                  <Loader2Icon className='animate-spin' />
-                )
-              ) : (
-                '***'
-              )}
+              {!accessDenied || isMainnet
+                ? (deposit?.amount.toNumber() || 0) / Math.pow(10, 6)
+                : '***'}
             </div>
 
             {token && depositUser && !accessDenied ? (
