@@ -1,4 +1,4 @@
-# Private Payments on Private Epehmeral Rollups (PER)
+# Private Payments on Private Ephemeral Rollups (PER)
 
 A simple payment app that works on Solana with Private Ephemeral Rollup (PER).
 
@@ -8,7 +8,7 @@ A simple payment app that works on Solana with Private Ephemeral Rollup (PER).
   - [Summary](#summary)
   - [How it works](#how-it-works)
     - [Private Ephemeral Rollup](#private-ephemeral-rollup)
-    - [How does private transfers work on PER?](#how-do-private-transfers-work-on-PER?)
+    - [How do private transfers work on PER?](#how-do-private-transfers-work-on-PER?)
   - [Payments provider use-case](#payments-provider-use-case)
   - [Running the demo](#running-the-demo)
     - [Installation](#installation)
@@ -22,7 +22,7 @@ A simple payment app that works on Solana with Private Ephemeral Rollup (PER).
 
 A Private Ephemeral Rollup (PER) is a variant of MagicBlock [Ephemeral Rollup](https://docs.magicblock.gg/pages/get-started/introduction/why-magicblock) (ER), that runs the validator inside a Trusted Execution Environment (TEE), specifically Intel Trust Domain Extension (TDX), to provide privacy and auditability.
 
-PER operaters can configure a middleware that enable user-specific READ/WRITE permissions on Solana account level:
+PER operators can configure a middleware that enables user-specific READ/WRITE permissions on Solana account level:
 - **Fine-grained Privacy Control** on individual Solana accounts and account groups
 - **Simple Authentication via Session Keys** after signing challenge with private key
 - **Customizable Permissions** are stored, enforced, modifiable through on-chain permission program and metadata accounts.
@@ -53,12 +53,12 @@ A typical interaction will go as follows (illustrated below):
 For operators:
 1. Payment provider configures on-chain READ/WRITE permission settings for internal team, merchants (clients) and users.
 2. Payment provider creates on-chain roles on PER such as internal team group and merchant-specific groups.
-3. Payment provider enable READ permissions on delegated accounts for specific roles, while users retain READ/WRITE permission on their own delegated accounts.
+3. Payment provider enables READ permissions on delegated accounts for specific roles, while users retain READ/WRITE permission on their own delegated accounts.
 
 For users:
 1. Bob deposits 100 USDC into his deposit account on Solana
 2. Bob conceals his deposit account by delegating to PER
-4. Bob makes private transfer to Alice on PER
+4. Bob makes a private transfer to Alice on PER
 5. Alice can continue receiving and sending transfers privately on PER until she decides to undelegate and reveal her balance on Solana.
 
 
