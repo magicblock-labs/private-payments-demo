@@ -169,7 +169,11 @@ export default function SimpleTransfer({
           <Button
             className='w-full'
             onClick={handleTransfer}
-            disabled={isTransferring || !selectedAddress}
+            disabled={
+              isTransferring ||
+              !selectedAddress ||
+              selectedAddress === wallet?.publicKey?.toString()
+            }
           >
             Transfer
             {isTransferring ? <Loader2Icon className='animate-spin' /> : null}
