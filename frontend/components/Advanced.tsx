@@ -19,7 +19,7 @@ export default function HomePage() {
     <div className='container flex flex-col gap-4 mx-auto mt-5 justify-center items-center'>
       <Navbar />
 
-      <Tokens />
+      <Tokens deposit />
       {wallet?.publicKey && (
         <>
           <Deposit />

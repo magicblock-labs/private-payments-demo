@@ -38,7 +38,7 @@ import { useProgram } from '@/hooks/use-program';
 import { GROUP_SEED, PERMISSION_PROGRAM_ID, PERMISSION_SEED } from '@/lib/constants';
 import { BN } from '@coral-xyz/anchor';
 
-const Tokens: React.FC = () => {
+const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
   const { connection } = useConnection();
   const wallet = useAnchorWallet();
   const { program, getDepositPda, getVaultPda } = useProgram();
@@ -56,164 +56,171 @@ const Tokens: React.FC = () => {
     );
   }, [selectedToken, wallet]);
 
-  const createToken = useCallback(async () => {
-    if (!wallet?.publicKey || !program) return;
+  const createToken = useCallback(
+    async (mintKp: Keypair, deposit: boolean) => {
+      if (!wallet?.publicKey || !program) return;
 
-    setIsCreating(true);
+      setIsCreating(true);
 
-    try {
-      const { blockhash } = await connection.getLatestBlockhash();
+      try {
+        const { blockhash } = await connection.getLatestBlockhash();
 
-      const mintKp = Keypair.generate();
-      const createIx = SystemProgram.createAccount({
-        fromPubkey: wallet.publicKey,
-        newAccountPubkey: mintKp.publicKey,
-        space: MINT_SIZE,
-        lamports: await getMinimumBalanceForRentExemptMint(connection),
-        programId: TOKEN_PROGRAM_ID,
-      });
+        const createIx = SystemProgram.createAccount({
+          fromPubkey: wallet.publicKey,
+          newAccountPubkey: mintKp.publicKey,
+          space: MINT_SIZE,
+          lamports: await getMinimumBalanceForRentExemptMint(connection),
+          programId: TOKEN_PROGRAM_ID,
+        });
 
-      const createMintIx = createInitializeMint2Instruction(
-        mintKp.publicKey,
-        6,
-        wallet.publicKey,
-        null,
-        TOKEN_PROGRAM_ID,
-      );
+        const createMintIx = createInitializeMint2Instruction(
+          mintKp.publicKey,
+          6,
+          wallet.publicKey,
+          null,
+          TOKEN_PROGRAM_ID,
+        );
 
-      const associatedTokenAccount = getAssociatedTokenAddressSync(
-        mintKp.publicKey,
-        wallet.publicKey,
-        true,
-        TOKEN_PROGRAM_ID,
-      );
+        const associatedTokenAccount = getAssociatedTokenAddressSync(
+          mintKp.publicKey,
+          wallet.publicKey,
+          true,
+          TOKEN_PROGRAM_ID,
+        );
 
-      const createAccountIx = createAssociatedTokenAccountIdempotentInstruction(
-        wallet.publicKey,
-        associatedTokenAccount,
-        wallet.publicKey,
-        mintKp.publicKey,
-        TOKEN_PROGRAM_ID,
-      );
+        const createAccountIx = createAssociatedTokenAccountIdempotentInstruction(
+          wallet.publicKey,
+          associatedTokenAccount,
+          wallet.publicKey,
+          mintKp.publicKey,
+          TOKEN_PROGRAM_ID,
+        );
 
-      const mintIx = createMintToCheckedInstruction(
-        mintKp.publicKey,
-        associatedTokenAccount,
-        wallet.publicKey,
-        amount * Math.pow(10, 6),
-        6,
-        [],
-        TOKEN_PROGRAM_ID,
-      );
+        const mintIx = createMintToCheckedInstruction(
+          mintKp.publicKey,
+          associatedTokenAccount,
+          wallet.publicKey,
+          amount * Math.pow(10, 6),
+          6,
+          [],
+          TOKEN_PROGRAM_ID,
+        );
 
-      const depositPda = getDepositPda(wallet.publicKey, mintKp.publicKey)!;
-      const vaultPda = getVaultPda(mintKp.publicKey)!;
-      const initIx = await program.methods
-        .initializeDeposit()
-        .accountsPartial({
-          payer: program.provider.publicKey,
-          user: wallet.publicKey,
-          deposit: depositPda,
-          tokenMint: mintKp.publicKey,
-          tokenProgram: TOKEN_PROGRAM_ID,
-        })
-        .instruction();
+        const depositPda = getDepositPda(wallet.publicKey, mintKp.publicKey)!;
+        const vaultPda = getVaultPda(mintKp.publicKey)!;
+        const initIx = await program.methods
+          .initializeDeposit()
+          .accountsPartial({
+            payer: program.provider.publicKey,
+            user: wallet.publicKey,
+            deposit: depositPda,
+            tokenMint: mintKp.publicKey,
+            tokenProgram: TOKEN_PROGRAM_ID,
+          })
+          .instruction();
 
-      const id = Keypair.generate().publicKey;
-      const permission = PublicKey.findProgramAddressSync(
-        [PERMISSION_SEED, depositPda.toBuffer()],
-        PERMISSION_PROGRAM_ID,
-      )[0];
-      const group = PublicKey.findProgramAddressSync(
-        [GROUP_SEED, id.toBuffer()],
-        PERMISSION_PROGRAM_ID,
-      )[0];
+        const id = Keypair.generate().publicKey;
+        const permission = PublicKey.findProgramAddressSync(
+          [PERMISSION_SEED, depositPda.toBuffer()],
+          PERMISSION_PROGRAM_ID,
+        )[0];
+        const group = PublicKey.findProgramAddressSync(
+          [GROUP_SEED, id.toBuffer()],
+          PERMISSION_PROGRAM_ID,
+        )[0];
 
-      const createPermissionIx = await program.methods
-        .createPermission(id)
-        .accountsPartial({
-          payer: program.provider.publicKey,
-          user: wallet.publicKey,
-          deposit: depositPda,
-          permission,
-          group,
-          permissionProgram: PERMISSION_PROGRAM_ID,
-        })
-        .instruction();
+        const createPermissionIx = await program.methods
+          .createPermission(id)
+          .accountsPartial({
+            payer: program.provider.publicKey,
+            user: wallet.publicKey,
+            deposit: depositPda,
+            permission,
+            group,
+            permissionProgram: PERMISSION_PROGRAM_ID,
+          })
+          .instruction();
 
-      const depositIx = await program.methods
-        .modifyBalance({ amount: new BN(amount * Math.pow(10, 6)), increase: true })
-        .accountsPartial({
-          payer: program.provider.publicKey,
-          user: wallet.publicKey,
-          vault: vaultPda,
-          deposit: depositPda,
-          userTokenAccount: getAssociatedTokenAddressSync(
-            mintKp.publicKey,
-            wallet.publicKey,
-            true,
-            TOKEN_PROGRAM_ID,
-          ),
-          vaultTokenAccount: getAssociatedTokenAddressSync(
-            mintKp.publicKey,
-            vaultPda,
-            true,
-            TOKEN_PROGRAM_ID,
-          ),
-          tokenMint: mintKp.publicKey,
-          tokenProgram: TOKEN_PROGRAM_ID,
-        })
-        .instruction();
+        let depositIx = null;
+        if (deposit) {
+          const depositIx = await program.methods
+            .modifyBalance({ amount: new BN(amount * Math.pow(10, 6)), increase: true })
+            .accountsPartial({
+              payer: program.provider.publicKey,
+              user: wallet.publicKey,
+              vault: vaultPda,
+              deposit: depositPda,
+              userTokenAccount: getAssociatedTokenAddressSync(
+                mintKp.publicKey,
+                wallet.publicKey,
+                true,
+                TOKEN_PROGRAM_ID,
+              ),
+              vaultTokenAccount: getAssociatedTokenAddressSync(
+                mintKp.publicKey,
+                vaultPda,
+                true,
+                TOKEN_PROGRAM_ID,
+              ),
+              tokenMint: mintKp.publicKey,
+              tokenProgram: TOKEN_PROGRAM_ID,
+            })
+            .instruction();
+        }
 
-      const finalTx = new Transaction().add(
-        createIx,
-        createMintIx,
-        createAccountIx,
-        mintIx,
-        initIx,
-        createPermissionIx,
-        depositIx,
-      );
-      finalTx.recentBlockhash = blockhash;
-      finalTx.feePayer = wallet.publicKey;
-      finalTx.partialSign(mintKp);
+        const finalTx = new Transaction().add(
+          createIx,
+          createMintIx,
+          createAccountIx,
+          mintIx,
+          initIx,
+          createPermissionIx,
+        );
+        if (deposit) {
+          finalTx.add(depositIx!);
+        }
+        finalTx.recentBlockhash = blockhash;
+        finalTx.feePayer = wallet.publicKey;
+        finalTx.partialSign(mintKp);
 
-      const txs = await wallet.signAllTransactions([finalTx]);
+        const txs = await wallet.signAllTransactions([finalTx]);
 
-      // Use a for loop to preserve order of transactions
-      const sigs = [];
-      for (const tx of txs) {
-        const sig = await connection.sendRawTransaction(tx.serialize());
-        sigs.push(sig);
-      }
+        // Use a for loop to preserve order of transactions
+        const sigs = [];
+        for (const tx of txs) {
+          const sig = await connection.sendRawTransaction(tx.serialize());
+          sigs.push(sig);
+        }
 
-      // Wait for all transactions to be confirmed
-      await Promise.all(
-        sigs.map(async sig => {
-          await connection.confirmTransaction(sig);
-        }),
-      );
+        // Wait for all transactions to be confirmed
+        await Promise.all(
+          sigs.map(async sig => {
+            await connection.confirmTransaction(sig);
+          }),
+        );
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
-      setTokens([
-        ...tokenList,
-        {
+        setTokens([
+          ...tokenList,
+          {
+            mint: mintKp.publicKey.toString(),
+            creator: wallet.publicKey.toString(),
+          },
+        ]);
+        // Reset token to refresh components
+        setToken(undefined);
+        setToken({
           mint: mintKp.publicKey.toString(),
           creator: wallet.publicKey.toString(),
-        },
-      ]);
-      // Reset token to refresh components
-      setToken(undefined);
-      setToken({
-        mint: mintKp.publicKey.toString(),
-        creator: wallet.publicKey.toString(),
-      });
-      toast.success(`Token ${mintKp.publicKey.toString()} created successfully`);
-    } finally {
-      setIsCreating(false);
-    }
-  }, [amount, wallet, connection, tokenList, setTokens, setToken]);
+        });
+        toast.success(`Token ${mintKp.publicKey.toString()} created successfully`);
+      } finally {
+        setIsCreating(false);
+      }
+    },
+    [amount, wallet, connection, tokenList, setTokens, setToken],
+  );
 
   useEffect(() => {
     const getBalance = async () => {
@@ -310,7 +317,7 @@ const Tokens: React.FC = () => {
               onChange={e => setAmount(Number(e.target.value))}
             />
           </div>
-          <Button onClick={createToken} disabled={isCreating}>
+          <Button onClick={() => createToken(Keypair.generate(), deposit)} disabled={isCreating}>
             Create Token
             {isCreating && <Loader2Icon className='animate-spin' />}
           </Button>
