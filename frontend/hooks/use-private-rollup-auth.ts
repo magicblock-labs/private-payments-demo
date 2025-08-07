@@ -6,19 +6,32 @@ import { EPHEMERAL_RPC_URL } from '../lib/constants';
 import { toast } from 'sonner';
 
 const SESSION_DURATION = 1000 * 60 * 60 * 24 * 30; // 30 days
-const TOKENS_STORAGE_KEY = 'private-rollup-tokens';
-const TOKENS_CHANGE_EVENT = 'private-rollup-tokens-changed';
+const TOKENS_STORAGE_KEY = 'private-rollup-auth-tokens';
+const TOKENS_CHANGE_EVENT = 'private-rollup-auth-tokens-changed';
 
 // Generate a unique instance ID
 let instanceCounter = 0;
+
+type AuthToken = {token: string, expiresAt: number};
 
 export function usePrivateRollupAuth() {
   const instanceId = useRef(++instanceCounter);
   const wallet = useAnchorWallet();
   const { signMessage } = useWallet();
-  const [tokens, setTokensState] = useState<Record<string, string>>({});
+  const [tokens, setTokensState] = useState<Record<string, AuthToken>>({});
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const isMountedRef = useRef(true);
+
+  const authToken = useMemo(() => {
+    let pk = wallet?.publicKey?.toBase58();
+    if (pk) {
+      let token = tokens[pk] ?? null;
+      if(token.expiresAt > Date.now()) {
+        return token.token;
+      }
+    }
+    return null;
+  }, [tokens, wallet]);
 
   // Track component lifecycle
   useEffect(() => {
@@ -61,8 +74,8 @@ export function usePrivateRollupAuth() {
   const setTokens = useCallback(
     (
       newTokens:
-        | Record<string, string>
-        | ((prev: Record<string, string>) => Record<string, string>),
+        | Record<string, AuthToken>
+        | ((prev: Record<string, AuthToken>) => Record<string, AuthToken>),
     ) => {
       if (!isMountedRef.current) {
         return;
@@ -87,20 +100,13 @@ export function usePrivateRollupAuth() {
     [],
   );
 
-  const authToken = useMemo(() => {
-    let pk = wallet?.publicKey?.toBase58();
-    if (pk) {
-      return tokens[pk] ?? null;
-    }
-    return null;
-  }, [tokens, wallet]);
-
   const getToken = useCallback(async () => {
     if (!wallet || !signMessage) return;
 
     setIsAuthenticating(true);
 
     try {
+      const expiresAt = Date.now() + SESSION_DURATION;
       const challengeResponse = await fetch(
         `${EPHEMERAL_RPC_URL}/auth/challenge?pubkey=${wallet.publicKey.toBase58()}`,
       );
@@ -115,8 +121,8 @@ export function usePrivateRollupAuth() {
         method: 'POST',
         body: JSON.stringify({
           pubkey: wallet.publicKey.toBase58(),
-          message: challengeJson.challenge,
-          signed_message: signatureString,
+          challenge: challengeJson.challenge,
+          signature: signatureString,
         }),
       });
       const authJson = await authResponse.json();
@@ -127,7 +133,7 @@ export function usePrivateRollupAuth() {
 
       setTokens(oldTokens => ({
         ...oldTokens,
-        [wallet.publicKey.toBase58()]: authJson.token,
+        [wallet.publicKey.toBase58()]: {token: authJson.token, expiresAt },
       }));
       toast.success(`Authenticated ${wallet.publicKey.toBase58()} successfully`);
     } catch (error) {
