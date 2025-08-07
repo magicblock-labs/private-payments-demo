@@ -4,9 +4,14 @@ import { useAnchorWallet } from '@solana/wallet-adapter-react';
 import { Keypair, Transaction } from '@solana/web3.js';
 import { PublicKey } from '@solana/web3.js';
 import { useCallback, useMemo } from 'react';
+import {
+  PERMISSION_PROGRAM_ID,
+  permissionPdaFromAccount,
+  groupPdaFromId,
+} from '@magicblock-labs/ephemeral-rollups-sdk/privacy';
 
-import { GROUP_SEED, PERMISSION_PROGRAM_ID, VAULT_PDA_SEED } from '../lib/constants';
-import { DEPOSIT_PDA_SEED, PERMISSION_SEED } from '../lib/constants';
+import { VAULT_PDA_SEED } from '../lib/constants';
+import { DEPOSIT_PDA_SEED } from '../lib/constants';
 import { PrivatePayments } from '../program/private_payments';
 import PrivatePaymentsIdl from '../program/private_payments.json';
 
@@ -64,14 +69,8 @@ export function useProgram() {
         .instruction();
 
       const id = Keypair.generate().publicKey;
-      const permission = PublicKey.findProgramAddressSync(
-        [PERMISSION_SEED, deposit.toBuffer()],
-        PERMISSION_PROGRAM_ID,
-      )[0];
-      const group = PublicKey.findProgramAddressSync(
-        [GROUP_SEED, id.toBuffer()],
-        PERMISSION_PROGRAM_ID,
-      )[0];
+      const permission = permissionPdaFromAccount(deposit);
+      const group = groupPdaFromId(id);
 
       const createPermissionIx = await program.methods
       .createPermission(id)
