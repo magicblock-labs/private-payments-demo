@@ -26,7 +26,7 @@ export function usePrivateRollupAuth() {
     let pk = wallet?.publicKey?.toBase58();
     if (pk) {
       let token = tokens[pk] ?? null;
-      if(token.expiresAt > Date.now()) {
+      if(token?.expiresAt > Date.now()) {
         return token.token;
       }
     }
