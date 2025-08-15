@@ -11,20 +11,16 @@ use anchor_lang::prelude::{AnchorDeserialize, AnchorSerialize};
 use borsh::{BorshDeserialize, BorshSerialize};
 
 /// Accounts.
-pub struct CreatePermission {
-    /// The new permission
+pub struct UpdatePermission {
+    /// The permission
     pub permission: solana_program::pubkey::Pubkey,
     /// The delegatable account
     pub delegated_account: solana_program::pubkey::Pubkey,
-    /// The group who has the permission
+    /// The new group for the permission
     pub group: solana_program::pubkey::Pubkey,
-    /// The account paying for the rent
-    pub payer: solana_program::pubkey::Pubkey,
-    /// The system program
-    pub system_program: solana_program::pubkey::Pubkey,
 }
 
-impl CreatePermission {
+impl UpdatePermission {
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(&[])
     }
@@ -33,7 +29,7 @@ impl CreatePermission {
         &self,
         remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
-        let mut accounts = Vec::with_capacity(5 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(3 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new(
             self.permission,
             false,
@@ -45,15 +41,8 @@ impl CreatePermission {
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.group, false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.payer, true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            self.system_program,
-            false,
-        ));
         accounts.extend_from_slice(remaining_accounts);
-        let data = CreatePermissionInstructionData::new().try_to_vec().unwrap();
+        let data = UpdatePermissionInstructionData::new().try_to_vec().unwrap();
 
         solana_program::instruction::Instruction {
             program_id: crate::MAGICBLOCK_PERMISSION_PROGRAM_ID,
@@ -65,40 +54,36 @@ impl CreatePermission {
 
 #[cfg_attr(not(feature = "anchor"), derive(BorshSerialize, BorshDeserialize))]
 #[cfg_attr(feature = "anchor", derive(AnchorSerialize, AnchorDeserialize))]
-pub struct CreatePermissionInstructionData {
+pub struct UpdatePermissionInstructionData {
     discriminator: u8,
 }
 
-impl CreatePermissionInstructionData {
+impl UpdatePermissionInstructionData {
     pub fn new() -> Self {
-        Self { discriminator: 1 }
+        Self { discriminator: 2 }
     }
 }
 
-/// Instruction builder for `CreatePermission`.
+/// Instruction builder for `UpdatePermission`.
 ///
 /// ### Accounts:
 ///
 ///   0. `[writable]` permission
 ///   1. `[signer]` delegated_account
 ///   2. `[]` group
-///   3. `[writable, signer]` payer
-///   4. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Default)]
-pub struct CreatePermissionBuilder {
+pub struct UpdatePermissionBuilder {
     permission: Option<solana_program::pubkey::Pubkey>,
     delegated_account: Option<solana_program::pubkey::Pubkey>,
     group: Option<solana_program::pubkey::Pubkey>,
-    payer: Option<solana_program::pubkey::Pubkey>,
-    system_program: Option<solana_program::pubkey::Pubkey>,
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
-impl CreatePermissionBuilder {
+impl UpdatePermissionBuilder {
     pub fn new() -> Self {
         Self::default()
     }
-    /// The new permission
+    /// The permission
     #[inline(always)]
     pub fn permission(&mut self, permission: solana_program::pubkey::Pubkey) -> &mut Self {
         self.permission = Some(permission);
@@ -113,23 +98,10 @@ impl CreatePermissionBuilder {
         self.delegated_account = Some(delegated_account);
         self
     }
-    /// The group who has the permission
+    /// The new group for the permission
     #[inline(always)]
     pub fn group(&mut self, group: solana_program::pubkey::Pubkey) -> &mut Self {
         self.group = Some(group);
-        self
-    }
-    /// The account paying for the rent
-    #[inline(always)]
-    pub fn payer(&mut self, payer: solana_program::pubkey::Pubkey) -> &mut Self {
-        self.payer = Some(payer);
-        self
-    }
-    /// `[optional account, default to '11111111111111111111111111111111']`
-    /// The system program
-    #[inline(always)]
-    pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
-        self.system_program = Some(system_program);
         self
     }
     /// Add an aditional account to the instruction.
@@ -152,64 +124,50 @@ impl CreatePermissionBuilder {
     }
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
-        let accounts = CreatePermission {
+        let accounts = UpdatePermission {
             permission: self.permission.expect("permission is not set"),
             delegated_account: self
                 .delegated_account
                 .expect("delegated_account is not set"),
             group: self.group.expect("group is not set"),
-            payer: self.payer.expect("payer is not set"),
-            system_program: self
-                .system_program
-                .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
         };
 
         accounts.instruction_with_remaining_accounts(&self.__remaining_accounts)
     }
 }
 
-/// `create_permission` CPI accounts.
-pub struct CreatePermissionCpiAccounts<'a, 'b> {
-    /// The new permission
+/// `update_permission` CPI accounts.
+pub struct UpdatePermissionCpiAccounts<'a, 'b> {
+    /// The permission
     pub permission: &'b solana_program::account_info::AccountInfo<'a>,
     /// The delegatable account
     pub delegated_account: &'b solana_program::account_info::AccountInfo<'a>,
-    /// The group who has the permission
+    /// The new group for the permission
     pub group: &'b solana_program::account_info::AccountInfo<'a>,
-    /// The account paying for the rent
-    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
-    /// The system program
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
 }
 
-/// `create_permission` CPI instruction.
-pub struct CreatePermissionCpi<'a, 'b> {
+/// `update_permission` CPI instruction.
+pub struct UpdatePermissionCpi<'a, 'b> {
     /// The program to invoke.
     pub __program: &'b solana_program::account_info::AccountInfo<'a>,
-    /// The new permission
+    /// The permission
     pub permission: &'b solana_program::account_info::AccountInfo<'a>,
     /// The delegatable account
     pub delegated_account: &'b solana_program::account_info::AccountInfo<'a>,
-    /// The group who has the permission
+    /// The new group for the permission
     pub group: &'b solana_program::account_info::AccountInfo<'a>,
-    /// The account paying for the rent
-    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
-    /// The system program
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
 }
 
-impl<'a, 'b> CreatePermissionCpi<'a, 'b> {
+impl<'a, 'b> UpdatePermissionCpi<'a, 'b> {
     pub fn new(
         program: &'b solana_program::account_info::AccountInfo<'a>,
-        accounts: CreatePermissionCpiAccounts<'a, 'b>,
+        accounts: UpdatePermissionCpiAccounts<'a, 'b>,
     ) -> Self {
         Self {
             __program: program,
             permission: accounts.permission,
             delegated_account: accounts.delegated_account,
             group: accounts.group,
-            payer: accounts.payer,
-            system_program: accounts.system_program,
         }
     }
     #[inline(always)]
@@ -245,7 +203,7 @@ impl<'a, 'b> CreatePermissionCpi<'a, 'b> {
             bool,
         )],
     ) -> solana_program::entrypoint::ProgramResult {
-        let mut accounts = Vec::with_capacity(5 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(3 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new(
             *self.permission.key,
             false,
@@ -258,14 +216,6 @@ impl<'a, 'b> CreatePermissionCpi<'a, 'b> {
             *self.group.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.payer.key,
-            true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            *self.system_program.key,
-            false,
-        ));
         remaining_accounts.iter().for_each(|remaining_account| {
             accounts.push(solana_program::instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
@@ -273,20 +223,18 @@ impl<'a, 'b> CreatePermissionCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let data = CreatePermissionInstructionData::new().try_to_vec().unwrap();
+        let data = UpdatePermissionInstructionData::new().try_to_vec().unwrap();
 
         let instruction = solana_program::instruction::Instruction {
             program_id: crate::MAGICBLOCK_PERMISSION_PROGRAM_ID,
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(5 + 1 + remaining_accounts.len());
+        let mut account_infos = Vec::with_capacity(3 + 1 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.permission.clone());
         account_infos.push(self.delegated_account.clone());
         account_infos.push(self.group.clone());
-        account_infos.push(self.payer.clone());
-        account_infos.push(self.system_program.clone());
         remaining_accounts
             .iter()
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
@@ -299,33 +247,29 @@ impl<'a, 'b> CreatePermissionCpi<'a, 'b> {
     }
 }
 
-/// Instruction builder for `CreatePermission` via CPI.
+/// Instruction builder for `UpdatePermission` via CPI.
 ///
 /// ### Accounts:
 ///
 ///   0. `[writable]` permission
 ///   1. `[signer]` delegated_account
 ///   2. `[]` group
-///   3. `[writable, signer]` payer
-///   4. `[]` system_program
-pub struct CreatePermissionCpiBuilder<'a, 'b> {
-    instruction: Box<CreatePermissionCpiBuilderInstruction<'a, 'b>>,
+pub struct UpdatePermissionCpiBuilder<'a, 'b> {
+    instruction: Box<UpdatePermissionCpiBuilderInstruction<'a, 'b>>,
 }
 
-impl<'a, 'b> CreatePermissionCpiBuilder<'a, 'b> {
+impl<'a, 'b> UpdatePermissionCpiBuilder<'a, 'b> {
     pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
-        let instruction = Box::new(CreatePermissionCpiBuilderInstruction {
+        let instruction = Box::new(UpdatePermissionCpiBuilderInstruction {
             __program: program,
             permission: None,
             delegated_account: None,
             group: None,
-            payer: None,
-            system_program: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
     }
-    /// The new permission
+    /// The permission
     #[inline(always)]
     pub fn permission(
         &mut self,
@@ -343,25 +287,10 @@ impl<'a, 'b> CreatePermissionCpiBuilder<'a, 'b> {
         self.instruction.delegated_account = Some(delegated_account);
         self
     }
-    /// The group who has the permission
+    /// The new group for the permission
     #[inline(always)]
     pub fn group(&mut self, group: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.group = Some(group);
-        self
-    }
-    /// The account paying for the rent
-    #[inline(always)]
-    pub fn payer(&mut self, payer: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
-        self.instruction.payer = Some(payer);
-        self
-    }
-    /// The system program
-    #[inline(always)]
-    pub fn system_program(
-        &mut self,
-        system_program: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
-        self.instruction.system_program = Some(system_program);
         self
     }
     /// Add an additional account to the instruction.
@@ -405,7 +334,7 @@ impl<'a, 'b> CreatePermissionCpiBuilder<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program::entrypoint::ProgramResult {
-        let instruction = CreatePermissionCpi {
+        let instruction = UpdatePermissionCpi {
             __program: self.instruction.__program,
 
             permission: self.instruction.permission.expect("permission is not set"),
@@ -416,13 +345,6 @@ impl<'a, 'b> CreatePermissionCpiBuilder<'a, 'b> {
                 .expect("delegated_account is not set"),
 
             group: self.instruction.group.expect("group is not set"),
-
-            payer: self.instruction.payer.expect("payer is not set"),
-
-            system_program: self
-                .instruction
-                .system_program
-                .expect("system_program is not set"),
         };
         instruction.invoke_signed_with_remaining_accounts(
             signers_seeds,
@@ -431,13 +353,11 @@ impl<'a, 'b> CreatePermissionCpiBuilder<'a, 'b> {
     }
 }
 
-struct CreatePermissionCpiBuilderInstruction<'a, 'b> {
+struct UpdatePermissionCpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_program::account_info::AccountInfo<'a>,
     permission: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     delegated_account: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     group: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    payer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(
         &'b solana_program::account_info::AccountInfo<'a>,

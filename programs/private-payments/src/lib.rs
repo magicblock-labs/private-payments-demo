@@ -120,9 +120,8 @@ pub mod private_payments {
 
         CreatePermissionCpiBuilder::new(&permission_program)
             .permission(&permission)
-            .group(&group)
             .delegated_account(&deposit.to_account_info())
-            .owner(&deposit.to_account_info())
+            .group(&group)
             .payer(&payer)
             .system_program(system_program)
             .invoke_signed(&[&[

@@ -138,6 +138,7 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
             permission,
             group,
             permissionProgram: PERMISSION_PROGRAM_ID,
+            systemProgram: SystemProgram.programId,
           })
           .instruction();
 
@@ -176,6 +177,7 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
           initIx,
           createPermissionIx,
         );
+        console.log(finalTx);
         if (deposit) {
           finalTx.add(depositIx!);
         }
@@ -184,6 +186,8 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
         finalTx.partialSign(mintKp);
 
         const txs = await wallet.signAllTransactions([finalTx]);
+        const simulation = await connection.simulateTransaction(finalTx);
+        console.log(simulation);
 
         // Use a for loop to preserve order of transactions
         const sigs = [];

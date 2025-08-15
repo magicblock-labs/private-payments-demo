@@ -1,7 +1,7 @@
 import { BN, Program } from '@coral-xyz/anchor';
 import { getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
-import { Keypair } from '@solana/web3.js';
+import { Keypair, Transaction } from '@solana/web3.js';
 import { PublicKey } from '@solana/web3.js';
 import { useCallback, useMemo } from 'react';
 
@@ -73,18 +73,24 @@ export function useProgram() {
         PERMISSION_PROGRAM_ID,
       )[0];
 
-      await program.methods
-        .createPermission(id)
-        .accountsPartial({
-          payer: program.provider.publicKey,
-          user,
-          deposit,
-          permission,
-          group,
-          permissionProgram: PERMISSION_PROGRAM_ID,
-        })
-        .preInstructions([initIx])
-        .rpc();
+      const createPermissionIx = await program.methods
+      .createPermission(id)
+      .accountsPartial({
+        payer: program.provider.publicKey,
+        user,
+        deposit,
+        permission,
+        group,
+        permissionProgram: PERMISSION_PROGRAM_ID,
+      })
+      .instruction();
+      
+      console.log(initIx, createPermissionIx)
+      const tx = new Transaction().add(initIx).add(createPermissionIx);
+      const signedTx = await wallet?.signTransaction(tx);
+      if (!signedTx) return;
+      const txHash = await program.provider.sendAndConfirm?.(signedTx);
+      console.log(txHash);
 
       return deposit;
     },

@@ -7,6 +7,8 @@
 
 pub(crate) mod r#create_group;
 pub(crate) mod r#create_permission;
+pub(crate) mod r#update_permission;
 
 pub use self::r#create_group::*;
 pub use self::r#create_permission::*;
+pub use self::r#update_permission::*;
