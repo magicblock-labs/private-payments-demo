@@ -120,6 +120,7 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
             deposit: depositPda,
             tokenMint: mintKp.publicKey,
             tokenProgram: TOKEN_PROGRAM_ID,
+            systemProgram: SystemProgram.programId,
           })
           .instruction();
 
@@ -142,7 +143,7 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
 
         let depositIx = null;
         if (deposit) {
-          const depositIx = await program.methods
+          depositIx = await program.methods
             .modifyBalance({ amount: new BN(amount * Math.pow(10, 6)), increase: true })
             .accountsPartial({
               payer: program.provider.publicKey,
