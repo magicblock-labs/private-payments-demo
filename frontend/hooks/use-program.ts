@@ -83,14 +83,8 @@ export function useProgram() {
         group,
         permissionProgram: PERMISSION_PROGRAM_ID,
       })
-      .instruction();
-      
-      console.log(initIx, createPermissionIx)
-      const tx = new Transaction().add(initIx).add(createPermissionIx);
-      const signedTx = await wallet?.signTransaction(tx);
-      if (!signedTx) return;
-      const txHash = await program.provider.sendAndConfirm?.(signedTx);
-      console.log(txHash);
+      .preInstructions([initIx])
+      .rpc();
 
       return deposit;
     },
