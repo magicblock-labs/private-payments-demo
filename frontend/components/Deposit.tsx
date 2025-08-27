@@ -20,12 +20,12 @@ const Deposit: React.FC = () => {
 
   return (
     <>
-      <Card>
+      <Card className='p-4 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20 border border-blue-200/50 dark:border-blue-800/50 rounded-lg'>
         <CardHeader>
           <H2>Public Solana</H2>
         </CardHeader>
-        <CardContent className='flex flex-col gap-4 items-center w-3xl mx-auto'>
-          <div className='flex gap-4'>
+        <CardContent className='flex flex-col gap-4 items-center w-full'>
+          <div className='grid grid-cols-1 md:grid-cols-3 gap-4 w-full'>
             {wallet?.publicKey ? (
               <ManageDeposit token={token} isMainnet />
             ) : (
@@ -53,18 +53,18 @@ const Deposit: React.FC = () => {
           </div>
         </CardContent>
       </Card>
-      <Card>
+      <Card className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 border border-purple-200/50 dark:border-purple-800/50 rounded-lg">
         <CardHeader>
           <H2>Private Ephemeral Rollup</H2>
         </CardHeader>
-        <CardContent className='flex flex-col gap-4 items-center max-w-5xl mx-auto'>
+        <CardContent className='flex flex-col gap-4 items-center w-full'>
           {!authToken && (
             <Button className='w-full' onClick={getToken} disabled={isAuthenticating}>
               Authenticate
               {isAuthenticating && <Loader2Icon className='animate-spin' />}
             </Button>
           )}
-          <div className='flex gap-4'>
+          <div className='grid grid-cols-1 md:grid-cols-3  gap-4 w-full'>
             {wallet?.publicKey ? (
               <ManageDeposit token={token} />
             ) : (
