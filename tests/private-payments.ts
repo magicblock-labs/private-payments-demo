@@ -7,6 +7,7 @@ import {
   PERMISSION_SEED,
   GROUP_SEED,
   DEPOSIT_PDA_SEED,
+  VAULT_PDA_SEED,
 } from "../frontend/lib/constants";
 import privatePaymentsIdl from "../frontend/program/private_payments.json";
 import {
@@ -49,7 +50,7 @@ describe("private-payments", () => {
   const otherUser = otherUserKp.publicKey;
   let tokenMint: PublicKey,
     userTokenAccount: PublicKey,
-    depositTokenAccount: PublicKey;
+    vaultTokenAccount: PublicKey;
   const initialAmount = 1000000;
   const groupId = PublicKey.unique();
   const otherGroupId = PublicKey.unique();
@@ -109,6 +110,10 @@ describe("private-payments", () => {
       ],
       program.programId
     )[0];
+    vaultTokenAccount = PublicKey.findProgramAddressSync(
+      [Buffer.from(VAULT_PDA_SEED), tokenMint.toBuffer()],
+      program.programId
+    )[0];
 
     userTokenAccount = await createAssociatedTokenAccountIdempotent(
       provider.connection,
@@ -136,7 +141,7 @@ describe("private-payments", () => {
     );
 
     console.log("User token account", userTokenAccount.toBase58());
-    console.log("Deposit token account", depositTokenAccount.toBase58());
+    console.log("Vault token account", vaultTokenAccount.toBase58());
     console.log("Deposit PDA", depositPda.toBase58());
     console.log("Other deposit PDA", otherDepositPda.toBase58());
     console.log("User", user.toBase58());
@@ -178,7 +183,7 @@ describe("private-payments", () => {
         user,
         deposit: depositPda,
         userTokenAccount,
-        depositTokenAccount,
+        vaultTokenAccount,
         tokenMint,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
@@ -196,7 +201,7 @@ describe("private-payments", () => {
         user,
         deposit: depositPda,
         userTokenAccount,
-        depositTokenAccount,
+        vaultTokenAccount,
         tokenMint,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
@@ -213,7 +218,7 @@ describe("private-payments", () => {
         user,
         deposit: depositPda,
         userTokenAccount,
-        depositTokenAccount,
+        vaultTokenAccount,
         tokenMint,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
