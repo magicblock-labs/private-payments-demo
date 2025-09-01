@@ -7,11 +7,19 @@ use ephemeral_rollups_sdk::ephem::commit_and_undelegate_accounts;
 use magicblock_permission_client::instructions::{
     CreateGroupCpiBuilder, CreatePermissionCpiBuilder,
 };
+use session_keys::{SessionError, SessionToken, session_auth_or, Session};
 
 declare_id!("EnhkomtzKms55jXi3ijn9XsMKYpMT4BJjmbuDQmPo3YS");
 
 pub const DEPOSIT_PDA_SEED: &[u8] = b"deposit";
 pub const VAULT_PDA_SEED: &[u8] = b"vault";
+
+#[error_code]
+pub enum ErrorCode {
+    #[msg("Unauthorized")]
+    Unauthorized,
+}
+
 
 #[ephemeral]
 #[program]
@@ -86,6 +94,10 @@ pub mod private_payments {
     /// Transfers a specified amount from one user's deposit account to another's for the same token mint.
     ///
     /// Only updates the internal accounting; does not move actual tokens.
+    #[session_auth_or(
+        ctx.accounts.user.key() == ctx.accounts.source_deposit.user,
+        ErrorCode::Unauthorized
+    )]
     pub fn transfer_deposit(ctx: Context<TransferDeposit>, amount: u64) -> Result<()> {
         let source_deposit = &mut ctx.accounts.source_deposit;
         let destination_deposit = &mut ctx.accounts.destination_deposit;
@@ -149,6 +161,10 @@ pub mod private_payments {
     /// Commits and undelegates the deposit account from the ephemeral rollups program.
     ///
     /// Uses the ephemeral rollups SDK to commit and undelegate the deposit account.
+    #[session_auth_or(
+        ctx.accounts.user.key() == ctx.accounts.deposit.user,
+        ErrorCode::Unauthorized
+    )]
     pub fn undelegate(ctx: Context<UndelegateDeposit>) -> Result<()> {
         commit_and_undelegate_accounts(
             &ctx.accounts.payer,
@@ -226,10 +242,17 @@ pub struct ModifyDeposit<'info> {
     pub system_program: Program<'info, System>,
 }
 
-#[derive(Accounts)]
+#[derive(Accounts, Session)]
 pub struct TransferDeposit<'info> {
+    /// CHECK: Matched against the deposit account
+    pub user: AccountInfo<'info>,
     #[account(mut)]
-    pub user: Signer<'info>,
+    pub signer: Signer<'info>,
+    #[session(
+        signer = signer,
+        authority = user.key()
+    )]
+    pub session_token: Option<Account<'info, SessionToken>>,
     #[account(
         mut,
         seeds = [
@@ -297,12 +320,19 @@ pub struct DelegateDeposit<'info> {
 }
 
 #[commit]
-#[derive(Accounts)]
+#[derive(Accounts, Session)]
 pub struct UndelegateDeposit<'info> {
+    /// CHECK: Matched against the deposit account
+    pub user: AccountInfo<'info>,
+    #[account(mut)]
+    pub signer: Signer<'info>,
+    #[session(
+        signer = signer,
+        authority = user.key()
+    )]
+    pub session_token: Option<Account<'info, SessionToken>>,
     #[account(mut)]
     pub payer: Signer<'info>,
-    #[account(mut)]
-    pub user: Signer<'info>,
     #[account(
         mut,
         seeds = [DEPOSIT_PDA_SEED, user.key().as_ref(), deposit.token_mint.as_ref()],
@@ -320,6 +350,10 @@ pub struct Deposit {
     pub amount: u64,
 }
 
+/// A vault storing deposited tokens.
+/// Has a dummy field because Anchor requires it.
 #[account]
 #[derive(InitSpace)]
-pub struct Vault;
+pub struct Vault {
+    _dummy: u8,
+}

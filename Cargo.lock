@@ -711,12 +711,12 @@ checksum = "48c757948c5ede0e46177b7add2e67155f70e33c07fea8284df6576da70b3719"
 
 [[package]]
 name = "ephemeral-rollups-sdk"
-version = "0.2.5"
+version = "0.2.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1567ae90eac4338ad3d87228bd357b540142af5edbc333c73f06c74cd2bf336f"
+checksum = "ae5b8813a2786422a8de59398901c7a9a206582e7770a102aecbf1f2cf958b28"
 dependencies = [
  "anchor-lang",
- "borsh 0.10.4",
+ "borsh 1.5.7",
  "ephemeral-rollups-sdk-attribute-commit",
  "ephemeral-rollups-sdk-attribute-delegate",
  "ephemeral-rollups-sdk-attribute-ephemeral",
@@ -725,9 +725,9 @@ dependencies = [
 
 [[package]]
 name = "ephemeral-rollups-sdk-attribute-commit"
-version = "0.2.5"
+version = "0.2.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "75518f8c7369c8d704c24b79c9b6338a100531e448966ded8adc33010fb23276"
+checksum = "716665ba2dc9d7e182ac7adb09d01c9e8e3c573e2e01f5cd1281670604aee6f8"
 dependencies = [
  "quote",
  "syn 1.0.109",
@@ -735,9 +735,9 @@ dependencies = [
 
 [[package]]
 name = "ephemeral-rollups-sdk-attribute-delegate"
-version = "0.2.5"
+version = "0.2.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b881281f72fe6fa8fb13b1a5402f809c09358a1032eca1a78d9987bfc99040ec"
+checksum = "e9f692c3bc52e93e6896067a061425534b54578e5983e0a2e45a7d74ef98e264"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -746,9 +746,9 @@ dependencies = [
 
 [[package]]
 name = "ephemeral-rollups-sdk-attribute-ephemeral"
-version = "0.2.5"
+version = "0.2.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a121fb704f5a9ca695a6ef1869ccd65a2f5e1df9756ee0047a7583322517a71d"
+checksum = "593129287cca0779b56b67dadd56e3ebd3294a085d67e3967e43374b8d597af9"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1253,6 +1253,7 @@ dependencies = [
  "anchor-spl",
  "ephemeral-rollups-sdk",
  "magicblock-permission-client",
+ "session-keys",
 ]
 
 [[package]]
@@ -1569,6 +1570,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "session-keys"
+version = "2.0.7"
+dependencies = [
+ "anchor-lang",
+ "session-keys-macros",
+ "solana-security-txt",
+]
+
+[[package]]
+name = "session-keys-macros"
+version = "0.1.1"
+dependencies = [
+ "session-keys-macros-attribute",
+]
+
+[[package]]
+name = "session-keys-macros-attribute"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
+]
+
+[[package]]
 name = "sha2"
 version = "0.9.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1739,9 +1765,9 @@ dependencies = [
 
 [[package]]
 name = "solana-curve25519"
-version = "2.2.15"
+version = "2.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "def3cfe5279edb64fc39111cff6dcf77b01fbfba2c02c13ced41e6a48baf4cbe"
+checksum = "b162f50499b391b785d57b2f2c73e3b9754d88fd4894bef444960b00bda8dcca"
 dependencies = [
  "bytemuck",
  "bytemuck_derive",
@@ -2482,9 +2508,9 @@ dependencies = [
 
 [[package]]
 name = "solana-zk-sdk"
-version = "2.2.15"
+version = "2.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "15045540c315a9b8ea056323e73320e76098dfdaac9e65b1b33fe9c2f3c9b9e1"
+checksum = "3bb171c0f76c420a7cb6aabbe5fa85a1a009d5bb4009189c43e1a03aff9446d7"
 dependencies = [
  "aes-gcm-siv",
  "base64 0.22.1",
@@ -2494,7 +2520,6 @@ dependencies = [
  "curve25519-dalek",
  "itertools",
  "js-sys",
- "lazy_static",
  "merlin",
  "num-derive 0.4.2",
  "num-traits",
