@@ -1,7 +1,7 @@
 import { BN, Program } from '@coral-xyz/anchor';
 import { getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
-import { Keypair, Transaction } from '@solana/web3.js';
+import { Keypair } from '@solana/web3.js';
 import { PublicKey } from '@solana/web3.js';
 import { useCallback, useMemo } from 'react';
 import {
@@ -10,10 +10,9 @@ import {
   groupPdaFromId,
 } from '@magicblock-labs/ephemeral-rollups-sdk/privacy';
 
-import { VAULT_PDA_SEED } from '../lib/constants';
-import { DEPOSIT_PDA_SEED } from '../lib/constants';
-import { PrivatePayments } from '../program/private_payments';
-import PrivatePaymentsIdl from '../program/private_payments.json';
+import { VAULT_PDA_SEED, DEPOSIT_PDA_SEED } from '@/lib/constants';
+import { PrivatePayments } from '@/program/private_payments';
+import PrivatePaymentsIdl from '@/program/private_payments.json';
 
 import { useProvider } from './use-provider';
 
@@ -73,17 +72,17 @@ export function useProgram() {
       const group = groupPdaFromId(id);
 
       const createPermissionIx = await program.methods
-      .createPermission(id)
-      .accountsPartial({
-        payer: program.provider.publicKey,
-        user,
-        deposit,
-        permission,
-        group,
-        permissionProgram: PERMISSION_PROGRAM_ID,
-      })
-      .preInstructions([initIx])
-      .rpc();
+        .createPermission(id)
+        .accountsPartial({
+          payer: program.provider.publicKey,
+          user,
+          deposit,
+          permission,
+          group,
+          permissionProgram: PERMISSION_PROGRAM_ID,
+        })
+        .preInstructions([initIx])
+        .rpc();
 
       return deposit;
     },
@@ -154,6 +153,8 @@ export function useProgram() {
       await usedProgram.methods
         .transferDeposit(new BN(amount * Math.pow(10, 6)))
         .accountsPartial({
+          sessionToken: null,
+          payer: usedProgram.provider.publicKey,
           user: usedProgram.provider.publicKey,
           sourceDeposit,
           destinationDeposit,
@@ -197,6 +198,8 @@ export function useProgram() {
       await ephemeralProgram.methods
         .undelegate()
         .accountsPartial({
+          sessionToken: null,
+          user: ephemeralProgram.provider.publicKey,
           payer: ephemeralProgram.provider.publicKey,
           deposit,
         })

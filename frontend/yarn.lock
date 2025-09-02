@@ -699,13 +699,15 @@
   dependencies:
     "@lit-labs/ssr-dom-shim" "^1.2.0"
 
-"@magicblock-labs/ephemeral-rollups-sdk@^0.2.5":
-  version "0.2.5"
-  resolved "https://registry.yarnpkg.com/@magicblock-labs/ephemeral-rollups-sdk/-/ephemeral-rollups-sdk-0.2.5.tgz#b4d4acd688948fca8c2e915f04b229db451f6219"
-  integrity sha512-4p2hsw0fd8WXxShvZjjIHnz/1YEQbaZy5+5Dxw7bMPB+8rhjK32vK2fQc99Gvuok+ksYOpDMc68mJtr5hcAU6A==
+"@magicblock-labs/ephemeral-rollups-sdk@0.2.9":
+  version "0.2.9"
+  resolved "https://registry.yarnpkg.com/@magicblock-labs/ephemeral-rollups-sdk/-/ephemeral-rollups-sdk-0.2.9.tgz#7d2727a800df91851a8d9e6325620a9b7bc06270"
+  integrity sha512-c6qhB+Pzi2yat2I39q8/DeVuiH9GnS4Pzvd5fKlggPG915XfFzo1fP994cggLTq62y1DMOwRErQL4ESqhqek2w==
   dependencies:
     "@metaplex-foundation/beet" "^0.7.2"
+    "@phala/dcap-qvl-web" "^0.2.7"
     "@solana/web3.js" "^1.98.0"
+    bs58 "^6.0.0"
     rpc-websockets "^9.0.4"
 
 "@magicblock-labs/gum-sdk@^3.0.8":
