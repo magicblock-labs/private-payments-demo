@@ -11,7 +11,15 @@ import { Button } from '@/components/ui/button';
 import { AccountLayout, getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { useSubscription } from '@/hooks/use-subscription';
 import { useAnchorWallet, useConnection } from '@solana/wallet-adapter-react';
-import { Link, Loader2Icon, Wallet, Shield, ArrowDownUp, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
+import {
+  Link,
+  Loader2Icon,
+  Wallet,
+  Shield,
+  ArrowDownUp,
+  ArrowUpRight,
+  ArrowDownLeft,
+} from 'lucide-react';
 import useSimpleTransfer from '@/hooks/use-simple-transfer';
 import { useDeposit } from '@/hooks/use-deposit';
 import { toast } from 'sonner';
@@ -132,7 +140,9 @@ export default function SimpleTransfer({
           <CardHeader className='pb-3'>
             <div className='flex items-center gap-2'>
               <Wallet className='w-4 h-4 text-blue-600' />
-              <span className='text-sm font-medium text-blue-700 dark:text-blue-300'>Mainnet Balance</span>
+              <span className='text-sm font-medium text-blue-700 dark:text-blue-300'>
+                Mainnet Balance
+              </span>
             </div>
           </CardHeader>
           <CardContent>
@@ -147,7 +157,9 @@ export default function SimpleTransfer({
           <CardHeader className='pb-3'>
             <div className='flex items-center gap-2'>
               <Shield className='w-4 h-4 text-purple-600' />
-              <span className='text-sm font-medium text-purple-700 dark:text-purple-300'>Private Balance</span>
+              <span className='text-sm font-medium text-purple-700 dark:text-purple-300'>
+                Private Balance
+              </span>
             </div>
           </CardHeader>
           <CardContent>
@@ -173,18 +185,22 @@ export default function SimpleTransfer({
         </CardHeader>
         <CardContent className='space-y-4'>
           <div className='space-y-2'>
-            <Label htmlFor='address' className='text-sm font-medium'>Recipient Address</Label>
-            <Input 
-              id='address' 
-              type='text' 
+            <Label htmlFor='address' className='text-sm font-medium'>
+              Recipient Address
+            </Label>
+            <Input
+              id='address'
+              type='text'
               onChange={handleAddressChange}
               placeholder='Enter recipient public key...'
               className='bg-background border-border'
             />
           </div>
-          
+
           <div className='space-y-2'>
-            <Label htmlFor='amount' className='text-sm font-medium'>Amount</Label>
+            <Label htmlFor='amount' className='text-sm font-medium'>
+              Amount
+            </Label>
             <Input
               id='amount'
               type='number'
@@ -194,7 +210,7 @@ export default function SimpleTransfer({
               className='bg-background border-border'
             />
           </div>
-          
+
           <Button
             className='w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white border-0 font-medium py-3 rounded-lg transition-all duration-300 hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:scale-100'
             onClick={handleTransfer}
@@ -230,7 +246,9 @@ export default function SimpleTransfer({
         </CardHeader>
         <CardContent className='space-y-4'>
           <div className='space-y-2'>
-            <Label htmlFor='withdrawAmount' className='text-sm font-medium'>Amount to Withdraw</Label>
+            <Label htmlFor='withdrawAmount' className='text-sm font-medium'>
+              Amount to Withdraw
+            </Label>
             <Input
               id='withdrawAmount'
               type='number'
@@ -240,10 +258,12 @@ export default function SimpleTransfer({
               className='bg-background border-border'
             />
             <Muted>
-              Available: {deposit ? (Number(deposit?.amount.toNumber()) / Math.pow(10, 6)).toFixed(2) : '0'} tokens
+              Available:{' '}
+              {deposit ? (Number(deposit?.amount.toNumber()) / Math.pow(10, 6)).toFixed(2) : '0'}{' '}
+              tokens
             </Muted>
           </div>
-          
+
           <Button
             className='w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white border-0 font-medium py-3 rounded-lg transition-all duration-300 hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:scale-100'
             onClick={handleWithdraw}
