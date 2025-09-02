@@ -5,7 +5,7 @@ import { useConnection } from '@solana/wallet-adapter-react';
 import { useEphemeralConnection } from './use-ephemeral-connection';
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { GROUP_SEED } from '@/lib/constants';
+import { GROUP_SEED, PAYMENTS_PROGRAM } from '@/lib/constants';
 import { PERMISSION_PROGRAM_ID } from '@/lib/constants';
 import { PERMISSION_SEED } from '@/lib/constants';
 import { BN, Program } from '@coral-xyz/anchor';
@@ -15,6 +15,7 @@ import {
   GetCommitmentSignature,
 } from '@magicblock-labs/ephemeral-rollups-sdk';
 import { DepositAccount } from '@/lib/types';
+import { SessionTokenManager } from '@magicblock-labs/gum-sdk';
 
 async function initializeDeposit({
   program,
@@ -92,7 +93,6 @@ export default function useSimpleTransfer() {
 
       let preliminaryTx: Transaction | undefined;
       let mainnetTx: Transaction | undefined;
-      const ephemeralTx = new Transaction();
 
       const vaultPda = getVaultPda(tokenMintPk)!;
 
@@ -130,6 +130,35 @@ export default function useSimpleTransfer() {
         amountToDeposit = amountToDeposit.sub(mainnetSenderDepositAmount);
       }
 
+      // Create a session for the ER
+      const sessionKp = Keypair.generate();
+      const sessionManager = new SessionTokenManager(wallet, connection);
+      const sessionToken = PublicKey.findProgramAddressSync(
+        [
+          Buffer.from('session_token'),
+          PAYMENTS_PROGRAM.toBuffer(),
+          sessionKp.publicKey.toBuffer(),
+          wallet.publicKey.toBuffer(),
+        ],
+        sessionManager.program.programId,
+      )[0];
+      const createSessionTx = await sessionManager.program.methods
+        .createSession(true, null, null)
+        .accountsPartial({
+          sessionToken,
+          sessionSigner: sessionKp.publicKey,
+          authority: wallet.publicKey,
+          targetProgram: PAYMENTS_PROGRAM,
+        })
+        .transaction();
+      const revokeSessionTx = await sessionManager.program.methods
+        .revokeSession()
+        .accountsPartial({
+          sessionToken,
+          authority: wallet.publicKey,
+        })
+        .transaction();
+
       if (!senderDepositAccount) {
         mainnetTx = await initializeDeposit({
           program,
@@ -145,7 +174,8 @@ export default function useSimpleTransfer() {
             let undelegateIx = await program.methods
               .undelegate()
               .accountsPartial({
-                payer: wallet.publicKey,
+                sessionToken,
+                payer: sessionKp.publicKey,
                 user: wallet.publicKey,
                 deposit: senderDepositPda,
               })
@@ -177,6 +207,7 @@ export default function useSimpleTransfer() {
       console.log('amountToDeposit:', amountToDeposit.toNumber() / Math.pow(10, 6));
 
       if (amountToDeposit.gt(new BN(0))) {
+        console.log('depositing', amountToDeposit.toNumber() / Math.pow(10, 6));
         let depositIx = await program.methods
           .modifyBalance({ amount: amountToDeposit, increase: true })
           .accountsPartial({
@@ -206,6 +237,7 @@ export default function useSimpleTransfer() {
 
       // Make sure both deposits are delegated
       if (!senderIsDelegated || preliminaryTx) {
+        console.log('delegating sender');
         let delegateIx = await program.methods
           .delegate(wallet.publicKey, tokenMintPk)
           .accountsPartial({
@@ -218,6 +250,7 @@ export default function useSimpleTransfer() {
       }
 
       if (!recipientIsDelegated) {
+        console.log('delegating recipient');
         let delegateIx = await program.methods
           .delegate(recipientPk, tokenMintPk)
           .accountsPartial({
@@ -230,21 +263,31 @@ export default function useSimpleTransfer() {
       }
 
       // Transfer the amount from the sender to the recipient
-      let transferIx = await ephemeralProgram.methods
+      console.log('transferring', tokenAmount.toNumber() / Math.pow(10, 6));
+      const ephemeralTx = await ephemeralProgram.methods
         .transferDeposit(tokenAmount)
         .accountsPartial({
+          sessionToken,
+          payer: sessionKp.publicKey,
           user: program.provider.publicKey,
           sourceDeposit: senderDepositPda,
           destinationDeposit: recipientDepositPda,
           tokenMint: tokenMintPk,
         })
-        .instruction();
-      ephemeralTx.add(transferIx);
+        .signers([sessionKp])
+        .transaction();
 
       let blockhash = (await connection.getLatestBlockhash()).blockhash;
       let ephemeralBlockhash = (await ephemeralConnection.getLatestBlockhash()).blockhash;
 
       let actions = [
+        {
+          name: 'createSessionTx',
+          tx: createSessionTx,
+          signedTx: createSessionTx,
+          blockhash,
+          connection,
+        },
         {
           name: 'recipientInitTx',
           tx: recipientInitTx,
@@ -279,20 +322,46 @@ export default function useSimpleTransfer() {
           connection: ephemeralConnection,
           callback: (signature: string) => ephemeralConnection.confirmTransaction(signature),
         },
+        {
+          name: 'revokeSessionTx',
+          tx: revokeSessionTx,
+          signedTx: revokeSessionTx,
+          blockhash,
+          connection,
+        },
       ]
         .filter(action => action.tx)
         .map(action => {
           let tx = action.tx!;
           tx.recentBlockhash = action.blockhash;
-          tx.feePayer = program.provider.publicKey;
+          tx.feePayer =
+            action.blockhash === ephemeralBlockhash
+              ? sessionKp.publicKey
+              : program.provider.publicKey;
           return { ...action, tx };
         });
 
-      let txs = actions.map(action => action.tx!);
+      for (let i = 0; i < actions.length; i++) {
+        let action = actions[i];
+        if (action.blockhash === ephemeralBlockhash || action.name === 'createSessionTx') {
+          action.tx!.partialSign(sessionKp);
+          actions[i].signedTx = action.tx!;
+        }
+      }
+
+      let userSignedActions = actions.filter(action => action.blockhash !== ephemeralBlockhash);
+      let txs = userSignedActions.map(action => action.tx!);
       let signedTxs = await wallet.signAllTransactions(txs);
-      actions = actions.map((action, index) => {
-        return { ...action, signedTx: signedTxs[index] };
-      });
+
+      for (let i = 0; i < actions.length; i++) {
+        let action = actions[i];
+        if (action.blockhash === ephemeralBlockhash) {
+          action.tx!.sign(sessionKp);
+          actions[i].signedTx = action.tx!;
+        } else {
+          actions[i].signedTx = signedTxs[userSignedActions.findIndex(a => a.name === action.name)];
+        }
+      }
 
       for (let action of actions) {
         console.log(`Sending ${action.name} transaction`);
@@ -350,12 +419,42 @@ export default function useSimpleTransfer() {
         throw new Error('Not enough tokens to withdraw');
       }
 
+      // Create a session for the ER
+      const sessionKp = Keypair.generate();
+      const sessionManager = new SessionTokenManager(wallet, connection);
+      const sessionToken = PublicKey.findProgramAddressSync(
+        [
+          Buffer.from('session_token'),
+          PAYMENTS_PROGRAM.toBuffer(),
+          sessionKp.publicKey.toBuffer(),
+          wallet.publicKey.toBuffer(),
+        ],
+        sessionManager.program.programId,
+      )[0];
+      const createSessionTx = await sessionManager.program.methods
+        .createSession(true, null, null)
+        .accountsPartial({
+          sessionToken,
+          sessionSigner: sessionKp.publicKey,
+          authority: wallet.publicKey,
+          targetProgram: PAYMENTS_PROGRAM,
+        })
+        .transaction();
+      const revokeSessionTx = await sessionManager.program.methods
+        .revokeSession()
+        .accountsPartial({
+          sessionToken,
+          authority: wallet.publicKey,
+        })
+        .transaction();
+
       let undelegateTx: Transaction | undefined;
       if (withdrawerDepositAccount?.owner.equals(new PublicKey(DELEGATION_PROGRAM_ID))) {
         let undelegateIx = await ephemeralProgram.methods
           .undelegate()
           .accountsPartial({
-            payer: wallet.publicKey,
+            sessionToken,
+            payer: sessionKp.publicKey,
             user: wallet.publicKey,
             deposit: withdrawerDepositPda,
           })
@@ -398,17 +497,25 @@ export default function useSimpleTransfer() {
       withdrawTx.feePayer = program.provider.publicKey;
 
       if (undelegateTx) {
+        createSessionTx.recentBlockhash = blockhash;
+        createSessionTx.feePayer = program.provider.publicKey;
+        createSessionTx.partialSign(sessionKp);
+
         undelegateTx.recentBlockhash = ephemeralBlockhash;
-        undelegateTx.feePayer = program.provider.publicKey;
+        undelegateTx.feePayer = sessionKp.publicKey;
 
-        let [signedUndelegateTx, signedWithdrawTx] = await wallet.signAllTransactions([
-          undelegateTx,
-          withdrawTx,
-        ]);
+        revokeSessionTx.recentBlockhash = blockhash;
+        revokeSessionTx.feePayer = program.provider.publicKey;
 
-        let signature = await ephemeralConnection.sendRawTransaction(
-          signedUndelegateTx.serialize(),
-        );
+        undelegateTx.sign(sessionKp);
+
+        const [signedCreateSessionTx, signedWithdrawTx, signedRevokeSessionTx] =
+          await wallet.signAllTransactions([createSessionTx, withdrawTx, revokeSessionTx]);
+
+        let signature = await connection.sendRawTransaction(signedCreateSessionTx.serialize());
+        await connection.confirmTransaction(signature);
+
+        signature = await ephemeralConnection.sendRawTransaction(undelegateTx.serialize());
         await ephemeralConnection.confirmTransaction(signature);
 
         // Wait for the delegation
@@ -420,6 +527,9 @@ export default function useSimpleTransfer() {
         signature = await connection.sendRawTransaction(signedWithdrawTx.serialize(), {
           skipPreflight: true,
         });
+        await connection.confirmTransaction(signature);
+
+        signature = await connection.sendRawTransaction(signedRevokeSessionTx.serialize());
         await connection.confirmTransaction(signature);
       } else {
         let [signedWithdrawTx] = await wallet.signAllTransactions([withdrawTx]);

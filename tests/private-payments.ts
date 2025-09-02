@@ -1,25 +1,23 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { PrivatePayments } from "../target/types/private_payments";
-import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import {
   PERMISSION_PROGRAM_ID,
   PERMISSION_SEED,
   GROUP_SEED,
   DEPOSIT_PDA_SEED,
+  VAULT_PDA_SEED,
 } from "../frontend/lib/constants";
 import privatePaymentsIdl from "../frontend/program/private_payments.json";
 import {
-  ASSOCIATED_TOKEN_PROGRAM_ID,
   createAssociatedTokenAccountIdempotent,
   createMint,
+  getAssociatedTokenAddressSync,
   mintToChecked,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import { assert } from "chai";
-import { Keypair } from "@solana/web3.js";
-import { Transaction } from "@solana/web3.js";
-import { SystemProgram } from "@solana/web3.js";
+import { Transaction, SystemProgram, PublicKey, Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
 
 describe("private-payments", () => {
   const userKp = Keypair.generate();
@@ -49,7 +47,8 @@ describe("private-payments", () => {
   const otherUser = otherUserKp.publicKey;
   let tokenMint: PublicKey,
     userTokenAccount: PublicKey,
-    depositTokenAccount: PublicKey;
+    vaultPda: PublicKey,
+    vaultTokenAccount: PublicKey;
   const initialAmount = 1000000;
   const groupId = PublicKey.unique();
   const otherGroupId = PublicKey.unique();
@@ -86,6 +85,7 @@ describe("private-payments", () => {
     }
     if (balance === 0) throw new Error("airdrop failed...");
 
+    console.log("Creating mint...");
     tokenMint = await createMint(
       provider.connection,
       userKp,
@@ -96,6 +96,11 @@ describe("private-payments", () => {
       undefined,
       TOKEN_PROGRAM_ID
     );
+    
+    while (await provider.connection.getAccountInfo(tokenMint) === null) {
+      console.log("Waiting for mint to be created...");
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
 
     depositPda = PublicKey.findProgramAddressSync(
       [Buffer.from(DEPOSIT_PDA_SEED), user.toBuffer(), tokenMint.toBuffer()],
@@ -109,7 +114,13 @@ describe("private-payments", () => {
       ],
       program.programId
     )[0];
+    vaultPda = PublicKey.findProgramAddressSync(
+      [Buffer.from(VAULT_PDA_SEED), tokenMint.toBuffer()],
+      program.programId
+    )[0];
+    vaultTokenAccount = getAssociatedTokenAddressSync(tokenMint, vaultPda, true, TOKEN_PROGRAM_ID);
 
+    console.log("Creating user token account...");
     userTokenAccount = await createAssociatedTokenAccountIdempotent(
       provider.connection,
       userKp,
@@ -117,10 +128,14 @@ describe("private-payments", () => {
       user,
       undefined,
       TOKEN_PROGRAM_ID,
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      true
     );
 
+    while (await provider.connection.getAccountInfo(userTokenAccount) === null) {
+      console.log("Waiting for user token account to be created...");
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+
+    console.log("Minting tokens to user...");
     // Mint tokens to the user
     await mintToChecked(
       provider.connection,
@@ -136,7 +151,7 @@ describe("private-payments", () => {
     );
 
     console.log("User token account", userTokenAccount.toBase58());
-    console.log("Deposit token account", depositTokenAccount.toBase58());
+    console.log("Vault token account", vaultTokenAccount.toBase58());
     console.log("Deposit PDA", depositPda.toBase58());
     console.log("Other deposit PDA", otherDepositPda.toBase58());
     console.log("User", user.toBase58());
@@ -157,6 +172,9 @@ describe("private-payments", () => {
       })
       .rpc({ skipPreflight: true });
 
+    let deposit = await program.account.deposit.fetch(depositPda);
+    assert.equal(deposit.amount.toNumber(), 0);
+
     await program.methods
       .initializeDeposit()
       .accountsPartial({
@@ -166,6 +184,9 @@ describe("private-payments", () => {
         tokenProgram: TOKEN_PROGRAM_ID,
       })
       .rpc({ skipPreflight: true });
+
+    deposit = await program.account.deposit.fetch(otherDepositPda);
+    assert.equal(deposit.amount.toNumber(), 0);
   });
 
   it("Modify balance", async () => {
@@ -176,9 +197,11 @@ describe("private-payments", () => {
       })
       .accountsPartial({
         user,
+        payer: user,
         deposit: depositPda,
         userTokenAccount,
-        depositTokenAccount,
+        vault: vaultPda,
+        vaultTokenAccount,
         tokenMint,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
@@ -194,9 +217,11 @@ describe("private-payments", () => {
       })
       .accountsPartial({
         user,
+        payer: user,
         deposit: depositPda,
         userTokenAccount,
-        depositTokenAccount,
+        vault: vaultPda,
+        vaultTokenAccount,
         tokenMint,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
@@ -211,9 +236,11 @@ describe("private-payments", () => {
       })
       .accountsPartial({
         user,
+        payer: user,
         deposit: depositPda,
         userTokenAccount,
-        depositTokenAccount,
+        vault: vaultPda,
+        vaultTokenAccount,
         tokenMint,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
@@ -227,6 +254,7 @@ describe("private-payments", () => {
       { deposit: depositPda, kp: userKp, id: groupId },
       { deposit: otherDepositPda, kp: otherUserKp, id: otherGroupId },
     ]) {
+      
       const permission = PublicKey.findProgramAddressSync(
         [PERMISSION_SEED, deposit.toBuffer()],
         PERMISSION_PROGRAM_ID
@@ -239,6 +267,7 @@ describe("private-payments", () => {
       await program.methods
         .createPermission(id)
         .accountsPartial({
+          payer: kp.publicKey,
           user: kp.publicKey,
           deposit,
           permission,

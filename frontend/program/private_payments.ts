@@ -715,11 +715,18 @@ export type PrivatePayments = {
       "accounts": [
         {
           "name": "user",
-          "writable": true,
-          "signer": true,
           "relations": [
             "sourceDeposit"
           ]
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "sessionToken",
+          "optional": true
         },
         {
           "name": "sourceDeposit",
@@ -819,14 +826,16 @@ export type PrivatePayments = {
       ],
       "accounts": [
         {
+          "name": "user"
+        },
+        {
           "name": "payer",
           "writable": true,
           "signer": true
         },
         {
-          "name": "user",
-          "writable": true,
-          "signer": true
+          "name": "sessionToken",
+          "optional": true
         },
         {
           "name": "deposit",
@@ -885,6 +894,19 @@ export type PrivatePayments = {
       ]
     },
     {
+      "name": "sessionToken",
+      "discriminator": [
+        233,
+        4,
+        115,
+        14,
+        46,
+        21,
+        1,
+        15
+      ]
+    },
+    {
       "name": "vault",
       "discriminator": [
         211,
@@ -896,6 +918,13 @@ export type PrivatePayments = {
         117,
         119
       ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "unauthorized",
+      "msg": "unauthorized"
     }
   ],
   "types": [
@@ -939,9 +968,43 @@ export type PrivatePayments = {
       }
     },
     {
-      "name": "vault",
+      "name": "sessionToken",
       "type": {
-        "kind": "struct"
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "targetProgram",
+            "type": "pubkey"
+          },
+          {
+            "name": "sessionSigner",
+            "type": "pubkey"
+          },
+          {
+            "name": "validUntil",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "vault",
+      "docs": [
+        "A vault storing deposited tokens.",
+        "Has a dummy field because Anchor requires it."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "dummy",
+            "type": "u8"
+          }
+        ]
       }
     }
   ]
