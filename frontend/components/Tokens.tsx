@@ -35,8 +35,12 @@ import { Loader2Icon, PlusCircle, Coins, TrendingUp, DollarSign } from 'lucide-r
 import { toast } from 'sonner';
 import { useTokens } from '@/hooks/use-tokens';
 import { useProgram } from '@/hooks/use-program';
-import { GROUP_SEED, PERMISSION_PROGRAM_ID, PERMISSION_SEED } from '@/lib/constants';
 import { BN } from '@coral-xyz/anchor';
+import {
+  groupPdaFromId,
+  PERMISSION_PROGRAM_ID,
+  permissionPdaFromAccount,
+} from '@magicblock-labs/ephemeral-rollups-sdk/privacy';
 
 const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
   const { connection } = useConnection();
@@ -116,18 +120,13 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
             deposit: depositPda,
             tokenMint: mintKp.publicKey,
             tokenProgram: TOKEN_PROGRAM_ID,
+            systemProgram: SystemProgram.programId,
           })
           .instruction();
 
         const id = Keypair.generate().publicKey;
-        const permission = PublicKey.findProgramAddressSync(
-          [PERMISSION_SEED, depositPda.toBuffer()],
-          PERMISSION_PROGRAM_ID,
-        )[0];
-        const group = PublicKey.findProgramAddressSync(
-          [GROUP_SEED, id.toBuffer()],
-          PERMISSION_PROGRAM_ID,
-        )[0];
+        const permission = permissionPdaFromAccount(depositPda);
+        const group = groupPdaFromId(id);
 
         const createPermissionIx = await program.methods
           .createPermission(id)
@@ -144,7 +143,7 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
 
         let depositIx = null;
         if (deposit) {
-          const depositIx = await program.methods
+          depositIx = await program.methods
             .modifyBalance({ amount: new BN(amount * Math.pow(10, 6)), increase: true })
             .accountsPartial({
               payer: program.provider.publicKey,

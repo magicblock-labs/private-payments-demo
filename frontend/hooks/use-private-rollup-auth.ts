@@ -1,18 +1,17 @@
-import { bs58 } from '@coral-xyz/anchor/dist/cjs/utils/bytes';
+import { getAuthToken, SESSION_DURATION } from '@magicblock-labs/ephemeral-rollups-sdk/privacy';
 import { useAnchorWallet, useWallet } from '@solana/wallet-adapter-react';
 import { useCallback, useMemo, useState, useEffect, useRef } from 'react';
 
 import { EPHEMERAL_RPC_URL } from '../lib/constants';
 import { toast } from 'sonner';
 
-const SESSION_DURATION = 1000 * 60 * 60 * 24 * 30; // 30 days
 const TOKENS_STORAGE_KEY = 'private-rollup-auth-tokens';
 const TOKENS_CHANGE_EVENT = 'private-rollup-auth-tokens-changed';
 
 // Generate a unique instance ID
 let instanceCounter = 0;
 
-type AuthToken = {token: string, expiresAt: number};
+type AuthToken = { token: string; expiresAt: number };
 
 export function usePrivateRollupAuth() {
   const instanceId = useRef(++instanceCounter);
@@ -26,7 +25,7 @@ export function usePrivateRollupAuth() {
     let pk = wallet?.publicKey?.toBase58();
     if (pk) {
       let token = tokens[pk] ?? null;
-      if(token?.expiresAt > Date.now()) {
+      if (token?.expiresAt > Date.now()) {
         return token.token;
       }
     }
@@ -107,33 +106,12 @@ export function usePrivateRollupAuth() {
 
     try {
       const expiresAt = Date.now() + SESSION_DURATION;
-      const challengeResponse = await fetch(
-        `${EPHEMERAL_RPC_URL}/auth/challenge?pubkey=${wallet.publicKey.toBase58()}`,
-      );
-      const challengeJson: { challenge: string } = await challengeResponse.json();
 
-      const signature = await signMessage(
-        new Uint8Array(Buffer.from(challengeJson.challenge, 'utf-8')),
-      );
-      const signatureString = bs58.encode(signature);
-
-      const authResponse = await fetch(`${EPHEMERAL_RPC_URL}/auth/login`, {
-        method: 'POST',
-        body: JSON.stringify({
-          pubkey: wallet.publicKey.toBase58(),
-          challenge: challengeJson.challenge,
-          signature: signatureString,
-        }),
-      });
-      const authJson = await authResponse.json();
-
-      if (authResponse.status !== 200) {
-        throw new Error(`Failed to authenticate: ${authJson.error.message}`);
-      }
+      const token = await getAuthToken(EPHEMERAL_RPC_URL, wallet.publicKey, signMessage);
 
       setTokens(oldTokens => ({
         ...oldTokens,
-        [wallet.publicKey.toBase58()]: {token: authJson.token, expiresAt },
+        [wallet.publicKey.toBase58()]: { token, expiresAt },
       }));
       toast.success(`Authenticated ${wallet.publicKey.toBase58()} successfully`);
     } catch (error) {

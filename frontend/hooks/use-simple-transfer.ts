@@ -5,15 +5,18 @@ import { useConnection } from '@solana/wallet-adapter-react';
 import { useEphemeralConnection } from './use-ephemeral-connection';
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { GROUP_SEED, PAYMENTS_PROGRAM } from '@/lib/constants';
-import { PERMISSION_PROGRAM_ID } from '@/lib/constants';
-import { PERMISSION_SEED } from '@/lib/constants';
+import { PAYMENTS_PROGRAM } from '@/lib/constants';
 import { BN, Program } from '@coral-xyz/anchor';
 import { PrivatePayments } from '@/program/private_payments';
 import {
   DELEGATION_PROGRAM_ID,
   GetCommitmentSignature,
 } from '@magicblock-labs/ephemeral-rollups-sdk';
+import {
+  groupPdaFromId,
+  PERMISSION_PROGRAM_ID,
+  permissionPdaFromAccount,
+} from '@magicblock-labs/ephemeral-rollups-sdk/privacy';
 import { DepositAccount } from '@/lib/types';
 import { SessionTokenManager } from '@magicblock-labs/gum-sdk';
 
@@ -42,14 +45,8 @@ async function initializeDeposit({
     .instruction();
 
   const id = Keypair.generate().publicKey;
-  const permission = PublicKey.findProgramAddressSync(
-    [PERMISSION_SEED, depositPda.toBuffer()],
-    PERMISSION_PROGRAM_ID,
-  )[0];
-  const group = PublicKey.findProgramAddressSync(
-    [GROUP_SEED, id.toBuffer()],
-    PERMISSION_PROGRAM_ID,
-  )[0];
+  const permission = permissionPdaFromAccount(depositPda);
+  const group = groupPdaFromId(id);
 
   let createPermissionIx = await program.methods
     .createPermission(id)

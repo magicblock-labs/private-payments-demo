@@ -6,14 +6,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   DEPOSIT_PDA_SEED,
   EPHEMERAL_RPC_URL,
-  PERMISSION_PROGRAM_ID,
-  PERMISSION_SEED,
 } from '@/lib/constants';
 import { DepositAccount } from '@/lib/types';
 
 import { useEphemeralConnection } from '@/hooks/use-ephemeral-connection';
 import { useProgram } from '@/hooks/use-program';
 import { useSubscription } from '@/hooks/use-subscription';
+import { permissionPdaFromAccount } from '@magicblock-labs/ephemeral-rollups-sdk/privacy';
 
 export function useDeposit(user?: PublicKey | string, tokenMint?: PublicKey | string) {
   const { program } = useProgram();
@@ -40,10 +39,7 @@ export function useDeposit(user?: PublicKey | string, tokenMint?: PublicKey | st
 
   const permissionPda = useMemo(() => {
     if (!depositPda) return;
-    return PublicKey.findProgramAddressSync(
-      [PERMISSION_SEED, depositPda.toBuffer()],
-      PERMISSION_PROGRAM_ID,
-    )[0];
+    return permissionPdaFromAccount(depositPda);
   }, [depositPda]);
 
   const getDeposit = useCallback(async () => {
