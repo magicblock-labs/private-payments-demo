@@ -247,9 +247,9 @@ pub struct TransferDeposit<'info> {
     /// CHECK: Matched against the deposit account
     pub user: AccountInfo<'info>,
     #[account(mut)]
-    pub signer: Signer<'info>,
+    pub payer: Signer<'info>,
     #[session(
-        signer = signer,
+        signer = payer,
         authority = user.key()
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
@@ -325,14 +325,12 @@ pub struct UndelegateDeposit<'info> {
     /// CHECK: Matched against the deposit account
     pub user: AccountInfo<'info>,
     #[account(mut)]
-    pub signer: Signer<'info>,
+    pub payer: Signer<'info>,
     #[session(
-        signer = signer,
+        signer = payer,
         authority = user.key()
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
-    #[account(mut)]
-    pub payer: Signer<'info>,
     #[account(
         mut,
         seeds = [DEPOSIT_PDA_SEED, user.key().as_ref(), deposit.token_mint.as_ref()],

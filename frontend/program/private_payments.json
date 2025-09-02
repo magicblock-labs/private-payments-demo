@@ -14,7 +14,16 @@
         "",
         "Calls out to the permission program to create a group and permission for the deposit account."
       ],
-      "discriminator": [190, 182, 26, 164, 156, 221, 8, 0],
+      "discriminator": [
+        190,
+        182,
+        26,
+        164,
+        156,
+        221,
+        8,
+        0
+      ],
       "accounts": [
         {
           "name": "payer",
@@ -30,7 +39,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [100, 101, 112, 111, 115, 105, 116]
+                "value": [
+                  100,
+                  101,
+                  112,
+                  111,
+                  115,
+                  105,
+                  116
+                ]
               },
               {
                 "kind": "account",
@@ -74,7 +91,16 @@
         "",
         "Uses the ephemeral rollups delegate CPI to delegate the deposit account."
       ],
-      "discriminator": [90, 147, 75, 178, 85, 88, 4, 137],
+      "discriminator": [
+        90,
+        147,
+        75,
+        178,
+        85,
+        88,
+        4,
+        137
+      ],
       "accounts": [
         {
           "name": "payer",
@@ -88,7 +114,14 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [98, 117, 102, 102, 101, 114]
+                "value": [
+                  98,
+                  117,
+                  102,
+                  102,
+                  101,
+                  114
+                ]
               },
               {
                 "kind": "account",
@@ -98,8 +131,38 @@
             "program": {
               "kind": "const",
               "value": [
-                204, 221, 38, 10, 116, 212, 156, 1, 120, 58, 221, 86, 190, 244, 82, 210, 141, 180,
-                94, 56, 227, 53, 71, 16, 17, 47, 238, 101, 116, 142, 81, 55
+                204,
+                221,
+                38,
+                10,
+                116,
+                212,
+                156,
+                1,
+                120,
+                58,
+                221,
+                86,
+                190,
+                244,
+                82,
+                210,
+                141,
+                180,
+                94,
+                56,
+                227,
+                53,
+                71,
+                16,
+                17,
+                47,
+                238,
+                101,
+                116,
+                142,
+                81,
+                55
               ]
             }
           }
@@ -111,7 +174,18 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [100, 101, 108, 101, 103, 97, 116, 105, 111, 110]
+                "value": [
+                  100,
+                  101,
+                  108,
+                  101,
+                  103,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
               },
               {
                 "kind": "account",
@@ -132,8 +206,25 @@
               {
                 "kind": "const",
                 "value": [
-                  100, 101, 108, 101, 103, 97, 116, 105, 111, 110, 45, 109, 101, 116, 97, 100, 97,
-                  116, 97
+                  100,
+                  101,
+                  108,
+                  101,
+                  103,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110,
+                  45,
+                  109,
+                  101,
+                  116,
+                  97,
+                  100,
+                  97,
+                  116,
+                  97
                 ]
               },
               {
@@ -154,7 +245,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [100, 101, 112, 111, 115, 105, 116]
+                "value": [
+                  100,
+                  101,
+                  112,
+                  111,
+                  115,
+                  105,
+                  116
+                ]
               },
               {
                 "kind": "arg",
@@ -198,7 +297,16 @@
         "",
         "Sets up a new deposit account with zero balance for the user and token mint."
       ],
-      "discriminator": [171, 65, 93, 225, 61, 109, 31, 227],
+      "discriminator": [
+        171,
+        65,
+        93,
+        225,
+        61,
+        109,
+        31,
+        227
+      ],
       "accounts": [
         {
           "name": "payer",
@@ -215,7 +323,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [100, 101, 112, 111, 115, 105, 116]
+                "value": [
+                  100,
+                  101,
+                  112,
+                  111,
+                  115,
+                  105,
+                  116
+                ]
               },
               {
                 "kind": "account",
@@ -250,7 +366,16 @@
         "If `args.increase` is true, tokens are transferred from the user's token account to the deposit account.",
         "If false, tokens are transferred from the deposit account back to the user's token account."
       ],
-      "discriminator": [148, 232, 7, 240, 55, 51, 121, 115],
+      "discriminator": [
+        148,
+        232,
+        7,
+        240,
+        55,
+        51,
+        121,
+        115
+      ],
       "accounts": [
         {
           "name": "payer",
@@ -260,7 +385,9 @@
         {
           "name": "user",
           "signer": true,
-          "relations": ["deposit"]
+          "relations": [
+            "deposit"
+          ]
         },
         {
           "name": "vault",
@@ -269,7 +396,13 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [118, 97, 117, 108, 116]
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
               },
               {
                 "kind": "account",
@@ -286,7 +419,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [100, 101, 112, 111, 115, 105, 116]
+                "value": [
+                  100,
+                  101,
+                  112,
+                  111,
+                  115,
+                  105,
+                  116
+                ]
               },
               {
                 "kind": "account",
@@ -313,8 +454,38 @@
               {
                 "kind": "const",
                 "value": [
-                  6, 221, 246, 225, 215, 101, 161, 147, 217, 203, 225, 70, 206, 235, 121, 172, 28,
-                  180, 133, 237, 95, 91, 55, 145, 58, 140, 245, 133, 126, 255, 0, 169
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
                 ]
               },
               {
@@ -325,8 +496,38 @@
             "program": {
               "kind": "const",
               "value": [
-                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142, 13, 131, 11, 90, 19,
-                153, 218, 255, 16, 132, 4, 142, 123, 216, 219, 233, 248, 89
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
               ]
             }
           }
@@ -343,8 +544,38 @@
               {
                 "kind": "const",
                 "value": [
-                  6, 221, 246, 225, 215, 101, 161, 147, 217, 203, 225, 70, 206, 235, 121, 172, 28,
-                  180, 133, 237, 95, 91, 55, 145, 58, 140, 245, 133, 126, 255, 0, 169
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
                 ]
               },
               {
@@ -355,15 +586,47 @@
             "program": {
               "kind": "const",
               "value": [
-                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142, 13, 131, 11, 90, 19,
-                153, 218, 255, 16, 132, 4, 142, 123, 216, 219, 233, 248, 89
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
               ]
             }
           }
         },
         {
           "name": "token_mint",
-          "relations": ["deposit"]
+          "relations": [
+            "deposit"
+          ]
         },
         {
           "name": "token_program",
@@ -391,7 +654,16 @@
     },
     {
       "name": "process_undelegation",
-      "discriminator": [196, 28, 41, 206, 48, 37, 51, 167],
+      "discriminator": [
+        196,
+        28,
+        41,
+        206,
+        48,
+        37,
+        51,
+        167
+      ],
       "accounts": [
         {
           "name": "base_account",
@@ -424,13 +696,31 @@
         "",
         "Only updates the internal accounting; does not move actual tokens."
       ],
-      "discriminator": [20, 20, 147, 223, 41, 63, 204, 111],
+      "discriminator": [
+        20,
+        20,
+        147,
+        223,
+        41,
+        63,
+        204,
+        111
+      ],
       "accounts": [
         {
           "name": "user",
+          "relations": [
+            "source_deposit"
+          ]
+        },
+        {
+          "name": "payer",
           "writable": true,
-          "signer": true,
-          "relations": ["source_deposit"]
+          "signer": true
+        },
+        {
+          "name": "session_token",
+          "optional": true
         },
         {
           "name": "source_deposit",
@@ -439,7 +729,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [100, 101, 112, 111, 115, 105, 116]
+                "value": [
+                  100,
+                  101,
+                  112,
+                  111,
+                  115,
+                  105,
+                  116
+                ]
               },
               {
                 "kind": "account",
@@ -461,7 +759,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [100, 101, 112, 111, 115, 105, 116]
+                "value": [
+                  100,
+                  101,
+                  112,
+                  111,
+                  115,
+                  105,
+                  116
+                ]
               },
               {
                 "kind": "account",
@@ -478,7 +784,10 @@
         },
         {
           "name": "token_mint",
-          "relations": ["source_deposit", "destination_deposit"]
+          "relations": [
+            "source_deposit",
+            "destination_deposit"
+          ]
         },
         {
           "name": "system_program",
@@ -499,17 +808,28 @@
         "",
         "Uses the ephemeral rollups SDK to commit and undelegate the deposit account."
       ],
-      "discriminator": [131, 148, 180, 198, 91, 104, 42, 238],
+      "discriminator": [
+        131,
+        148,
+        180,
+        198,
+        91,
+        104,
+        42,
+        238
+      ],
       "accounts": [
+        {
+          "name": "user"
+        },
         {
           "name": "payer",
           "writable": true,
           "signer": true
         },
         {
-          "name": "user",
-          "writable": true,
-          "signer": true
+          "name": "session_token",
+          "optional": true
         },
         {
           "name": "deposit",
@@ -518,7 +838,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [100, 101, 112, 111, 115, 105, 116]
+                "value": [
+                  100,
+                  101,
+                  112,
+                  111,
+                  115,
+                  105,
+                  116
+                ]
               },
               {
                 "kind": "account",
@@ -548,17 +876,57 @@
   "accounts": [
     {
       "name": "Deposit",
-      "discriminator": [148, 146, 121, 66, 207, 173, 21, 227]
+      "discriminator": [
+        148,
+        146,
+        121,
+        66,
+        207,
+        173,
+        21,
+        227
+      ]
+    },
+    {
+      "name": "SessionToken",
+      "discriminator": [
+        233,
+        4,
+        115,
+        14,
+        46,
+        21,
+        1,
+        15
+      ]
     },
     {
       "name": "Vault",
-      "discriminator": [211, 8, 232, 43, 2, 152, 117, 119]
+      "discriminator": [
+        211,
+        8,
+        232,
+        43,
+        2,
+        152,
+        117,
+        119
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "Unauthorized",
+      "msg": "Unauthorized"
     }
   ],
   "types": [
     {
       "name": "Deposit",
-      "docs": ["A deposit account for a user and token mint."],
+      "docs": [
+        "A deposit account for a user and token mint."
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -594,9 +962,43 @@
       }
     },
     {
-      "name": "Vault",
+      "name": "SessionToken",
       "type": {
-        "kind": "struct"
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "target_program",
+            "type": "pubkey"
+          },
+          {
+            "name": "session_signer",
+            "type": "pubkey"
+          },
+          {
+            "name": "valid_until",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Vault",
+      "docs": [
+        "A vault storing deposited tokens.",
+        "Has a dummy field because Anchor requires it."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "_dummy",
+            "type": "u8"
+          }
+        ]
       }
     }
   ]
