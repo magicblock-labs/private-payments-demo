@@ -272,7 +272,8 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
       <div className='space-y-3'>
         <h3 className='text-lg font-semibold text-foreground'>No tokens created yet</h3>
         <p className='text-muted-foreground max-w-md mx-auto'>
-          Create your first token and start building your Web3 ecosystem. Set the supply and launch your project to the blockchain.
+          Create your first token and start building your Web3 ecosystem. Set the supply and launch
+          your project to the blockchain.
         </p>
       </div>
     </div>
@@ -309,7 +310,10 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
       return (
         <div className='flex flex-col gap-3'>
           <Label className='text-sm font-medium text-foreground'>
-            Select Token {balance !== null && <span className='text-muted-foreground font-normal'>(Balance: {balance})</span>}
+            Select Token{' '}
+            {balance !== null && (
+              <span className='text-muted-foreground font-normal'>(Balance: {balance})</span>
+            )}
           </Label>
           <Select
             defaultValue={selectedToken?.mint}
@@ -345,8 +349,51 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
     }
   };
 
+  const TokenCreation = () => {
+    return (
+      <>
+        <div className='flex flex-col gap-2 min-w-[200px] w-full'>
+          <Label htmlFor='amount' className='text-sm font-medium text-foreground'>
+            Initial Supply
+          </Label>
+          <div className='relative'>
+            <Input
+              id='amount'
+              type='number'
+              value={amount || undefined}
+              onChange={e => setAmount(Number(e.target.value))}
+              className='bg-background border-border text-foreground pr-12'
+              placeholder='1000'
+            />
+            <div className='absolute right-3 top-1/2 transform -translate-y-1/2'>
+              <Coins className='w-4 h-4 text-muted-foreground' />
+            </div>
+          </div>
+        </div>
+
+        <Button
+          onClick={() => createToken(Keypair.generate(), deposit)}
+          disabled={isCreating}
+          className='w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 border-0 text-white font-medium px-8 py-2 h-auto rounded-lg transition-all duration-300 hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:scale-100'
+        >
+          {isCreating ? (
+            <>
+              <Loader2Icon className='animate-spin mr-2 w-4 h-4' />
+              Creating...
+            </>
+          ) : (
+            <>
+              <PlusCircle className='mr-2 w-4 h-4' />
+              Create Token
+            </>
+          )}
+        </Button>
+      </>
+    );
+  };
+
   return (
-    <Card className='gap-3 overflow-hidden bg-white/80 dark:bg-card/80 backdrop-blur-sm border-border/50 shadow-xl p-2!'>
+    <Card className='gap-3 overflow-hidden bg-white/80 dark:bg-card/80 backdrop-blur-sm border-border/50 shadow-xl p-0!'>
       <CardHeader className='p-2! bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-b border-border/50'>
         <div className='flex items-center gap-3'>
           <div className='p-2 bg-blue-600/10 rounded-lg'>
@@ -360,41 +407,7 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
           <div className='p-6'>
             <div className='flex flex-col md:flex-row gap-2 md:items-end'>
               <TokenSelect />
-              
-              <div className='flex flex-col gap-2 min-w-[200px]'>
-                <Label htmlFor='amount' className='text-sm font-medium text-foreground'>Initial Supply</Label>
-                <div className='relative'>
-                  <Input
-                    id='amount'
-                    type='number'
-                    value={amount || undefined}
-                    onChange={e => setAmount(Number(e.target.value))}
-                    className='bg-background border-border text-foreground pr-12'
-                    placeholder='1000'
-                  />
-                  <div className='absolute right-3 top-1/2 transform -translate-y-1/2'>
-                    <Coins className='w-4 h-4 text-muted-foreground' />
-                  </div>
-                </div>
-              </div>
-              
-              <Button 
-                onClick={() => createToken(Keypair.generate(), deposit)} 
-                disabled={isCreating}
-                className='bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 border-0 text-white font-medium px-8 py-2 h-auto rounded-lg transition-all duration-300 hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:scale-100'
-              >
-                {isCreating ? (
-                  <>
-                    <Loader2Icon className='animate-spin mr-2 w-4 h-4' />
-                    Creating...
-                  </>
-                ) : (
-                  <>
-                    <PlusCircle className='mr-2 w-4 h-4' />
-                    Create Token
-                  </>
-                )}
-              </Button>
+              <TokenCreation />
             </div>
           </div>
         ) : (
@@ -402,39 +415,7 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
             <EmptyState />
             <div className='px-6 pb-6'>
               <div className='flex flex-col sm:flex-row gap-4 items-end justify-center'>
-                <div className='flex flex-col gap-2 min-w-[200px]'>
-                  <Label htmlFor='amount' className='text-sm font-medium text-foreground text-center'>Initial Supply</Label>
-                  <div className='relative'>
-                    <Input
-                      id='amount'
-                      type='number'
-                      value={amount}
-                      onChange={e => setAmount(Number(e.target.value))}
-                      className='bg-background border-border text-foreground pr-12 text-center'
-                      placeholder='1000'
-                    />
-                    <div className='absolute right-3 top-1/2 transform -translate-y-1/2'>
-                      <Coins className='w-4 h-4 text-muted-foreground' />
-                    </div>
-                  </div>
-                </div>
-                <Button 
-                  onClick={() => createToken(Keypair.generate(), deposit)} 
-                  disabled={isCreating}
-                  className='bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 border-0 text-white font-medium px-8 py-2 h-auto rounded-lg transition-all duration-300 hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:scale-100 w-full sm:w-auto'
-                >
-                  {isCreating ? (
-                    <>
-                      <Loader2Icon className='animate-spin mr-2 w-4 h-4' />
-                      Creating Token...
-                    </>
-                  ) : (
-                    <>
-                      <PlusCircle className='mr-2 w-4 h-4' />
-                      Create Token
-                    </>
-                  )}
-                </Button>
+                <TokenCreation />
               </div>
             </div>
           </div>
