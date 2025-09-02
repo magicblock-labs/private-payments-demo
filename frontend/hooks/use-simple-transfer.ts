@@ -419,12 +419,42 @@ export default function useSimpleTransfer() {
         throw new Error('Not enough tokens to withdraw');
       }
 
+      // Create a session for the ER
+      const sessionKp = Keypair.generate();
+      const sessionManager = new SessionTokenManager(wallet, connection);
+      const sessionToken = PublicKey.findProgramAddressSync(
+        [
+          Buffer.from('session_token'),
+          PAYMENTS_PROGRAM.toBuffer(),
+          sessionKp.publicKey.toBuffer(),
+          wallet.publicKey.toBuffer(),
+        ],
+        sessionManager.program.programId,
+      )[0];
+      const createSessionTx = await sessionManager.program.methods
+        .createSession(true, null, null)
+        .accountsPartial({
+          sessionToken,
+          sessionSigner: sessionKp.publicKey,
+          authority: wallet.publicKey,
+          targetProgram: PAYMENTS_PROGRAM,
+        })
+        .transaction();
+      const revokeSessionTx = await sessionManager.program.methods
+        .revokeSession()
+        .accountsPartial({
+          sessionToken,
+          authority: wallet.publicKey,
+        })
+        .transaction();
+
       let undelegateTx: Transaction | undefined;
       if (withdrawerDepositAccount?.owner.equals(new PublicKey(DELEGATION_PROGRAM_ID))) {
         let undelegateIx = await ephemeralProgram.methods
           .undelegate()
           .accountsPartial({
-            payer: wallet.publicKey,
+            sessionToken,
+            payer: sessionKp.publicKey,
             user: wallet.publicKey,
             deposit: withdrawerDepositPda,
           })
@@ -467,17 +497,25 @@ export default function useSimpleTransfer() {
       withdrawTx.feePayer = program.provider.publicKey;
 
       if (undelegateTx) {
+        createSessionTx.recentBlockhash = blockhash;
+        createSessionTx.feePayer = program.provider.publicKey;
+        createSessionTx.partialSign(sessionKp);
+
         undelegateTx.recentBlockhash = ephemeralBlockhash;
-        undelegateTx.feePayer = program.provider.publicKey;
+        undelegateTx.feePayer = sessionKp.publicKey;
 
-        let [signedUndelegateTx, signedWithdrawTx] = await wallet.signAllTransactions([
-          undelegateTx,
-          withdrawTx,
-        ]);
+        revokeSessionTx.recentBlockhash = blockhash;
+        revokeSessionTx.feePayer = program.provider.publicKey;
 
-        let signature = await ephemeralConnection.sendRawTransaction(
-          signedUndelegateTx.serialize(),
-        );
+        undelegateTx.sign(sessionKp);
+
+        const [signedCreateSessionTx, signedWithdrawTx, signedRevokeSessionTx] =
+          await wallet.signAllTransactions([createSessionTx, withdrawTx, revokeSessionTx]);
+
+        let signature = await connection.sendRawTransaction(signedCreateSessionTx.serialize());
+        await connection.confirmTransaction(signature);
+
+        signature = await ephemeralConnection.sendRawTransaction(undelegateTx.serialize());
         await ephemeralConnection.confirmTransaction(signature);
 
         // Wait for the delegation
@@ -489,6 +527,9 @@ export default function useSimpleTransfer() {
         signature = await connection.sendRawTransaction(signedWithdrawTx.serialize(), {
           skipPreflight: true,
         });
+        await connection.confirmTransaction(signature);
+
+        signature = await connection.sendRawTransaction(signedRevokeSessionTx.serialize());
         await connection.confirmTransaction(signature);
       } else {
         let [signedWithdrawTx] = await wallet.signAllTransactions([withdrawTx]);
