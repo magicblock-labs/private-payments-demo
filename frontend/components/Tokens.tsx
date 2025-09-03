@@ -352,7 +352,7 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
   const TokenCreation = () => {
     return (
       <>
-        <div className='flex flex-col gap-2 min-w-[200px] w-full'>
+        <div className='w-full md:w-auto flex flex-col gap-2 min-w-[200px]'>
           <Label htmlFor='amount' className='text-sm font-medium text-foreground'>
             Initial Supply
           </Label>
@@ -374,7 +374,7 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
         <Button
           onClick={() => createToken(Keypair.generate(), deposit)}
           disabled={isCreating}
-          className='bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 border-0 text-white font-medium px-8 py-2 h-auto rounded-lg transition-all duration-300 hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:scale-100'
+          className='w-full md:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 border-0 text-white font-medium px-8 py-2 h-auto rounded-lg transition-all duration-300 hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:scale-100'
         >
           {isCreating ? (
             <>
