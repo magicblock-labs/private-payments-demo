@@ -374,7 +374,7 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
         <Button
           onClick={() => createToken(Keypair.generate(), deposit)}
           disabled={isCreating}
-          className='w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 border-0 text-white font-medium px-8 py-2 h-auto rounded-lg transition-all duration-300 hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:scale-100'
+          className='bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 border-0 text-white font-medium px-8 py-2 h-auto rounded-lg transition-all duration-300 hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:scale-100'
         >
           {isCreating ? (
             <>
