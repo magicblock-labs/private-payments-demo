@@ -150,10 +150,14 @@ pub mod private_payments {
     ///
     /// Uses the ephemeral rollups delegate CPI to delegate the deposit account.
     pub fn delegate(ctx: Context<DelegateDeposit>, user: Pubkey, token_mint: Pubkey) -> Result<()> {
+        let validator = ctx.accounts.validator.as_ref().map(|v| v.key());
         ctx.accounts.delegate_deposit(
             &ctx.accounts.payer,
             &[DEPOSIT_PDA_SEED, user.as_ref(), token_mint.as_ref()],
-            DelegateConfig::default(),
+            DelegateConfig {
+                validator,
+                ..DelegateConfig::default()
+            },
         )?;
         Ok(())
     }
@@ -309,6 +313,8 @@ pub struct CreatePermission<'info> {
 pub struct DelegateDeposit<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
+    /// CHECK: Checked by the delegate program
+    pub validator: Option<AccountInfo<'info>>,
     /// CHECK: Checked counter accountby the delegate program
     #[account(
         mut,

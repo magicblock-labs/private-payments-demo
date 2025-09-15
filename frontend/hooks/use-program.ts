@@ -166,7 +166,7 @@ export function useProgram() {
   );
 
   const delegate = useCallback(
-    async (user: PublicKey, tokenMint: PublicKey) => {
+    async (user: PublicKey, tokenMint: PublicKey, validator?: PublicKey) => {
       if (!program?.provider.publicKey) return;
 
       const deposit = getDepositPda(user, tokenMint)!;
@@ -182,6 +182,7 @@ export function useProgram() {
         .delegate(user, tokenMint)
         .accountsPartial({
           payer: program.provider.publicKey,
+          validator,
           deposit,
         })
         .rpc();

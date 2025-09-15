@@ -9,6 +9,7 @@ import { useProgram } from '@/hooks/use-program';
 import { toast } from 'sonner';
 import { PublicKey } from '@solana/web3.js';
 import { TokenListEntry } from '@/lib/types';
+import { VALIDATOR_PUBKEY } from '@/lib/constants';
 
 interface DepositActionsProps {
   token: TokenListEntry;
@@ -62,7 +63,7 @@ export default function DepositActions({
     if (!token || !depositUser) return;
     setIsDelegating(true);
     try {
-      await delegate(depositUser, new PublicKey(token.mint));
+      await delegate(depositUser, new PublicKey(token.mint), VALIDATOR_PUBKEY);
       toast.success(`Delegated successfully`);
     } catch (error) {
       toast.error(`Failed to delegate: ${error}`);

@@ -5,7 +5,7 @@
   "private": true,
   "dependencies": {
     "@coral-xyz/anchor": "^0.31.1",
-    "@magicblock-labs/ephemeral-rollups-sdk": "0.2.9",
+    "@magicblock-labs/ephemeral-rollups-sdk": "^0.2.11",
     "@magicblock-labs/gum-sdk": "^3.0.8",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-dialog": "^1.1.14",
