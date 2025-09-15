@@ -5,7 +5,7 @@ import { useConnection } from '@solana/wallet-adapter-react';
 import { useEphemeralConnection } from './use-ephemeral-connection';
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { PAYMENTS_PROGRAM } from '@/lib/constants';
+import { PAYMENTS_PROGRAM, VALIDATOR_PUBKEY } from '@/lib/constants';
 import { BN, Program } from '@coral-xyz/anchor';
 import { PrivatePayments } from '@/program/private_payments';
 import {
@@ -239,6 +239,7 @@ export default function useSimpleTransfer() {
           .delegate(wallet.publicKey, tokenMintPk)
           .accountsPartial({
             payer: wallet.publicKey,
+            validator: VALIDATOR_PUBKEY,
             deposit: senderDepositPda,
           })
           .instruction();
@@ -252,6 +253,7 @@ export default function useSimpleTransfer() {
           .delegate(recipientPk, tokenMintPk)
           .accountsPartial({
             payer: wallet.publicKey,
+            validator: VALIDATOR_PUBKEY,
             deposit: recipientDepositPda,
           })
           .instruction();

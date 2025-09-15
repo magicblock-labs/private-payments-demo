@@ -2,12 +2,11 @@ import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { PrivatePayments } from "../target/types/private_payments";
 import {
+  groupPdaFromId,
   PERMISSION_PROGRAM_ID,
-  PERMISSION_SEED,
-  GROUP_SEED,
-  DEPOSIT_PDA_SEED,
-  VAULT_PDA_SEED,
-} from "../frontend/lib/constants";
+  permissionPdaFromAccount,
+} from "@magicblock-labs/ephemeral-rollups-sdk/privacy";
+import { DEPOSIT_PDA_SEED, VAULT_PDA_SEED } from "../frontend/lib/constants";
 import privatePaymentsIdl from "../frontend/program/private_payments.json";
 import {
   createAssociatedTokenAccountIdempotent,
@@ -17,7 +16,13 @@ import {
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import { assert } from "chai";
-import { Transaction, SystemProgram, PublicKey, Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import {
+  Transaction,
+  SystemProgram,
+  PublicKey,
+  Keypair,
+  LAMPORTS_PER_SOL,
+} from "@solana/web3.js";
 
 describe("private-payments", () => {
   const userKp = Keypair.generate();
@@ -96,8 +101,8 @@ describe("private-payments", () => {
       undefined,
       TOKEN_PROGRAM_ID
     );
-    
-    while (await provider.connection.getAccountInfo(tokenMint) === null) {
+
+    while ((await provider.connection.getAccountInfo(tokenMint)) === null) {
       console.log("Waiting for mint to be created...");
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
@@ -118,7 +123,12 @@ describe("private-payments", () => {
       [Buffer.from(VAULT_PDA_SEED), tokenMint.toBuffer()],
       program.programId
     )[0];
-    vaultTokenAccount = getAssociatedTokenAddressSync(tokenMint, vaultPda, true, TOKEN_PROGRAM_ID);
+    vaultTokenAccount = getAssociatedTokenAddressSync(
+      tokenMint,
+      vaultPda,
+      true,
+      TOKEN_PROGRAM_ID
+    );
 
     console.log("Creating user token account...");
     userTokenAccount = await createAssociatedTokenAccountIdempotent(
@@ -127,10 +137,12 @@ describe("private-payments", () => {
       tokenMint,
       user,
       undefined,
-      TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID
     );
 
-    while (await provider.connection.getAccountInfo(userTokenAccount) === null) {
+    while (
+      (await provider.connection.getAccountInfo(userTokenAccount)) === null
+    ) {
       console.log("Waiting for user token account to be created...");
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
@@ -254,15 +266,8 @@ describe("private-payments", () => {
       { deposit: depositPda, kp: userKp, id: groupId },
       { deposit: otherDepositPda, kp: otherUserKp, id: otherGroupId },
     ]) {
-      
-      const permission = PublicKey.findProgramAddressSync(
-        [PERMISSION_SEED, deposit.toBuffer()],
-        PERMISSION_PROGRAM_ID
-      )[0];
-      const group = PublicKey.findProgramAddressSync(
-        [GROUP_SEED, id.toBuffer()],
-        PERMISSION_PROGRAM_ID
-      )[0];
+      const permission = permissionPdaFromAccount(deposit);
+      const group = groupPdaFromId(id);
 
       await program.methods
         .createPermission(id)

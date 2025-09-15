@@ -704,16 +704,17 @@
   dependencies:
     "@lit-labs/ssr-dom-shim" "^1.2.0"
 
-"@magicblock-labs/ephemeral-rollups-sdk@0.2.9":
-  version "0.2.9"
-  resolved "https://registry.yarnpkg.com/@magicblock-labs/ephemeral-rollups-sdk/-/ephemeral-rollups-sdk-0.2.9.tgz#7d2727a800df91851a8d9e6325620a9b7bc06270"
-  integrity sha512-c6qhB+Pzi2yat2I39q8/DeVuiH9GnS4Pzvd5fKlggPG915XfFzo1fP994cggLTq62y1DMOwRErQL4ESqhqek2w==
+"@magicblock-labs/ephemeral-rollups-sdk@^0.2.11":
+  version "0.2.11"
+  resolved "https://registry.yarnpkg.com/@magicblock-labs/ephemeral-rollups-sdk/-/ephemeral-rollups-sdk-0.2.11.tgz#6347a8e37440e438c4d8717f454f5e922cf94e13"
+  integrity sha512-I9pqYBsWhkUpndt9b4P6jqpVhAKaMdyyiBuxEX+Y2VdWeXuRpF0qXngyn26i1oKCVvbPNQYLu033LpNeSB4BKg==
   dependencies:
     "@metaplex-foundation/beet" "^0.7.2"
     "@phala/dcap-qvl-web" "^0.2.7"
     "@solana/web3.js" "^1.98.0"
     bs58 "^6.0.0"
     rpc-websockets "^9.0.4"
+    typescript "^5.3.0"
 
 "@magicblock-labs/gum-sdk@^3.0.8":
   version "3.0.8"
@@ -9030,6 +9031,11 @@ typescript-eslint@^8.35.0:
     "@typescript-eslint/eslint-plugin" "8.35.0"
     "@typescript-eslint/parser" "8.35.0"
     "@typescript-eslint/utils" "8.35.0"
+
+typescript@^5.3.0:
+  version "5.9.2"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-5.9.2.tgz#d93450cddec5154a2d5cabe3b8102b83316fb2a6"
+  integrity sha512-CWBzXQrc/qOkhidw1OzBTQuYRbfyxDXJMVJ1XNwUHGROVmuaeiEm3OslpZ1RV96d7SKKjZKrSJu3+t/xlw3R9A==
 
 typescript@^5.4.3:
   version "5.8.3"

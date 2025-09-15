@@ -114,6 +114,10 @@ export type PrivatePayments = {
           "signer": true
         },
         {
+          "name": "validator",
+          "optional": true
+        },
+        {
           "name": "bufferDeposit",
           "writable": true,
           "pda": {
