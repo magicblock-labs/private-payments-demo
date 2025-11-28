@@ -706,10 +706,10 @@
   dependencies:
     "@lit-labs/ssr-dom-shim" "^1.4.0"
 
-"@magicblock-labs/ephemeral-rollups-sdk@^0.6.3":
-  version "0.6.3"
-  resolved "https://registry.yarnpkg.com/@magicblock-labs/ephemeral-rollups-sdk/-/ephemeral-rollups-sdk-0.6.3.tgz#c82865c566b1972daef2d72d3584ec9f4fe725c8"
-  integrity sha512-ciT5Hj+nanh5lxYa4ve4HPRZsxXbtHCwdlqgqX0TxQx05HwsyEMyqld01IR1631PgeesKLeGIZ8/Zl0caGy7Uw==
+"@magicblock-labs/ephemeral-rollups-sdk@^0.6.4":
+  version "0.6.4"
+  resolved "https://registry.yarnpkg.com/@magicblock-labs/ephemeral-rollups-sdk/-/ephemeral-rollups-sdk-0.6.4.tgz#2172b24118b20f92bb90c0d09953894fbe12128f"
+  integrity sha512-PiHQKUKGVipa97x4Jrnkkjq9SPl0QcoldyZXQzNhFcI3/jP+F/Z3GdCzIR3RQ91rBKCrKIDSBdV+I44wSr5cfg==
   dependencies:
     "@phala/dcap-qvl-web" "^0.2.7"
     "@solana/web3.js" "^1.98.0"
