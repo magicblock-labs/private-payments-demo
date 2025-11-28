@@ -1,4 +1,4 @@
-import { getAuthToken, SESSION_DURATION } from '@magicblock-labs/ephemeral-rollups-sdk/privacy';
+import { getAuthToken } from '@magicblock-labs/ephemeral-rollups-sdk';
 import { useAnchorWallet, useWallet } from '@solana/wallet-adapter-react';
 import { useCallback, useMemo, useState, useEffect, useRef } from 'react';
 
@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 
 const TOKENS_STORAGE_KEY = 'private-rollup-auth-tokens';
 const TOKENS_CHANGE_EVENT = 'private-rollup-auth-tokens-changed';
+const SESSION_DURATION = 1000 * 60 * 60 * 24 * 30 // 30 days
 
 // Generate a unique instance ID
 let instanceCounter = 0;
@@ -38,7 +39,7 @@ export function usePrivateRollupAuth() {
 
     // Listen for custom token change events to sync across instances
     const handleTokenChange = (e: CustomEvent) => {
-      if (e.detail && typeof e.detail === 'object') {
+      if (isMountedRef.current && e.detail && typeof e.detail === 'object') {
         setTokensState(e.detail);
       }
     };
@@ -108,10 +109,11 @@ export function usePrivateRollupAuth() {
       const expiresAt = Date.now() + SESSION_DURATION;
 
       const token = await getAuthToken(EPHEMERAL_RPC_URL, wallet.publicKey, signMessage);
+      console.log("token", token)
 
       setTokens(oldTokens => ({
         ...oldTokens,
-        [wallet.publicKey.toBase58()]: { token, expiresAt },
+        [wallet.publicKey.toBase58()]: token,
       }));
       toast.success(`Authenticated ${wallet.publicKey.toBase58()} successfully`);
     } catch (error) {

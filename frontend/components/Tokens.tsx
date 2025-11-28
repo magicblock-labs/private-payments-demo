@@ -40,7 +40,7 @@ import {
   groupPdaFromId,
   PERMISSION_PROGRAM_ID,
   permissionPdaFromAccount,
-} from '@magicblock-labs/ephemeral-rollups-sdk/privacy';
+} from '@magicblock-labs/ephemeral-rollups-sdk';
 
 const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
   const { connection } = useConnection();
@@ -360,7 +360,7 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
             <Input
               id='amount'
               type='number'
-              value={amount || undefined}
+              value={amount}
               onChange={e => setAmount(Number(e.target.value))}
               className='bg-background border-border text-foreground pr-12'
               placeholder='1000'

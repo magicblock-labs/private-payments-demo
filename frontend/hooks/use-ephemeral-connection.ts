@@ -8,7 +8,7 @@ import { usePrivateRollupAuth } from './use-private-rollup-auth';
 export function useEphemeralConnection() {
   const { authToken } = usePrivateRollupAuth();
   const ephemeralConnection = useMemo(() => {
-    if (authToken) {
+    if (authToken && typeof authToken === 'string') {
       return new Connection(`${EPHEMERAL_RPC_URL}?token=${authToken}`, 'confirmed');
     }
     return null;

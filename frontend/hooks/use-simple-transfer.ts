@@ -16,7 +16,7 @@ import {
   groupPdaFromId,
   PERMISSION_PROGRAM_ID,
   permissionPdaFromAccount,
-} from '@magicblock-labs/ephemeral-rollups-sdk/privacy';
+} from '@magicblock-labs/ephemeral-rollups-sdk';
 import { DepositAccount } from '@/lib/types';
 import { SessionTokenManager } from '@magicblock-labs/gum-sdk';
 

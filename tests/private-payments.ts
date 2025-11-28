@@ -5,7 +5,7 @@ import {
   groupPdaFromId,
   PERMISSION_PROGRAM_ID,
   permissionPdaFromAccount,
-} from "@magicblock-labs/ephemeral-rollups-sdk/privacy";
+} from "@magicblock-labs/ephemeral-rollups-sdk";
 import { DEPOSIT_PDA_SEED, VAULT_PDA_SEED } from "../frontend/lib/constants";
 import privatePaymentsIdl from "../frontend/program/private_payments.json";
 import {

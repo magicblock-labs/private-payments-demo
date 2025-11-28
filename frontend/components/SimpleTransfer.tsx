@@ -204,9 +204,10 @@ export default function SimpleTransfer({
             <Input
               id='amount'
               type='number'
-              value={amount || undefined}
-              onChange={e => setAmount(Number(e.target.value))}
+              value={amount || ''}
+              onChange={e => setAmount(e.target.value === '' ? 0 : Number(e.target.value))}
               placeholder='0'
+              step='any'
               className='bg-background border-border'
             />
           </div>
@@ -252,9 +253,10 @@ export default function SimpleTransfer({
             <Input
               id='withdrawAmount'
               type='number'
-              value={withdrawAmount || undefined}
-              onChange={e => setWithdrawAmount(Number(e.target.value))}
+              value={withdrawAmount || ''}
+              onChange={e => setWithdrawAmount(e.target.value === '' ? 0 : Number(e.target.value))}
               placeholder='0'
+              step='any'
               className='bg-background border-border'
             />
             <Muted>

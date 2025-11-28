@@ -8,8 +8,8 @@
     "start-app": "cd app && yarn start"
   },
   "dependencies": {
-    "@coral-xyz/anchor": "0.31.1",
-    "@magicblock-labs/ephemeral-rollups-sdk": "^0.2.11",
+    "@coral-xyz/anchor": "0.32.1",
+    "@magicblock-labs/ephemeral-rollups-sdk": "^0.6.3",
     "@solana/spl-token": "^0.4.13",
     "@solana/web3.js": "^1.98.0"
   },
