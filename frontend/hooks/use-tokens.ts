@@ -23,13 +23,13 @@ export function useTokens() {
     // Listen for custom token change events to sync across instances
     const handleTokensChange = (e: CustomEvent) => {
       console.log('handleTokensChange', e.detail);
-      if (e.detail && Array.isArray(e.detail)) {
+      if (isMountedRef.current && e.detail && Array.isArray(e.detail)) {
         setTokenList(e.detail);
       }
     };
     const handleSelectedTokenChange = (e: CustomEvent) => {
       console.log('handleSelectedTokenChange', e.detail);
-      if (e.detail && typeof e.detail === 'object') {
+      if (isMountedRef.current && e.detail && typeof e.detail === 'object') {
         setSelectedToken(e.detail);
       }
     };

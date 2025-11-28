@@ -50,10 +50,10 @@ export default function SimpleRecipient({ user, token }: TransferProps) {
       if (!token || !userPk) return;
       try {
         const balance = await connection.getTokenAccountBalance(
-          getAssociatedTokenAddressSync(new PublicKey(token.mint), userPk, true, TOKEN_PROGRAM_ID),
-        );
-        setBalance(Number(balance.value.uiAmount));
-      } catch (error) {
+            getAssociatedTokenAddressSync(new PublicKey(token.mint), userPk, true, TOKEN_PROGRAM_ID),
+          );
+          setBalance(Number(balance.value.uiAmount));
+        } catch (error) {
         console.error('Error getting balance:', error);
         setBalance(0);
       }

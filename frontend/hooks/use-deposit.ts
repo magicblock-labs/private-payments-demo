@@ -1,4 +1,4 @@
-import { DELEGATION_PROGRAM_ID } from '@magicblock-labs/ephemeral-rollups-sdk';
+import { DELEGATION_PROGRAM_ID, permissionPdaFromAccount } from '@magicblock-labs/ephemeral-rollups-sdk';
 import { useConnection } from '@solana/wallet-adapter-react';
 import { AccountInfo, PublicKey } from '@solana/web3.js';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -12,7 +12,6 @@ import { DepositAccount } from '@/lib/types';
 import { useEphemeralConnection } from '@/hooks/use-ephemeral-connection';
 import { useProgram } from '@/hooks/use-program';
 import { useSubscription } from '@/hooks/use-subscription';
-import { permissionPdaFromAccount } from '@magicblock-labs/ephemeral-rollups-sdk/privacy';
 
 export function useDeposit(user?: PublicKey | string, tokenMint?: PublicKey | string) {
   const { program } = useProgram();

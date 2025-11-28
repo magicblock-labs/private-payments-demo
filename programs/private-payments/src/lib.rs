@@ -4,7 +4,7 @@ use anchor_spl::token::{Mint, Token, TokenAccount};
 use ephemeral_rollups_sdk::anchor::{commit, delegate, ephemeral};
 use ephemeral_rollups_sdk::cpi::DelegateConfig;
 use ephemeral_rollups_sdk::ephem::commit_and_undelegate_accounts;
-use magicblock_permission_client::instructions::{
+use ephemeral_rollups_sdk::access_control::{
     CreateGroupCpiBuilder, CreatePermissionCpiBuilder,
 };
 use session_keys::{SessionError, SessionToken, session_auth_or, Session};

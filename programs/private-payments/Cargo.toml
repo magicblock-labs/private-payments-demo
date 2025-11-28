@@ -22,8 +22,7 @@ custom-panic = []
 [dependencies]
 anchor-lang = { workspace = true, features = ["init-if-needed"] }
 anchor-spl = { workspace = true }
-ephemeral-rollups-sdk = { workspace = true, features = ["anchor"] }
-magicblock-permission-client = { workspace = true }
+ephemeral-rollups-sdk = { workspace = true, features = ["anchor", "access-control"] }
 session-keys = { workspace = true, features = ["no-entrypoint"] }
 
 [lints.rust.unexpected_cfgs]

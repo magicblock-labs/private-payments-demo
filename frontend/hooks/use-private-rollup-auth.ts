@@ -1,4 +1,4 @@
-import { getAuthToken, SESSION_DURATION } from '@magicblock-labs/ephemeral-rollups-sdk/privacy';
+import { getAuthToken, SESSION_DURATION } from '@magicblock-labs/ephemeral-rollups-sdk';
 import { useAnchorWallet, useWallet } from '@solana/wallet-adapter-react';
 import { useCallback, useMemo, useState, useEffect, useRef } from 'react';
 
@@ -38,7 +38,7 @@ export function usePrivateRollupAuth() {
 
     // Listen for custom token change events to sync across instances
     const handleTokenChange = (e: CustomEvent) => {
-      if (e.detail && typeof e.detail === 'object') {
+      if (isMountedRef.current && e.detail && typeof e.detail === 'object') {
         setTokensState(e.detail);
       }
     };
@@ -111,7 +111,7 @@ export function usePrivateRollupAuth() {
 
       setTokens(oldTokens => ({
         ...oldTokens,
-        [wallet.publicKey.toBase58()]: { token, expiresAt },
+        [wallet.publicKey.toBase58()]: token,
       }));
       toast.success(`Authenticated ${wallet.publicKey.toBase58()} successfully`);
     } catch (error) {
