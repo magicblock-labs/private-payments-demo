@@ -14,7 +14,7 @@ codegen-units = 1
 [workspace.dependencies]
 anchor-lang = "0.32.1"
 anchor-spl = "0.32.1"
-ephemeral-rollups-sdk = { version = "0.6.5", features = ["anchor", "access-control"] }
+ephemeral-rollups-sdk = { version = "0.8.0", features = ["anchor", "access-control"] }
 borsh = "^0.10"
 num-derive = "^0.3"
 num-traits = "^0.2"

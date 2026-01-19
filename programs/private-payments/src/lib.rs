@@ -5,7 +5,7 @@ use ephemeral_rollups_sdk::anchor::{commit, delegate, ephemeral};
 use ephemeral_rollups_sdk::cpi::DelegateConfig;
 use ephemeral_rollups_sdk::ephem::commit_and_undelegate_accounts;
 use ephemeral_rollups_sdk::access_control::{
-    CreateGroupCpiBuilder, CreatePermissionCpiBuilder,
+    instructions::CreatePermissionCpiBuilder,
 };
 use session_keys::{SessionError, SessionToken, session_auth_or, Session};
 
@@ -25,6 +25,7 @@ pub enum ErrorCode {
 #[program]
 pub mod private_payments {
     use anchor_spl::token::{transfer_checked, TransferChecked};
+    use ephemeral_rollups_sdk::access_control::structs::{AUTHORITY_FLAG, Member, MembersArgs};
 
     use super::*;
 
@@ -108,34 +109,33 @@ pub mod private_payments {
         Ok(())
     }
 
-    /// Creates a permission group and permission for a deposit account using the external permission program.
+    /// Creates a permission for a deposit account using the external permission program.
     ///
-    /// Calls out to the permission program to create a group and permission for the deposit account.
-    pub fn create_permission(ctx: Context<CreatePermission>, id: Pubkey) -> Result<()> {
+    /// Calls out to the permission program to create a permission for the deposit account.
+    pub fn create_permission(ctx: Context<CreatePermission>) -> Result<()> {
         let CreatePermission {
             payer,
             permission,
             permission_program,
-            group,
             deposit,
             user,
             system_program,
         } = ctx.accounts;
 
-        CreateGroupCpiBuilder::new(&permission_program)
-            .group(&group)
-            .id(id)
-            .members(vec![user.key()])
-            .payer(&payer)
-            .system_program(system_program)
-            .invoke()?;
-
+        // Whitelist programs allowed to use the permission account
+        // The owner program is added by default to prevent bricking the account
+        let members = vec![
+            Member { pubkey: user.key(), flags: AUTHORITY_FLAG }, // The user can directly modify the permission
+            // Example: Member { pubkey: crate::id(), flags: 0 },
+        ];
         CreatePermissionCpiBuilder::new(&permission_program)
             .permission(&permission)
-            .delegated_account(&deposit.to_account_info())
-            .group(&group)
+            .permissioned_account(&deposit.to_account_info())
             .payer(&payer)
             .system_program(system_program)
+            .args(MembersArgs {
+                members: Some(members),
+            })
             .invoke_signed(&[&[
                 DEPOSIT_PDA_SEED,
                 user.key().as_ref(),
@@ -156,7 +156,8 @@ pub mod private_payments {
             &[DEPOSIT_PDA_SEED, user.as_ref(), token_mint.as_ref()],
             DelegateConfig {
                 validator,
-                ..DelegateConfig::default()
+                commit_frequency_ms: 0,
+                
             },
         )?;
         Ok(())
@@ -299,9 +300,6 @@ pub struct CreatePermission<'info> {
     /// CHECK: Checked by the permission program
     #[account(mut)]
     pub permission: UncheckedAccount<'info>,
-    /// CHECK: Checked by the permission program
-    #[account(mut)]
-    pub group: UncheckedAccount<'info>,
     /// CHECK: Checked by the permission program
     pub permission_program: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,

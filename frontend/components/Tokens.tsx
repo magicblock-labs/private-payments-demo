@@ -37,7 +37,6 @@ import { useTokens } from '@/hooks/use-tokens';
 import { useProgram } from '@/hooks/use-program';
 import { BN } from '@coral-xyz/anchor';
 import {
-  groupPdaFromId,
   PERMISSION_PROGRAM_ID,
   permissionPdaFromAccount,
 } from '@magicblock-labs/ephemeral-rollups-sdk';
@@ -124,18 +123,15 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
           })
           .instruction();
 
-        const id = Keypair.generate().publicKey;
         const permission = permissionPdaFromAccount(depositPda);
-        const group = groupPdaFromId(id);
 
         const createPermissionIx = await program.methods
-          .createPermission(id)
+          .createPermission()
           .accountsPartial({
             payer: program.provider.publicKey,
             user: wallet.publicKey,
             deposit: depositPda,
             permission,
-            group,
             permissionProgram: PERMISSION_PROGRAM_ID,
             systemProgram: SystemProgram.programId,
           })

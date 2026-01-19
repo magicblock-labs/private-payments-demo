@@ -13,7 +13,6 @@ import {
   GetCommitmentSignature,
 } from '@magicblock-labs/ephemeral-rollups-sdk';
 import {
-  groupPdaFromId,
   PERMISSION_PROGRAM_ID,
   permissionPdaFromAccount,
 } from '@magicblock-labs/ephemeral-rollups-sdk';
@@ -44,18 +43,15 @@ async function initializeDeposit({
     })
     .instruction();
 
-  const id = Keypair.generate().publicKey;
   const permission = permissionPdaFromAccount(depositPda);
-  const group = groupPdaFromId(id);
 
   let createPermissionIx = await program.methods
-    .createPermission(id)
+    .createPermission()
     .accountsPartial({
       payer: program.provider.publicKey,
       user,
       deposit: depositPda,
       permission,
-      group,
       permissionProgram: PERMISSION_PROGRAM_ID,
     })
     .preInstructions([initIx])
@@ -106,19 +102,19 @@ export default function useSimpleTransfer() {
       let amountToDeposit = tokenAmount;
       let mainnetSenderDepositAmount = senderDepositAccount
         ? (
-            (await program.coder.accounts.decode(
-              'deposit',
-              senderDepositAccount.data,
-            )) as DepositAccount
-          ).amount
+          (await program.coder.accounts.decode(
+            'deposit',
+            senderDepositAccount.data,
+          )) as DepositAccount
+        ).amount
         : new BN(0);
       let ephemeralSenderDepositAmount = ephemeralSenderDepositAccount
         ? (
-            (await program.coder.accounts.decode(
-              'deposit',
-              ephemeralSenderDepositAccount.data,
-            )) as DepositAccount
-          ).amount
+          (await program.coder.accounts.decode(
+            'deposit',
+            ephemeralSenderDepositAccount.data,
+          )) as DepositAccount
+        ).amount
         : new BN(0);
 
       if (senderIsDelegated) {
@@ -302,7 +298,14 @@ export default function useSimpleTransfer() {
           blockhash: ephemeralBlockhash,
           connection: ephemeralConnection,
           callback: async (signature: string) => {
-            await GetCommitmentSignature(signature, ephemeralConnection);
+            let retries = 5;
+            while (retries > 0) {
+              try {
+                await GetCommitmentSignature(signature, ephemeralConnection);
+              } catch (error) {
+                retries--;
+              }
+            }
             return new Promise(resolve => setTimeout(resolve, 1000));
           },
         },
@@ -364,7 +367,7 @@ export default function useSimpleTransfer() {
 
       for (let action of actions) {
         console.log(`Sending ${action.name} transaction`);
-        let signature = await action.connection.sendRawTransaction(action.signedTx!.serialize());
+        let signature = await action.connection.sendRawTransaction(action.signedTx!.serialize(), { preflightCommitment: 'confirmed' });
         await action.connection.confirmTransaction(signature);
         await action.callback?.(signature);
       }
@@ -394,22 +397,22 @@ export default function useSimpleTransfer() {
       );
       const withdrawerDepositAmount = withdrawerDepositAccount
         ? (
-            (await ephemeralProgram.coder.accounts.decode(
-              'deposit',
-              withdrawerDepositAccount?.data,
-            )) as DepositAccount
-          ).amount
+          (await ephemeralProgram.coder.accounts.decode(
+            'deposit',
+            withdrawerDepositAccount?.data,
+          )) as DepositAccount
+        ).amount
         : new BN(0);
 
       let ephemeralWithdrawerDepositAccount =
         await ephemeralConnection.getAccountInfo(withdrawerDepositPda);
       let ephemeralDepositAmount = ephemeralWithdrawerDepositAccount
         ? (
-            (await ephemeralProgram.coder.accounts.decode(
-              'deposit',
-              ephemeralWithdrawerDepositAccount?.data,
-            )) as DepositAccount
-          ).amount
+          (await ephemeralProgram.coder.accounts.decode(
+            'deposit',
+            ephemeralWithdrawerDepositAccount?.data,
+          )) as DepositAccount
+        ).amount
         : new BN(0);
 
       const actualBalance = isDelegated ? ephemeralDepositAmount : withdrawerDepositAmount;
