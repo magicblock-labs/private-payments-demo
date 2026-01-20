@@ -2,7 +2,7 @@ import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { PrivatePayments } from "../target/types/private_payments";
 import {
-  groupPdaFromId,
+  getAuthToken,
   PERMISSION_PROGRAM_ID,
   permissionPdaFromAccount,
 } from "@magicblock-labs/ephemeral-rollups-sdk";
@@ -23,6 +23,7 @@ import {
   Keypair,
   LAMPORTS_PER_SOL,
 } from "@solana/web3.js";
+import { sign } from "tweetnacl";
 
 describe("private-payments", () => {
   const userKp = Keypair.generate();
@@ -30,24 +31,16 @@ describe("private-payments", () => {
   const otherUserKp = Keypair.generate();
 
   const provider = new anchor.AnchorProvider(
-    new anchor.web3.Connection("https://api.devnet.solana.com", {
-      wsEndpoint: "wss://api.devnet.solana.com",
-    }),
-    wallet
-  );
-  const ephemeralProvider = new anchor.AnchorProvider(
-    new anchor.web3.Connection("http://0.0.0.0:8899", {
-      wsEndpoint: "ws://0.0.0.0:8900",
+    new anchor.web3.Connection("https://rpc.magicblock.app/devnet", {
+      wsEndpoint: "wss://rpc.magicblock.app/devnet",
     }),
     wallet
   );
   anchor.setProvider(provider);
 
   const program = new Program<PrivatePayments>(privatePaymentsIdl, provider);
-  const ephemeralProgram = new Program<PrivatePayments>(
-    privatePaymentsIdl,
-    ephemeralProvider
-  );
+  let ephemeralProgramUser: Program<PrivatePayments>;
+  let ephemeralProgramOtherUser: Program<PrivatePayments>;
   const user = userKp.publicKey;
   const otherUser = otherUserKp.publicKey;
   let tokenMint: PublicKey,
@@ -55,11 +48,34 @@ describe("private-payments", () => {
     vaultPda: PublicKey,
     vaultTokenAccount: PublicKey;
   const initialAmount = 1000000;
-  const groupId = PublicKey.unique();
-  const otherGroupId = PublicKey.unique();
   let depositPda: PublicKey, otherDepositPda: PublicKey;
 
   before(async () => {
+    let ephemeralRpcUrl = "https://tee.magicblock.app";
+    const { token } = await getAuthToken(ephemeralRpcUrl, wallet.publicKey, async (message) => sign.detached(message, userKp.secretKey));
+    const ephemeralProviderUser = new anchor.AnchorProvider(
+      new anchor.web3.Connection("https://tee.magicblock.app?token=" + token, {
+        wsEndpoint: "wss://tee.magicblock.app?token=" + token,
+      }),
+      wallet
+    );
+    ephemeralProgramUser = new Program<PrivatePayments>(
+      privatePaymentsIdl,
+      ephemeralProviderUser
+    );
+
+    const { token: otherToken } = await getAuthToken(ephemeralRpcUrl, otherUserKp.publicKey, async (message) => sign.detached(message, otherUserKp.secretKey));
+    const ephemeralProviderOtherUser = new anchor.AnchorProvider(
+      new anchor.web3.Connection("https://tee.magicblock.app?token=" + otherToken, {
+        wsEndpoint: "wss://tee.magicblock.app?token=" + otherToken,
+      }),
+      new anchor.Wallet(otherUserKp)
+    );
+    ephemeralProgramOtherUser = new Program<PrivatePayments>(
+      privatePaymentsIdl,
+      ephemeralProviderOtherUser
+    );
+
     const faucet = anchor.Wallet.local();
 
     // Airdrop SOL to the users
@@ -169,8 +185,6 @@ describe("private-payments", () => {
     console.log("User", user.toBase58());
     console.log("Other user", otherUser.toBase58());
     console.log("Token mint", tokenMint.toBase58());
-    console.log("Group ID", groupId.toBase58());
-    console.log("Other group ID", otherGroupId.toBase58());
   });
 
   it("Initialize deposits", async () => {
@@ -187,7 +201,7 @@ describe("private-payments", () => {
     let deposit = await program.account.deposit.fetch(depositPda);
     assert.equal(deposit.amount.toNumber(), 0);
 
-    await program.methods
+    const tx = await program.methods
       .initializeDeposit()
       .accountsPartial({
         user: otherUser,
@@ -196,13 +210,15 @@ describe("private-payments", () => {
         tokenProgram: TOKEN_PROGRAM_ID,
       })
       .rpc({ skipPreflight: true });
+    console.log("Initialize deposit tx", tx);
+    await provider.connection.confirmTransaction(tx);
 
     deposit = await program.account.deposit.fetch(otherDepositPda);
     assert.equal(deposit.amount.toNumber(), 0);
   });
 
   it("Modify balance", async () => {
-    await program.methods
+    let tx = await program.methods
       .modifyBalance({
         amount: new anchor.BN(initialAmount / 2),
         increase: true,
@@ -218,11 +234,13 @@ describe("private-payments", () => {
         tokenProgram: TOKEN_PROGRAM_ID,
       })
       .rpc({ skipPreflight: true });
+    console.log("Modify balance tx", tx);
+    await provider.connection.confirmTransaction(tx);
 
     let deposit = await program.account.deposit.fetch(depositPda);
     assert.equal(deposit.amount.toNumber(), initialAmount / 2);
 
-    await program.methods
+    tx = await program.methods
       .modifyBalance({
         amount: new anchor.BN(initialAmount / 4),
         increase: false,
@@ -238,10 +256,13 @@ describe("private-payments", () => {
         tokenProgram: TOKEN_PROGRAM_ID,
       })
       .rpc({ skipPreflight: true });
+    console.log("Modify balance tx", tx);
+    await provider.connection.confirmTransaction(tx);
+
     deposit = await program.account.deposit.fetch(depositPda);
     assert.equal(deposit.amount.toNumber(), initialAmount / 4);
 
-    await program.methods
+    tx = await program.methods
       .modifyBalance({
         amount: new anchor.BN((3 * initialAmount) / 4),
         increase: true,
@@ -257,30 +278,33 @@ describe("private-payments", () => {
         tokenProgram: TOKEN_PROGRAM_ID,
       })
       .rpc({ skipPreflight: true });
+    console.log("Modify balance tx", tx);
+    await provider.connection.confirmTransaction(tx);
+
     deposit = await program.account.deposit.fetch(depositPda);
     assert.equal(deposit.amount.toNumber(), initialAmount);
   });
 
   it("Create permission", async () => {
-    for (const { deposit, kp, id } of [
-      { deposit: depositPda, kp: userKp, id: groupId },
-      { deposit: otherDepositPda, kp: otherUserKp, id: otherGroupId },
+    for (const { deposit, kp } of [
+      { deposit: depositPda, kp: userKp },
+      { deposit: otherDepositPda, kp: otherUserKp },
     ]) {
       const permission = permissionPdaFromAccount(deposit);
-      const group = groupPdaFromId(id);
 
-      await program.methods
-        .createPermission(id)
+      let tx = await program.methods
+        .createPermission()
         .accountsPartial({
           payer: kp.publicKey,
           user: kp.publicKey,
           deposit,
           permission,
-          group,
           permissionProgram: PERMISSION_PROGRAM_ID,
         })
         .signers([kp])
         .rpc({ skipPreflight: true });
+      console.log("Create permission tx", tx);
+      await provider.connection.confirmTransaction(tx);
     }
   });
 
@@ -291,32 +315,35 @@ describe("private-payments", () => {
     ]) {
       const tx = await program.methods
         .delegate(kp.publicKey, tokenMint)
-        .accountsPartial({ payer: kp.publicKey, deposit })
+        .accountsPartial({ payer: kp.publicKey, deposit, validator: new PublicKey("FnE6VJT5QNZdedZPnCoLsARgBwoE6DeJNjBs2H1gySXA") })
         .signers([kp])
         .rpc({ skipPreflight: true });
+      console.log("Delegate tx", tx);
+      await provider.connection.confirmTransaction(tx);
     }
   });
 
   it("Transfer", async () => {
-    // Used to force fetching accounts from the base validator
-    await ephemeralProvider.connection.requestAirdrop(depositPda, 1000);
-    await ephemeralProvider.connection.requestAirdrop(otherDepositPda, 1000);
-
-    ephemeralProgram.methods
+    console.log("Ephemeral RPC endpoint", ephemeralProgramUser.provider.connection.rpcEndpoint);
+    let tx = await ephemeralProgramUser.methods
       .transferDeposit(new anchor.BN(initialAmount / 2))
       .accountsPartial({
         user,
         sourceDeposit: depositPda,
         destinationDeposit: otherDepositPda,
+        sessionToken: null,
         tokenMint,
       })
       .signers([userKp])
       .rpc({ skipPreflight: true });
+    console.log("Ephemeral RPC endpoint", ephemeralProgramOtherUser.provider.connection.rpcEndpoint);
+    console.log("Transfer tx", tx);
+    await provider.connection.confirmTransaction(tx);
 
-    let deposit = await ephemeralProgram.account.deposit.fetch(depositPda);
+    let deposit = await ephemeralProgramUser.account.deposit.fetch(depositPda);
     assert.equal(deposit.amount.toNumber(), initialAmount / 2);
 
-    deposit = await ephemeralProgram.account.deposit.fetch(otherDepositPda);
+    deposit = await ephemeralProgramOtherUser.account.deposit.fetch(otherDepositPda);
     assert.equal(deposit.amount.toNumber(), initialAmount / 2);
   });
 });

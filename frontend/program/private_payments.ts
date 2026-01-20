@@ -16,9 +16,9 @@ export type PrivatePayments = {
     {
       "name": "createPermission",
       "docs": [
-        "Creates a permission group and permission for a deposit account using the external permission program.",
+        "Creates a permission for a deposit account using the external permission program.",
         "",
-        "Calls out to the permission program to create a group and permission for the deposit account."
+        "Calls out to the permission program to create a permission for the deposit account."
       ],
       "discriminator": [
         190,
@@ -72,10 +72,6 @@ export type PrivatePayments = {
           "writable": true
         },
         {
-          "name": "group",
-          "writable": true
-        },
-        {
           "name": "permissionProgram"
         },
         {
@@ -83,12 +79,7 @@ export type PrivatePayments = {
           "address": "11111111111111111111111111111111"
         }
       ],
-      "args": [
-        {
-          "name": "id",
-          "type": "pubkey"
-        }
-      ]
+      "args": []
     },
     {
       "name": "delegate",

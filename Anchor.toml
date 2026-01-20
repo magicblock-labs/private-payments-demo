@@ -29,6 +29,6 @@ program = "tests/fixtures/dlp.so"
 upgradeable = false
 
 [[test.genesis]]
-address = "BTWAqWNBmF2TboMh3fxMJfgR16xGHYD7Kgr2dPwbRPBi"
+address = "ACLseoPoyC3cBqoUtkbjZ4aDrkurZW86v19pXz2XQnp1"
 program = "tests/fixtures/permission.so"
 upgradeable = false

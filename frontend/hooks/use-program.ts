@@ -1,13 +1,11 @@
 import { BN, Program } from '@coral-xyz/anchor';
 import { getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
-import { Keypair } from '@solana/web3.js';
 import { PublicKey } from '@solana/web3.js';
 import { useCallback, useMemo } from 'react';
 import {
   PERMISSION_PROGRAM_ID,
   permissionPdaFromAccount,
-  groupPdaFromId,
 } from '@magicblock-labs/ephemeral-rollups-sdk';
 
 import { VAULT_PDA_SEED, DEPOSIT_PDA_SEED } from '@/lib/constants';
@@ -67,18 +65,15 @@ export function useProgram() {
         })
         .instruction();
 
-      const id = Keypair.generate().publicKey;
       const permission = permissionPdaFromAccount(deposit);
-      const group = groupPdaFromId(id);
 
-      const createPermissionIx = await program.methods
-        .createPermission(id)
+      await program.methods
+        .createPermission()
         .accountsPartial({
           payer: program.provider.publicKey,
           user,
           deposit,
           permission,
-          group,
           permissionProgram: PERMISSION_PROGRAM_ID,
         })
         .preInstructions([initIx])
