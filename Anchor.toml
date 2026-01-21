@@ -12,7 +12,7 @@ private_payments = "EnhkomtzKms55jXi3ijn9XsMKYpMT4BJjmbuDQmPo3YS"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]

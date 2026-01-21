@@ -3,6 +3,7 @@ import { Program } from "@coral-xyz/anchor";
 import { PrivatePayments } from "../target/types/private_payments";
 import {
   getAuthToken,
+  GetCommitmentSignature,
   PERMISSION_PROGRAM_ID,
   permissionPdaFromAccount,
 } from "@magicblock-labs/ephemeral-rollups-sdk";
@@ -338,12 +339,53 @@ describe("private-payments", () => {
       .rpc({ skipPreflight: true });
     console.log("Ephemeral RPC endpoint", ephemeralProgramOtherUser.provider.connection.rpcEndpoint);
     console.log("Transfer tx", tx);
-    await provider.connection.confirmTransaction(tx);
 
     let deposit = await ephemeralProgramUser.account.deposit.fetch(depositPda);
     assert.equal(deposit.amount.toNumber(), initialAmount / 2);
-
     deposit = await ephemeralProgramOtherUser.account.deposit.fetch(otherDepositPda);
     assert.equal(deposit.amount.toNumber(), initialAmount / 2);
+
+    try {
+      await ephemeralProgramUser.account.deposit.fetch(otherDepositPda);
+      assert.fail("Deposit should not exist");
+    } catch (error) {
+      assert.isNotNull(error);
+    }
+    try {
+      await ephemeralProgramOtherUser.account.deposit.fetch(depositPda);
+      assert.fail("Deposit should not exist");
+    } catch (error) {
+      assert.isNotNull(error);
+    }
+  });
+
+  it("Undelegate", async () => {
+    console.log("Ephemeral RPC endpoint", ephemeralProgramUser.provider.connection.rpcEndpoint);
+    let tx = await ephemeralProgramUser.methods
+      .undelegate()
+      .accountsPartial({
+        user,
+        deposit: depositPda,
+        sessionToken: null,
+      })
+      .signers([userKp])
+      .rpc({ skipPreflight: true });
+    console.log("Undelegate tx", tx);
+    await ephemeralProgramUser.provider.connection.confirmTransaction(tx);
+
+    // Get commitment signature does not work for the PER
+    let retries = 10;
+    while (retries > 0) {
+      try {
+        let account = await provider.connection.getAccountInfo(depositPda);
+        if (account?.owner.equals(program.programId)) {
+          break;
+        }
+      } catch (error) {
+        retries--;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+    assert.isAbove(retries, 0, "Undelegate failed...");
   });
 });
