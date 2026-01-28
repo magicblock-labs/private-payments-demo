@@ -1,5 +1,8 @@
 'use client';
 
+import { useEphemeralConnection } from '@/hooks/use-ephemeral-connection';
+import { useConnection } from '@solana/wallet-adapter-react';
+import { Connection } from '@solana/web3.js';
 import React, {
   createContext,
   useCallback,
@@ -9,10 +12,6 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { useConnection } from '@solana/wallet-adapter-react';
-import { Connection } from '@solana/web3.js';
-
-import { useEphemeralConnection } from '@/hooks/use-ephemeral-connection';
 
 type BlockhashCacheEntry = {
   blockhash?: string;

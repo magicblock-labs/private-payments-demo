@@ -1,27 +1,26 @@
 'use client';
 
+import { useSubscription } from '@/hooks/use-subscription';
+import { TokenAccounts } from '@/hooks/use-token-account';
+import { useTokenAccounts } from '@/hooks/use-token-accounts';
+import { deriveVault } from '@magicblock-labs/ephemeral-rollups-sdk';
+import {
+  Account,
+  TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddressSync,
+  unpackAccount,
+} from '@solana/spl-token';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { AccountInfo, PublicKey } from '@solana/web3.js';
 import React, {
-  createContext,
-  useContext,
   ReactNode,
+  createContext,
   useCallback,
+  useContext,
   useEffect,
   useMemo,
   useState,
 } from 'react';
-import { AccountInfo, PublicKey } from '@solana/web3.js';
-import { useConnection, useWallet } from '@solana/wallet-adapter-react';
-import {
-  Account,
-  getAssociatedTokenAddressSync,
-  TOKEN_PROGRAM_ID,
-  unpackAccount,
-} from '@solana/spl-token';
-import { deriveVault } from '@magicblock-labs/ephemeral-rollups-sdk';
-
-import { TokenAccounts } from '@/hooks/use-token-account';
-import { useTokenAccounts } from '@/hooks/use-token-accounts';
-import { useSubscription } from '@/hooks/use-subscription';
 
 interface TokenAccountContextValue {
   wallet?: PublicKey;
