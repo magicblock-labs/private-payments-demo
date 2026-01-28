@@ -1,6 +1,6 @@
-import nextCoreWebVitals from 'eslint-config-next/core-web-vitals';
-import prettierConfig from 'eslint-config-prettier';
-import prettierPlugin from 'eslint-plugin-prettier';
+const nextCoreWebVitals = require('eslint-config-next/core-web-vitals');
+const prettierConfig = require('eslint-config-prettier');
+const prettierPlugin = require('eslint-plugin-prettier');
 
 const flatconf = [
   ...nextCoreWebVitals,
@@ -16,4 +16,4 @@ const flatconf = [
   },
 ];
 
-export default flatconf;
+module.exports = flatconf;
