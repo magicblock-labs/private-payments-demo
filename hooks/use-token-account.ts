@@ -74,9 +74,8 @@ export function useTokenAccount({ user, tokenMint }: TokenAccountProps): TokenAc
           let ephemeralAtaInfo = null;
           try {
             ephemeralAtaInfo = await ephemeralConnection?.getAccountInfo(ata);
-          } catch (error) {
-            console.log('ephemeral connection error', error);
-          }
+          } catch {}
+
           if (ephemeralAtaInfo) {
             const decodedEphemeralAta = unpackAccount(ata, ephemeralAtaInfo);
             setEphemeralAta(decodedEphemeralAta);
@@ -90,9 +89,7 @@ export function useTokenAccount({ user, tokenMint }: TokenAccountProps): TokenAc
         setMainnetAta(null);
         setEphemeralAta(null);
       }
-    } catch (error) {
-      console.log('getDeposit error', error);
-    }
+    } catch {}
   }, [user, ata, eata, connection, ephemeralConnection]);
 
   const handleAtaChange = useCallback(
@@ -137,10 +134,9 @@ export function useTokenAccount({ user, tokenMint }: TokenAccountProps): TokenAc
 
   // Initialize the deposit
   useEffect(() => {
-    const f = async () => {
+    setTimeout(async () => {
       await getAta();
-    };
-    f();
+    }, 0);
   }, [getAta]);
 
   return {

@@ -60,12 +60,7 @@ export function usePrivateRollupAuth() {
           const parsedTokens = JSON.parse(storedTokens);
           setTokensState(parsedTokens);
         }
-      } catch (error) {
-        console.error(
-          `[Instance ${instanceId.current}] Error loading tokens from localStorage:`,
-          error,
-        );
-      }
+      } catch {}
     }
   }, [tokens]); // Run whenever tokens state changes
 
@@ -87,12 +82,7 @@ export function usePrivateRollupAuth() {
           // Dispatch custom event to notify other instances
           const event = new CustomEvent(TOKENS_CHANGE_EVENT, { detail: updatedTokens });
           window.dispatchEvent(event);
-        } catch (error) {
-          console.error(
-            `[Instance ${instanceId.current}] Error saving tokens to localStorage:`,
-            error,
-          );
-        }
+        } catch {}
         return updatedTokens;
       });
     },
@@ -112,8 +102,6 @@ export function usePrivateRollupAuth() {
         [wallet.publicKey.toBase58()]: token,
       }));
       toast.success(`Authenticated ${wallet.publicKey.toBase58()} successfully`);
-    } catch (error) {
-      console.error('Error getting token:', error);
     } finally {
       setIsAuthenticating(false);
     }

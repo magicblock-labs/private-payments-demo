@@ -97,9 +97,6 @@ export default function useSimpleTransfer({
       const senderAta = getAssociatedTokenAddressSync(tokenMintPk, wallet.publicKey);
 
       const senderIsDelegated = senderAccounts?.isDelegated;
-      console.log('senderIsDelegated:', senderIsDelegated);
-      console.log('senderAta:', senderAta.toString());
-      console.log('senderEata:', senderEata.toString());
 
       // Compute the amount of tokens to deposit
       let amountToDeposit = tokenAmount;
@@ -107,7 +104,6 @@ export default function useSimpleTransfer({
       const availableBalance = senderAccounts.isDelegated
         ? (senderAccounts?.ephemeralAta?.amount ?? 0n)
         : (senderAccounts?.mainnetEata?.amount ?? 0n);
-      console.log('availableBalance:', availableBalance);
       amountToDeposit -= availableBalance;
 
       // If the vault does not exist, we need to initialize it
@@ -154,11 +150,7 @@ export default function useSimpleTransfer({
         });
       }
 
-      console.log('delegation status:', senderIsDelegated, recipientIsDelegated);
-      console.log('amountToDeposit:', Number(amountToDeposit) / Math.pow(10, 6));
-
       if (amountToDeposit > 0) {
-        console.log('depositing', Number(amountToDeposit) / Math.pow(10, 6));
         let depositIx = transferToVaultIx(
           senderEata,
           vault,
@@ -174,14 +166,12 @@ export default function useSimpleTransfer({
 
       // Make sure both deposits are delegated
       if (!senderIsDelegated || preliminaryTx) {
-        console.log('delegating sender');
         let delegIx = delegateIx(wallet.publicKey, senderEata, senderEataBump, VALIDATOR_PUBKEY);
         mainnetTx = mainnetTx || new Transaction();
         mainnetTx.add(delegIx);
       }
 
       if (!recipientIsDelegated) {
-        console.log('delegating recipient');
         let delegIx = delegateIx(
           wallet.publicKey,
           recipientEata,
@@ -193,7 +183,6 @@ export default function useSimpleTransfer({
       }
 
       // Transfer the amount from the sender to the recipient
-      console.log('transferring', Number(tokenAmount) / Math.pow(10, 6));
       const ephemeralTx = new Transaction().add(
         createTransferCheckedInstruction(
           senderAta,
@@ -225,10 +214,8 @@ export default function useSimpleTransfer({
                 }
               } catch {}
               retries--;
-              console.log('retrying undelegate sender', retries);
               await new Promise(resolve => setTimeout(resolve, 400));
             }
-            console.log('could not undelegate sender');
             throw new Error('Could not undelegate sender');
           },
         },
@@ -265,13 +252,10 @@ export default function useSimpleTransfer({
       }
 
       for (let action of actions) {
-        console.log(`Sending ${action.name} transaction`, action);
         let signature = await action.connection.sendRawTransaction(action.signedTx!.serialize(), {
           // skipPreflight: true,
         });
-        console.log('signature:', signature);
         await action.callback?.(signature);
-        console.log('confirmed');
       }
     },
     [
@@ -331,7 +315,6 @@ export default function useSimpleTransfer({
         let signature = await ephemeralConnection.sendRawTransaction(
           signedUndelegateTx.serialize(),
         );
-        console.log('signature:', signature);
         await ephemeralConnection.confirmTransaction(signature);
 
         // Wait for the undelegation
@@ -349,7 +332,6 @@ export default function useSimpleTransfer({
         }
 
         signature = await connection.sendRawTransaction(signedWithdrawTx.serialize());
-        console.log('signature:', signature);
         await connection.confirmTransaction(signature);
       } else {
         let [signedWithdrawTx] = await wallet.signAllTransactions([withdrawTx]);

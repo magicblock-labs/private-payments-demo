@@ -26,9 +26,7 @@ export function useSubscription(
 
         const publicKey = new PublicKey(account);
         subscriptionId.current = connection.onAccountChange(publicKey, onAccountChange);
-      } catch (error) {
-        console.log(`Can't find account ${account}:`, error);
-      }
+      } catch {}
     };
 
     subscribe();

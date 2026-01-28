@@ -11,7 +11,6 @@ const SELECTED_TOKEN_CHANGE_EVENT = 'selected-token-changed';
 let instanceCounter = 0;
 
 export function useTokens() {
-  const instanceId = useRef(++instanceCounter);
   const isMountedRef = useRef(true);
   const [tokenList, setTokenList] = useState<TokenListEntry[]>([]);
   const [selectedToken, setSelectedToken] = useState<TokenListEntry | undefined>();
@@ -22,13 +21,11 @@ export function useTokens() {
 
     // Listen for custom token change events to sync across instances
     const handleTokensChange = (e: CustomEvent) => {
-      console.log('handleTokensChange', e.detail);
       if (isMountedRef.current && e.detail && Array.isArray(e.detail)) {
         setTokenList(e.detail);
       }
     };
     const handleSelectedTokenChange = (e: CustomEvent) => {
-      console.log('handleSelectedTokenChange', e.detail);
       if (isMountedRef.current && e.detail && typeof e.detail === 'object') {
         setSelectedToken(e.detail);
       }
@@ -56,14 +53,11 @@ export function useTokens() {
       const storedTokens = localStorage.getItem(TOKENS_STORAGE_KEY);
       if (storedTokens) {
         const parsedTokens = JSON.parse(storedTokens);
-        setTokenList(parsedTokens);
+        setTimeout(() => {
+          setTokenList(parsedTokens);
+        }, 0);
       }
-    } catch (error) {
-      console.error(
-        `[Instance ${instanceId.current}] Error loading tokens from localStorage:`,
-        error,
-      );
-    }
+    } catch {}
   }, []); // Only run on mount
 
   // Load selected token from localStorage on mount
@@ -72,14 +66,11 @@ export function useTokens() {
       const storedSelectedToken = localStorage.getItem(SELECTED_TOKEN_STORAGE_KEY);
       if (storedSelectedToken) {
         const parsedToken = JSON.parse(storedSelectedToken);
-        setSelectedToken(parsedToken);
+        setTimeout(() => {
+          setSelectedToken(parsedToken);
+        }, 0);
       }
-    } catch (error) {
-      console.error(
-        `[Instance ${instanceId.current}] Error loading selected token from localStorage:`,
-        error,
-      );
-    }
+    } catch {}
   }, []); // Only run on mount
 
   // Save tokens to localStorage whenever they change
@@ -96,12 +87,7 @@ export function useTokens() {
           // Dispatch custom event to notify other instances
           const event = new CustomEvent(TOKENS_CHANGE_EVENT, { detail: updatedTokens });
           window.dispatchEvent(event);
-        } catch (error) {
-          console.error(
-            `[Instance ${instanceId.current}] Error saving tokens to localStorage:`,
-            error,
-          );
-        }
+        } catch {}
         return updatedTokens;
       });
     },
@@ -126,12 +112,7 @@ export function useTokens() {
           // Dispatch custom event to notify other instances
           const event = new CustomEvent(SELECTED_TOKEN_CHANGE_EVENT, { detail: updatedToken });
           window.dispatchEvent(event);
-        } catch (error) {
-          console.error(
-            `[Instance ${instanceId.current}] Error saving selected token to localStorage:`,
-            error,
-          );
-        }
+        } catch {}
         return updatedToken;
       });
     },

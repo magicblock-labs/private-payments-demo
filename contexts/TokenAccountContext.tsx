@@ -111,10 +111,9 @@ export function TokenAccountProvider({
   }, [connection, vault, vaultAta]);
 
   useEffect(() => {
-    const f = async () => {
+    setTimeout(async () => {
       await fetchVault();
-    };
-    f();
+    }, 0);
   }, [fetchVault]);
 
   useSubscription(connection, vault, accountInfo => {
@@ -130,28 +129,6 @@ export function TokenAccountProvider({
   });
 
   const value = useMemo(() => {
-    console.log('walletAccounts:', {
-      ata: walletAccounts.ata?.toString(),
-      eata: walletAccounts.eata?.toString(),
-      mainnetAta: walletAccounts.mainnetAta?.amount,
-      mainnetEata: walletAccounts.mainnetEata?.amount,
-      ephemeralAta: walletAccounts.ephemeralAta?.amount,
-      tokenAccount: walletAccounts.tokenAccount?.amount,
-      isDelegated: walletAccounts.isDelegated,
-      accessDenied: walletAccounts.accessDenied,
-    });
-
-    console.log('recipientAccounts:', {
-      ata: recipientAccounts.ata?.toString(),
-      eata: recipientAccounts.eata?.toString(),
-      mainnetAta: recipientAccounts.mainnetAta?.amount,
-      mainnetEata: recipientAccounts.mainnetEata?.amount,
-      ephemeralAta: recipientAccounts.ephemeralAta?.amount,
-      tokenAccount: recipientAccounts.tokenAccount?.amount,
-      isDelegated: recipientAccounts.isDelegated,
-      accessDenied: recipientAccounts.accessDenied,
-    });
-
     return {
       wallet: publicKey ?? undefined,
       recipient: recipientKey,
