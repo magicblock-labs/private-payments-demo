@@ -121,8 +121,9 @@ export function TokenAccountProvider({
   });
 
   useSubscription(connection, vaultAta, accountInfo => {
+    if (!vaultAta) return;
     try {
-      setVaultAtaAccount(unpackAccount(vaultAta!, accountInfo));
+      setVaultAtaAccount(unpackAccount(vaultAta, accountInfo));
     } catch {
       setVaultAtaAccount(undefined);
     }
