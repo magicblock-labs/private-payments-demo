@@ -59,11 +59,9 @@ export function useTokenAccount({ user, tokenMint }: TokenAccountProps): TokenAc
 
   const getAta = useCallback(async () => {
     if (!user || !ata || !eata) return;
-    setEphemeralAta(null);
-    setMainnetAta(null);
 
+    let [ataInfo, eataInfo] = await connection.getMultipleAccountsInfo([ata, eata]);
     try {
-      let [ataInfo, eataInfo] = await connection.getMultipleAccountsInfo([ata, eata]);
       if (ataInfo) {
         let decodedMainnetAta = unpackAccount(ata, ataInfo);
         setMainnetAta(decodedMainnetAta);
@@ -84,9 +82,11 @@ export function useTokenAccount({ user, tokenMint }: TokenAccountProps): TokenAc
           }
         } else {
           setIsDelegated(false);
+          setEphemeralAta(null);
         }
       } else {
         setMainnetAta(null);
+        setMainnetEata(null);
         setEphemeralAta(null);
       }
     } catch {}

@@ -88,8 +88,6 @@ export function TokenAccountProvider({
 
   const fetchVault = useCallback(async () => {
     if (!vault || !vaultAta) return;
-    setVaultInfo(undefined);
-    setVaultAtaAccount(undefined);
 
     try {
       const [vaultAccountInfo, vaultAtaInfo] = await connection.getMultipleAccountsInfo([
@@ -103,6 +101,8 @@ export function TokenAccountProvider({
         } catch {
           setVaultAtaAccount(undefined);
         }
+      } else {
+        setVaultAtaAccount(undefined);
       }
     } catch {
       setVaultInfo(undefined);
