@@ -21,9 +21,9 @@ export function usePrivateRollupAuth() {
   const isMountedRef = useRef(true);
 
   const authToken = useMemo(() => {
-    let pk = wallet?.publicKey?.toBase58();
+    const pk = wallet?.publicKey?.toBase58();
     if (pk) {
-      let token = tokens[pk] ?? null;
+      const token = tokens[pk] ?? null;
       if (token?.expiresAt > Date.now()) {
         return token.token;
       }

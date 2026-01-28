@@ -12,6 +12,7 @@ const flatconf = [
       ...prettierConfig.rules,
       'prettier/prettier': 'error',
       'no-console': 'warn',
+      'prefer-const': 'error',
     },
   },
 ];

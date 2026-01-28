@@ -40,11 +40,11 @@ async function initializeDeposit({
   payer: PublicKey;
   transaction?: Transaction;
 }) {
-  let ata = getAssociatedTokenAddressSync(tokenMint, user, true, TOKEN_PROGRAM_ID);
-  let [eata, eataBump] = deriveEphemeralAta(user, tokenMint);
-  let initAta = createAssociatedTokenAccountIdempotentInstruction(payer, ata, user, tokenMint);
-  let initIx = initEphemeralAtaIx(eata, user, tokenMint, payer, eataBump);
-  let createPermissionIx = createEataPermissionIx(eata, payer, eataBump);
+  const ata = getAssociatedTokenAddressSync(tokenMint, user, true, TOKEN_PROGRAM_ID);
+  const [eata, eataBump] = deriveEphemeralAta(user, tokenMint);
+  const initAta = createAssociatedTokenAccountIdempotentInstruction(payer, ata, user, tokenMint);
+  const initIx = initEphemeralAtaIx(eata, user, tokenMint, payer, eataBump);
+  const createPermissionIx = createEataPermissionIx(eata, payer, eataBump);
   transaction = transaction || new Transaction();
   transaction.add(initAta);
   transaction.add(initIx);
@@ -85,7 +85,7 @@ export default function useSimpleTransfer({
       )
         return;
 
-      let tokenAmount = BigInt(Math.round(10 ** 6 * amount));
+      const tokenAmount = BigInt(Math.round(10 ** 6 * amount));
       const recipientPk = recipientAccounts.user;
       const tokenMintPk = tokenMint;
 
@@ -132,7 +132,7 @@ export default function useSimpleTransfer({
         // If the sender has a deposit, we need to undelegate to transfer more tokens to it
         if (senderIsDelegated) {
           if (amountToDeposit > 0) {
-            let undelegIx = undelegateIx(wallet.publicKey, tokenMintPk);
+            const undelegIx = undelegateIx(wallet.publicKey, tokenMintPk);
             preliminaryTx = new Transaction().add(undelegIx);
           }
         }
@@ -153,7 +153,7 @@ export default function useSimpleTransfer({
       }
 
       if (amountToDeposit > 0) {
-        let depositIx = transferToVaultIx(
+        const depositIx = transferToVaultIx(
           senderEata,
           vault,
           tokenMintPk,
@@ -168,13 +168,13 @@ export default function useSimpleTransfer({
 
       // Make sure both deposits are delegated
       if (!senderIsDelegated || preliminaryTx) {
-        let delegIx = delegateIx(wallet.publicKey, senderEata, senderEataBump, VALIDATOR_PUBKEY);
+        const delegIx = delegateIx(wallet.publicKey, senderEata, senderEataBump, VALIDATOR_PUBKEY);
         mainnetTx = mainnetTx || new Transaction();
         mainnetTx.add(delegIx);
       }
 
       if (!recipientIsDelegated) {
-        let delegIx = delegateIx(
+        const delegIx = delegateIx(
           wallet.publicKey,
           recipientEata,
           recipientEataBump,
@@ -197,7 +197,7 @@ export default function useSimpleTransfer({
         ),
       );
 
-      let actions = [
+      const actions = [
         {
           name: 'preliminaryTx',
           tx: preliminaryTx,
@@ -208,7 +208,7 @@ export default function useSimpleTransfer({
             let retries = 15;
             while (retries > 0) {
               try {
-                let accountInfo = await connection.getAccountInfo(senderEata);
+                const accountInfo = await connection.getAccountInfo(senderEata);
                 if (
                   accountInfo &&
                   !accountInfo.owner.equals(new PublicKey(DELEGATION_PROGRAM_ID))
@@ -243,23 +243,21 @@ export default function useSimpleTransfer({
       ]
         .filter(action => action.tx)
         .map(action => {
-          let tx = action.tx!;
+          const tx = action.tx!;
           tx.recentBlockhash = action.blockhash;
           tx.feePayer = wallet.publicKey;
           return { ...action, tx };
         });
 
-      let txs = actions.map(action => action.tx!);
-      let signedTxs = await wallet.signAllTransactions(txs);
+      const txs = actions.map(action => action.tx!);
+      const signedTxs = await wallet.signAllTransactions(txs);
 
       for (let i = 0; i < actions.length; i++) {
         actions[i].signedTx = signedTxs[i];
       }
 
-      for (let action of actions) {
-        let signature = await action.connection.sendRawTransaction(action.signedTx!.serialize(), {
-          // skipPreflight: true,
-        });
+      for (const action of actions) {
+        const signature = await action.connection.sendRawTransaction(action.signedTx!.serialize());
         await action.callback?.(signature);
       }
     },
@@ -289,9 +287,9 @@ export default function useSimpleTransfer({
       )
         return;
 
-      let tokenAmount = BigInt(Math.round(10 ** 6 * amount));
+      const tokenAmount = BigInt(Math.round(10 ** 6 * amount));
 
-      let [withdrawerEata] = deriveEphemeralAta(wallet.publicKey, tokenMint);
+      const [withdrawerEata] = deriveEphemeralAta(wallet.publicKey, tokenMint);
       const isDelegated = senderAccounts?.isDelegated;
 
       const actualBalance = isDelegated
@@ -304,13 +302,13 @@ export default function useSimpleTransfer({
 
       let undelegateTx: Transaction | undefined;
       if (isDelegated) {
-        let undelegIx = undelegateIx(wallet.publicKey, tokenMint);
+        const undelegIx = undelegateIx(wallet.publicKey, tokenMint);
         undelegateTx = new Transaction();
         undelegateTx.add(undelegIx);
       }
 
-      let withdrawIx = withdrawSplIx(wallet.publicKey, tokenMint, tokenAmount);
-      let withdrawTx = new Transaction();
+      const withdrawIx = withdrawSplIx(wallet.publicKey, tokenMint, tokenAmount);
+      const withdrawTx = new Transaction();
       withdrawTx.add(withdrawIx);
 
       withdrawTx.recentBlockhash = mainnet.blockhash;
@@ -335,7 +333,7 @@ export default function useSimpleTransfer({
         let retries = 10;
         while (retries > 0) {
           try {
-            let accountInfo = await connection.getAccountInfo(withdrawerEata);
+            const accountInfo = await connection.getAccountInfo(withdrawerEata);
             if (accountInfo && !accountInfo.owner.equals(new PublicKey(DELEGATION_PROGRAM_ID))) {
               break;
             }
@@ -352,8 +350,8 @@ export default function useSimpleTransfer({
         signature = await connection.sendRawTransaction(signedWithdrawTx.serialize());
         await connection.confirmTransaction(signature);
       } else {
-        let [signedWithdrawTx] = await wallet.signAllTransactions([withdrawTx]);
-        let signature = await connection.sendRawTransaction(signedWithdrawTx.serialize(), {
+        const [signedWithdrawTx] = await wallet.signAllTransactions([withdrawTx]);
+        const signature = await connection.sendRawTransaction(signedWithdrawTx.serialize(), {
           skipPreflight: true,
         });
         await connection.confirmTransaction(signature);

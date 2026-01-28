@@ -6,9 +6,6 @@ const SELECTED_TOKEN_STORAGE_KEY = 'selected-token';
 const TOKENS_CHANGE_EVENT = 'tokens-changed';
 const SELECTED_TOKEN_CHANGE_EVENT = 'selected-token-changed';
 
-// Generate a unique instance ID
-let instanceCounter = 0;
-
 export function useTokens() {
   const isMountedRef = useRef(true);
   const [tokenList, setTokenList] = useState<TokenListEntry[]>([]);

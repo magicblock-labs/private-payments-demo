@@ -41,7 +41,7 @@ export function useProgram() {
       const blockhash = (await connection.getLatestBlockhash()).blockhash;
       transaction.recentBlockhash = blockhash;
       transaction.feePayer = wallet.publicKey;
-      let signedTransaction = await wallet.signTransaction(transaction);
+      const signedTransaction = await wallet.signTransaction(transaction);
 
       const signature = await connection.sendRawTransaction(signedTransaction.serialize());
       await connection.confirmTransaction(signature);
@@ -55,10 +55,10 @@ export function useProgram() {
     async (user: PublicKey, tokenMint: PublicKey, amount: number, isIncrease: boolean) => {
       if (!wallet?.publicKey) return;
 
-      let [eata] = deriveEphemeralAta(user, tokenMint);
-      let [vault, vaultBump] = deriveVault(tokenMint);
-      let userAta = getAssociatedTokenAddressSync(tokenMint, user, true, TOKEN_PROGRAM_ID);
-      let vaultAta = getAssociatedTokenAddressSync(tokenMint, vault, true, TOKEN_PROGRAM_ID);
+      const [eata] = deriveEphemeralAta(user, tokenMint);
+      const [vault, vaultBump] = deriveVault(tokenMint);
+      const userAta = getAssociatedTokenAddressSync(tokenMint, user, true, TOKEN_PROGRAM_ID);
+      const vaultAta = getAssociatedTokenAddressSync(tokenMint, vault, true, TOKEN_PROGRAM_ID);
 
       const amountBn = BigInt(Math.round(amount * 10 ** 6));
 
@@ -82,7 +82,7 @@ export function useProgram() {
       const blockhash = (await connection.getLatestBlockhash()).blockhash;
       transaction.recentBlockhash = blockhash;
       transaction.feePayer = wallet.publicKey;
-      let signedTransaction = await wallet.signTransaction(transaction);
+      const signedTransaction = await wallet.signTransaction(transaction);
 
       const signature = await connection.sendRawTransaction(signedTransaction.serialize());
       await connection.confirmTransaction(signature);
@@ -132,11 +132,11 @@ export function useProgram() {
       transaction.add(ix);
 
       // NOTE: Safe to use ! because we check if the connection is valid above
-      let conn = (delegated ? ephemeralConnection : connection)!;
+      const conn = (delegated ? ephemeralConnection : connection)!;
       const blockhash = (await conn.getLatestBlockhash()).blockhash;
       transaction.recentBlockhash = blockhash;
       transaction.feePayer = wallet.publicKey;
-      let signedTransaction = await wallet.signTransaction(transaction);
+      const signedTransaction = await wallet.signTransaction(transaction);
 
       const signature = await conn.sendRawTransaction(signedTransaction.serialize());
       await conn.confirmTransaction(signature);
@@ -150,7 +150,7 @@ export function useProgram() {
     async (user: PublicKey, tokenMint: PublicKey, validator?: PublicKey) => {
       if (!wallet?.publicKey) return;
 
-      let [eata, eataBump] = deriveEphemeralAta(user, tokenMint);
+      const [eata, eataBump] = deriveEphemeralAta(user, tokenMint);
 
       const ix = delegateIx(wallet.publicKey, eata, eataBump, validator);
       const transaction = new Transaction();
@@ -159,7 +159,7 @@ export function useProgram() {
       const blockhash = (await connection.getLatestBlockhash()).blockhash;
       transaction.recentBlockhash = blockhash;
       transaction.feePayer = wallet.publicKey;
-      let signedTransaction = await wallet.signTransaction(transaction);
+      const signedTransaction = await wallet.signTransaction(transaction);
 
       const signature = await connection.sendRawTransaction(signedTransaction.serialize());
       await connection.confirmTransaction(signature);
@@ -180,7 +180,7 @@ export function useProgram() {
       const blockhash = (await connection.getLatestBlockhash()).blockhash;
       transaction.recentBlockhash = blockhash;
       transaction.feePayer = wallet.publicKey;
-      let signedTransaction = await wallet.signTransaction(transaction);
+      const signedTransaction = await wallet.signTransaction(transaction);
 
       const signature = await connection.sendRawTransaction(signedTransaction.serialize());
       await connection.confirmTransaction(signature);
