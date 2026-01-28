@@ -227,7 +227,10 @@ export default function useSimpleTransfer({
                   let accountInfo = await connection.getAccountInfo(
                     senderAccounts.ephemeralAta.address,
                   );
-                  if (!accountInfo?.owner.equals(new PublicKey(DELEGATION_PROGRAM_ID))) {
+                  if (
+                    accountInfo &&
+                    !accountInfo.owner.equals(new PublicKey(DELEGATION_PROGRAM_ID))
+                  ) {
                     break;
                   }
                 }
@@ -266,7 +269,7 @@ export default function useSimpleTransfer({
       let signedTxs = await wallet.signAllTransactions(txs);
 
       for (let i = 0; i < actions.length; i++) {
-        actions[i].signedTx = signedTxs[actions.findIndex(a => a.name === actions[i].name)];
+        actions[i].signedTx = signedTxs[i];
       }
 
       for (let action of actions) {
@@ -367,15 +370,13 @@ export default function useSimpleTransfer({
         while (retries > 0) {
           try {
             let accountInfo = await ephemeralConnection.getAccountInfo(withdrawerEata);
-            if (accountInfo?.owner.equals(new PublicKey(DELEGATION_PROGRAM_ID))) {
+            if (accountInfo && !accountInfo.owner.equals(new PublicKey(DELEGATION_PROGRAM_ID))) {
               break;
             }
           } catch {}
           retries--;
+          await new Promise(resolve => setTimeout(resolve, 1000));
         }
-
-        // Timeout to be sure undelegation is complete
-        await new Promise(resolve => setTimeout(resolve, 1000));
 
         signature = await connection.sendRawTransaction(signedWithdrawTx.serialize());
         console.log('signature:', signature);

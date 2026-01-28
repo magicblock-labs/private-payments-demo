@@ -130,25 +130,27 @@ export function TokenAccountProvider({
   });
 
   const value = useMemo(() => {
-    console.log('walletAccounts:');
-    console.log('\t ata:', walletAccounts.ata?.toString());
-    console.log('\t eata:', walletAccounts.eata?.toString());
-    console.log('\t mainnetAta:', walletAccounts.mainnetAta?.amount);
-    console.log('\t mainnetEata:', walletAccounts.mainnetEata?.amount);
-    console.log('\t ephemeralAta:', walletAccounts.ephemeralAta?.amount);
-    console.log('\t tokenAccount:', walletAccounts.tokenAccount?.amount);
-    console.log('\t isDelegated:', walletAccounts.isDelegated);
-    console.log('\t accessDenied:', walletAccounts.accessDenied);
+    console.log('walletAccounts:', {
+      ata: walletAccounts.ata?.toString(),
+      eata: walletAccounts.eata?.toString(),
+      mainnetAta: walletAccounts.mainnetAta?.amount,
+      mainnetEata: walletAccounts.mainnetEata?.amount,
+      ephemeralAta: walletAccounts.ephemeralAta?.amount,
+      tokenAccount: walletAccounts.tokenAccount?.amount,
+      isDelegated: walletAccounts.isDelegated,
+      accessDenied: walletAccounts.accessDenied,
+    });
 
-    console.log('recipientAccounts:', recipientAccounts);
-    console.log('\t ata:', recipientAccounts.ata?.toString());
-    console.log('\t eata:', recipientAccounts.eata?.toString());
-    console.log('\t mainnetAta:', recipientAccounts.mainnetAta?.amount);
-    console.log('\t mainnetEata:', recipientAccounts.mainnetEata?.amount);
-    console.log('\t ephemeralAta:', recipientAccounts.ephemeralAta?.amount);
-    console.log('\t tokenAccount:', recipientAccounts.tokenAccount?.amount);
-    console.log('\t isDelegated:', recipientAccounts.isDelegated);
-    console.log('\t accessDenied:', recipientAccounts.accessDenied);
+    console.log('recipientAccounts:', {
+      ata: recipientAccounts.ata?.toString(),
+      eata: recipientAccounts.eata?.toString(),
+      mainnetAta: recipientAccounts.mainnetAta?.amount,
+      mainnetEata: recipientAccounts.mainnetEata?.amount,
+      ephemeralAta: recipientAccounts.ephemeralAta?.amount,
+      tokenAccount: recipientAccounts.tokenAccount?.amount,
+      isDelegated: recipientAccounts.isDelegated,
+      accessDenied: recipientAccounts.accessDenied,
+    });
 
     return {
       wallet: publicKey ?? undefined,
