@@ -37,14 +37,15 @@ async function initializeDeposit({
 }: {
   user: PublicKey;
   tokenMint: PublicKey;
-  transaction: Transaction;
   payer: PublicKey;
+  transaction?: Transaction;
 }) {
   let ata = getAssociatedTokenAddressSync(tokenMint, user, true, TOKEN_PROGRAM_ID);
   let [eata, eataBump] = deriveEphemeralAta(user, tokenMint);
   let initAta = createAssociatedTokenAccountIdempotentInstruction(payer, ata, user, tokenMint);
   let initIx = initEphemeralAtaIx(eata, user, tokenMint, payer, eataBump);
   let createPermissionIx = createEataPermissionIx(eata, payer, eataBump);
+  transaction = transaction || new Transaction();
   transaction.add(initAta);
   transaction.add(initIx);
   transaction.add(createPermissionIx);
@@ -127,7 +128,7 @@ export default function useSimpleTransfer({
           payer: wallet.publicKey,
           user: wallet.publicKey,
           tokenMint: tokenMintPk,
-          transaction: mainnetTx || new Transaction(),
+          transaction: mainnetTx,
         });
       } else {
         // If the sender has a deposit, we need to undelegate to transfer more tokens to it
@@ -144,13 +145,12 @@ export default function useSimpleTransfer({
       const recipientAta = getAssociatedTokenAddressSync(tokenMintPk, recipientPk, true);
       const recipientIsDelegated = recipientAccounts?.isDelegated;
 
-      let recipientInitTx: Transaction | undefined;
-      if (!recipientAccounts.ephemeralAta) {
-        recipientInitTx = await initializeDeposit({
+      if (!recipientAccounts.mainnetEata) {
+        mainnetTx = await initializeDeposit({
           payer: wallet.publicKey,
           user: recipientPk,
           tokenMint: tokenMintPk,
-          transaction: new Transaction(),
+          transaction: mainnetTx,
         });
       }
 
@@ -207,38 +207,29 @@ export default function useSimpleTransfer({
 
       let actions = [
         {
-          name: 'recipientInitTx',
-          tx: recipientInitTx,
-          signedTx: recipientInitTx,
-          blockhash: mainnet.blockhash,
-          connection,
-        },
-        {
           name: 'preliminaryTx',
           tx: preliminaryTx,
           signedTx: preliminaryTx,
           blockhash: ephemeral.blockhash,
           connection: ephemeralConnection,
           callback: async () => {
-            let retries = 5;
+            let retries = 15;
             while (retries > 0) {
               try {
-                if (senderAccounts.ephemeralAta?.address) {
-                  let accountInfo = await connection.getAccountInfo(
-                    senderAccounts.ephemeralAta.address,
-                  );
-                  if (
-                    accountInfo &&
-                    !accountInfo.owner.equals(new PublicKey(DELEGATION_PROGRAM_ID))
-                  ) {
-                    break;
-                  }
+                let accountInfo = await connection.getAccountInfo(senderEata);
+                if (
+                  accountInfo &&
+                  !accountInfo.owner.equals(new PublicKey(DELEGATION_PROGRAM_ID))
+                ) {
+                  return;
                 }
-              } catch {
-                retries--;
-              }
-              await new Promise(resolve => setTimeout(resolve, 1000));
+              } catch {}
+              retries--;
+              console.log('retrying undelegate sender', retries);
+              await new Promise(resolve => setTimeout(resolve, 400));
             }
+            console.log('could not undelegate sender');
+            throw new Error('Could not undelegate sender');
           },
         },
         {
@@ -247,6 +238,7 @@ export default function useSimpleTransfer({
           signedTx: mainnetTx,
           blockhash: mainnet.blockhash,
           connection,
+          callback: (signature: string) => connection.confirmTransaction(signature),
         },
         {
           name: 'ephemeralTx',
@@ -303,33 +295,11 @@ export default function useSimpleTransfer({
       let tokenAmount = BigInt(Math.pow(10, 6) * amount);
 
       let [withdrawerEata] = deriveEphemeralAta(wallet.publicKey, tokenMint);
-      let withdrawerAta = getAssociatedTokenAddressSync(tokenMint, wallet.publicKey);
-      let [mainnetWithdrawerAtaInfo, mainnetWithdrawerEataInfo] =
-        await connection.getMultipleAccountsInfo([withdrawerAta, withdrawerEata]);
-      let [ephemeralWithdrawerAtaInfo] = await ephemeralConnection.getMultipleAccountsInfo([
-        withdrawerAta,
-      ]);
-      const isDelegated = mainnetWithdrawerEataInfo?.owner.equals(
-        new PublicKey(DELEGATION_PROGRAM_ID),
-      );
-      const mainnetWithdrawerAtaBalance = mainnetWithdrawerAtaInfo
-        ? unpackAccount(withdrawerAta, mainnetWithdrawerAtaInfo).amount
-        : 0n;
-      const ephemeralWithdrawerAtaBalance = ephemeralWithdrawerAtaInfo
-        ? unpackAccount(withdrawerAta, ephemeralWithdrawerAtaInfo).amount
-        : 0n;
-      console.log('mainnetWithdrawerAtaBalance:', mainnetWithdrawerAtaBalance);
-      console.log('ephemeralWithdrawerAtaBalance:', ephemeralWithdrawerAtaBalance);
-      console.log('tokenAmount:', tokenAmount);
-      console.log('isDelegated:', isDelegated);
-      console.log('withdrawerAta:', withdrawerAta.toString());
-      console.log('withdrawerEata:', withdrawerEata.toString());
-      console.log('wallet.publicKey:', wallet.publicKey.toString());
-      console.log('tokenMintPk:', tokenMint.toString());
+      const isDelegated = senderAccounts?.isDelegated;
 
       const actualBalance = isDelegated
-        ? ephemeralWithdrawerAtaBalance
-        : mainnetWithdrawerAtaBalance;
+        ? (senderAccounts?.ephemeralAta?.amount ?? 0n)
+        : (senderAccounts?.mainnetEata?.amount ?? 0n);
 
       if (actualBalance < tokenAmount) {
         throw new Error('Not enough tokens to withdraw');
@@ -364,18 +334,18 @@ export default function useSimpleTransfer({
         console.log('signature:', signature);
         await ephemeralConnection.confirmTransaction(signature);
 
-        // Wait for the delegation
+        // Wait for the undelegation
         // await GetCommitmentSignature(signature, ephemeralConnection); // Does not work without logs
-        let retries = 5;
+        let retries = 10;
         while (retries > 0) {
           try {
-            let accountInfo = await ephemeralConnection.getAccountInfo(withdrawerEata);
+            let accountInfo = await connection.getAccountInfo(withdrawerEata);
             if (accountInfo && !accountInfo.owner.equals(new PublicKey(DELEGATION_PROGRAM_ID))) {
               break;
             }
           } catch {}
           retries--;
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise(resolve => setTimeout(resolve, 400));
         }
 
         signature = await connection.sendRawTransaction(signedWithdrawTx.serialize());
@@ -389,7 +359,15 @@ export default function useSimpleTransfer({
         await connection.confirmTransaction(signature);
       }
     },
-    [wallet, connection, ephemeralConnection, tokenMint, mainnet.blockhash, ephemeral.blockhash],
+    [
+      wallet,
+      connection,
+      ephemeralConnection,
+      tokenMint,
+      senderAccounts,
+      mainnet.blockhash,
+      ephemeral.blockhash,
+    ],
   );
 
   return {

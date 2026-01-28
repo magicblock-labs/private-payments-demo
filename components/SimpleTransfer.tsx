@@ -130,11 +130,17 @@ export default function SimpleTransfer({ token }: TransferProps) {
     setBalance(Number(account.amount) / Math.pow(10, 6));
   });
 
+  const shadow = (condition: boolean) => {
+    return condition ? 'shadow-[0_0_10px_rgba(255,255,255,0.2)]' : '';
+  };
+
   return (
     <div className='space-y-4'>
       {/* Balance Cards */}
       <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-        <Card className='bg-linear-to-br from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20 border-blue-200/50 dark:border-blue-800/50'>
+        <Card
+          className={`bg-linear-to-br from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20 border-blue-200/50 dark:border-blue-800/50 ${shadow(!isDelegated)}`}
+        >
           <CardHeader className='pb-3'>
             <div className='flex items-center gap-2'>
               <Wallet className='w-4 h-4 text-blue-600' />
@@ -151,7 +157,9 @@ export default function SimpleTransfer({ token }: TransferProps) {
           </CardContent>
         </Card>
 
-        <Card className='bg-linear-to-br from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 border-purple-200/50 dark:border-purple-800/50'>
+        <Card
+          className={`bg-linear-to-br from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 border-purple-200/50 dark:border-purple-800/50 ${shadow(isDelegated)}`}
+        >
           <CardHeader className='pb-3'>
             <div className='flex items-center gap-2'>
               <Shield className='w-4 h-4 text-purple-600' />
@@ -162,11 +170,6 @@ export default function SimpleTransfer({ token }: TransferProps) {
           </CardHeader>
           <CardContent>
             <div className='text-2xl font-bold text-purple-900 dark:text-purple-100'>
-              {/* {ephemeralAta
-                ? Number(ephemeralAta.amount) / Math.pow(10, 6)
-                : isDelegated
-                  ? '***'
-                  : '0'} */}
               {withdrawableBalance}
             </div>
             <Muted className='text-purple-600! dark:text-purple-400!'>Private</Muted>

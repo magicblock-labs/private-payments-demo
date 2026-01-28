@@ -65,8 +65,8 @@ export function useTokenAccount({ user, tokenMint }: TokenAccountProps): TokenAc
     try {
       let [ataInfo, eataInfo] = await connection.getMultipleAccountsInfo([ata, eata]);
       if (ataInfo) {
-        let mainnetAta = unpackAccount(ata, ataInfo);
-        setMainnetAta(mainnetAta);
+        let decodedMainnetAta = unpackAccount(ata, ataInfo);
+        setMainnetAta(decodedMainnetAta);
         setMainnetEata(eataInfo ? decodeEphemeralAta(eataInfo) : null);
         if (eataInfo?.owner.equals(new PublicKey(DELEGATION_PROGRAM_ID))) {
           setIsDelegated(true);
@@ -78,8 +78,8 @@ export function useTokenAccount({ user, tokenMint }: TokenAccountProps): TokenAc
             console.log('ephemeral connection error', error);
           }
           if (ephemeralAtaInfo) {
-            const ephemeralAta = unpackAccount(ata, ephemeralAtaInfo);
-            setEphemeralAta(ephemeralAta);
+            const decodedEphemeralAta = unpackAccount(ata, ephemeralAtaInfo);
+            setEphemeralAta(decodedEphemeralAta);
           } else {
             setEphemeralAta(null);
           }
@@ -97,8 +97,9 @@ export function useTokenAccount({ user, tokenMint }: TokenAccountProps): TokenAc
 
   const handleAtaChange = useCallback(
     (mainnet: boolean, notification: AccountInfo<Buffer>) => {
+      if (!ata) return;
       try {
-        const decoded = unpackAccount(ata!, notification);
+        const decoded = unpackAccount(ata, notification);
         if (decoded) {
           if (mainnet) {
             setMainnetAta(decoded);
@@ -152,6 +153,6 @@ export function useTokenAccount({ user, tokenMint }: TokenAccountProps): TokenAc
     ephemeralAta,
     tokenAccount,
     isDelegated,
-    accessDenied: isDelegated && !!!ephemeralAta,
+    accessDenied: isDelegated && !ephemeralAta,
   };
 }

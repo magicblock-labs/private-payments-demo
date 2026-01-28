@@ -129,7 +129,7 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
           wallet.publicKey,
           eataBump,
         );
-        let createPermissionIx = createEataPermissionIx(eata, wallet.publicKey, eataBump);
+        const createPermissionIx = createEataPermissionIx(eata, wallet.publicKey, eataBump);
 
         let depositIx = null;
         if (deposit) {
@@ -140,7 +140,7 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
             associatedTokenAccount,
             vaultAta,
             wallet.publicKey,
-            BigInt(amount * Math.pow(10, 6)),
+            BigInt(Math.round(amount * Math.pow(10, 6))),
           );
         }
 
