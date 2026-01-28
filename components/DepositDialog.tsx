@@ -49,14 +49,14 @@ export default function DepositDialog({
                   id='deposit-address'
                   name='name'
                   className='rounded-r-none'
-                  defaultValue={ata?.toBase58() ?? '???'}
+                  defaultValue={ata.toBase58()}
                   disabled
                 />
                 <Button
                   variant='outline'
                   className='rounded-l-none'
                   onClick={() => {
-                    navigator.clipboard.writeText(ata?.toBase58() ?? '');
+                    navigator.clipboard.writeText(ata.toBase58());
                     toast.info('Copied to clipboard');
                   }}
                 >
