@@ -5,7 +5,6 @@ import { H3, Muted } from '@/components/ui/typography';
 import { useTokenAccountContext } from '@/contexts/TokenAccountContext';
 import { shortKey } from '@/lib/utils';
 import { Shield, User, Wallet } from 'lucide-react';
-import React from 'react';
 
 interface TransferProps {
   user?: string;
@@ -17,7 +16,7 @@ export default function SimpleRecipient({ user }: TransferProps) {
 
   function mainnetBalance(): string {
     if (mainnetAta) {
-      return (Number(mainnetAta.amount) / Math.pow(10, 6)).toFixed(2);
+      return (Number(mainnetAta.amount) / 10 ** 6).toFixed(2);
     } else {
       return '0';
     }
@@ -25,7 +24,7 @@ export default function SimpleRecipient({ user }: TransferProps) {
 
   function ephemeralBalance(): string {
     if (ephemeralAta) {
-      return (Number(ephemeralAta.amount) / Math.pow(10, 6)).toFixed(2);
+      return (Number(ephemeralAta.amount) / 10 ** 6).toFixed(2);
     } else {
       return '***';
     }

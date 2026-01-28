@@ -60,7 +60,7 @@ export function useProgram() {
       let userAta = getAssociatedTokenAddressSync(tokenMint, user, true, TOKEN_PROGRAM_ID);
       let vaultAta = getAssociatedTokenAddressSync(tokenMint, vault, true, TOKEN_PROGRAM_ID);
 
-      const amountBn = BigInt(Math.round(amount * Math.pow(10, 6)));
+      const amountBn = BigInt(Math.round(amount * 10 ** 6));
 
       let ix: TransactionInstruction;
       if (isIncrease) {
@@ -111,7 +111,7 @@ export function useProgram() {
       if (!wallet?.publicKey || (!connection && !delegated) || (!ephemeralConnection && delegated))
         return;
 
-      const amountBn = BigInt(amount * Math.pow(10, 6));
+      const amountBn = BigInt(Math.round(amount * 10 ** 6));
 
       const fromAta = getAssociatedTokenAddressSync(
         tokenMint,

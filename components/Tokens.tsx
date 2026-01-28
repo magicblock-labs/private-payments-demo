@@ -104,7 +104,7 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
           mintKp.publicKey,
           associatedTokenAccount,
           wallet.publicKey,
-          amount * Math.pow(10, 6),
+          amount * 10 ** 6,
           6,
           [],
           TOKEN_PROGRAM_ID,
@@ -139,7 +139,7 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
             associatedTokenAccount,
             vaultAta,
             wallet.publicKey,
-            BigInt(Math.round(amount * Math.pow(10, 6))),
+            BigInt(Math.round(amount * 10 ** 6)),
           );
         }
 
@@ -229,7 +229,7 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
 
   useSubscription(connection, userTokenAccount, notification => {
     const account = AccountLayout.decode(Uint8Array.from(notification.data));
-    setBalance(Number(account.amount) / Math.pow(10, 6));
+    setBalance(Number(account.amount) / 10 ** 6);
   });
 
   useEffect(() => {

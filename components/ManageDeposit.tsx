@@ -80,7 +80,7 @@ const ManageDeposit: React.FC<DepositProps> = ({ user, token, isMainnet }) => {
             <div />
             <div className='flex flex-row gap-2 items-center justify-center-safe text-5xl font-bold text-center hyphens-auto'>
               {!accessDenied || isMainnet
-                ? Number((isMainnet ? mainnetAta : ephemeralAta)?.amount) / Math.pow(10, 6) || 0
+                ? Number((isMainnet ? mainnetAta : ephemeralAta)?.amount) / 10 ** 6 || 0
                 : '***'}
             </div>
 
