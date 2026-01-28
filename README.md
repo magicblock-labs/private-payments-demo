@@ -7,7 +7,7 @@ yarn install
 ```
 
 ```bash
-yarn start
+yarn dev
 ```
 
 ## 💚 Open Source
