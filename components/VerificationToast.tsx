@@ -1,10 +1,9 @@
-import React from 'react';
-
 import { useTdxQuoteVerification } from '../hooks/use-tdx-quote-verification';
-import { Loader2, ShieldCheck, ShieldOff, ShieldQuestion } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { Button } from './ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { H3 } from './ui/typography';
+import { Loader2, ShieldCheck, ShieldOff, ShieldQuestion } from 'lucide-react';
+import React from 'react';
 
 const VerificationToast: React.FC = () => {
   const { isVerified, isLoading, resetVerification } = useTdxQuoteVerification();

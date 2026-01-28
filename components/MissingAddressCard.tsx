@@ -1,6 +1,6 @@
-import { UserPlus, ArrowRight } from 'lucide-react';
 import { Card, CardContent, CardHeader } from './ui/card';
 import { H3, Muted } from './ui/typography';
+import { ArrowRight, UserPlus } from 'lucide-react';
 
 export default function MissingAddressCard() {
   return (

@@ -1,24 +1,14 @@
-import { useCallback } from 'react';
-import { useAnchorWallet } from '@solana/wallet-adapter-react';
-import { useConnection } from '@solana/wallet-adapter-react';
 import { useEphemeralConnection } from './use-ephemeral-connection';
-import { AccountInfo, PublicKey, Transaction } from '@solana/web3.js';
-import {
-  Account,
-  createAssociatedTokenAccountIdempotentInstruction,
-  createTransferCheckedInstruction,
-  getAssociatedTokenAddressSync,
-  TOKEN_PROGRAM_ID,
-  unpackAccount,
-} from '@solana/spl-token';
+import { TokenAccounts } from './use-token-account';
+import { useBlockhashCache } from '@/contexts/BlockhashCacheContext';
 import { VALIDATOR_PUBKEY } from '@/lib/constants';
 import {
+  DELEGATION_PROGRAM_ID,
+  GetCommitmentSignature,
   createEataPermissionIx,
   delegateIx,
-  DELEGATION_PROGRAM_ID,
   deriveEphemeralAta,
   deriveVault,
-  GetCommitmentSignature,
   initEphemeralAtaIx,
   initVaultAtaIx,
   initVaultIx,
@@ -26,8 +16,18 @@ import {
   undelegateIx,
   withdrawSplIx,
 } from '@magicblock-labs/ephemeral-rollups-sdk';
-import { TokenAccounts } from './use-token-account';
-import { useBlockhashCache } from '@/contexts/BlockhashCacheContext';
+import {
+  Account,
+  TOKEN_PROGRAM_ID,
+  createAssociatedTokenAccountIdempotentInstruction,
+  createTransferCheckedInstruction,
+  getAssociatedTokenAddressSync,
+  unpackAccount,
+} from '@solana/spl-token';
+import { useAnchorWallet } from '@solana/wallet-adapter-react';
+import { useConnection } from '@solana/wallet-adapter-react';
+import { AccountInfo, PublicKey, Transaction } from '@solana/web3.js';
+import { useCallback } from 'react';
 
 async function initializeDeposit({
   user,

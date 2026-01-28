@@ -3,12 +3,11 @@
 import { Provider } from '@coral-xyz/anchor';
 import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
+// Default styles that can be overridden by your app
+import '@solana/wallet-adapter-react-ui/styles.css';
 import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets';
 import { Connection, PublicKey } from '@solana/web3.js';
 import React, { FC, ReactNode, useMemo } from 'react';
-
-// Default styles that can be overridden by your app
-import '@solana/wallet-adapter-react-ui/styles.css';
 
 interface WalletProps {
   children: ReactNode;

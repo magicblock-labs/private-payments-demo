@@ -1,15 +1,14 @@
-import React from 'react';
-
-import { usePrivateRollupAuth } from '@/hooks/use-private-rollup-auth';
+import MissingAddressCard from './MissingAddressCard';
+import SimpleRecipient from './SimpleRecipient';
+import SimpleTransfer from '@/components/SimpleTransfer';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { H3, Muted } from '@/components/ui/typography';
-import { Button } from '@/components/ui/button';
-import { Loader2Icon, Send, Info, Shield } from 'lucide-react';
-import SimpleTransfer from '@/components/SimpleTransfer';
-import { useTokens } from '@/hooks/use-tokens';
-import SimpleRecipient from './SimpleRecipient';
 import { useTokenAccountContext } from '@/contexts/TokenAccountContext';
-import MissingAddressCard from './MissingAddressCard';
+import { usePrivateRollupAuth } from '@/hooks/use-private-rollup-auth';
+import { useTokens } from '@/hooks/use-tokens';
+import { Info, Loader2Icon, Send, Shield } from 'lucide-react';
+import React from 'react';
 
 export default function SimpleDeposit() {
   const { authToken, isAuthenticating, getToken } = usePrivateRollupAuth();

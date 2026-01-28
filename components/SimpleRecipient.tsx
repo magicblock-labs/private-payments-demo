@@ -1,12 +1,11 @@
 'use client';
 
-import React from 'react';
-
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { H3, Muted } from '@/components/ui/typography';
 import { useTokenAccountContext } from '@/contexts/TokenAccountContext';
-import { User, Wallet, Shield } from 'lucide-react';
 import { shortKey } from '@/lib/utils';
+import { Shield, User, Wallet } from 'lucide-react';
+import React from 'react';
 
 interface TransferProps {
   user?: string;

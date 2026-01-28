@@ -1,11 +1,4 @@
-import {
-  createTransferCheckedInstruction,
-  getAssociatedTokenAddressSync,
-  TOKEN_PROGRAM_ID,
-} from '@solana/spl-token';
-import { useAnchorWallet, useConnection } from '@solana/wallet-adapter-react';
-import { PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
-import { useCallback } from 'react';
+import { useEphemeralConnection } from './use-ephemeral-connection';
 import {
   createEataPermissionIx,
   delegateIx,
@@ -18,8 +11,14 @@ import {
   undelegateIx,
   withdrawSplIx,
 } from '@magicblock-labs/ephemeral-rollups-sdk';
-
-import { useEphemeralConnection } from './use-ephemeral-connection';
+import {
+  TOKEN_PROGRAM_ID,
+  createTransferCheckedInstruction,
+  getAssociatedTokenAddressSync,
+} from '@solana/spl-token';
+import { useAnchorWallet, useConnection } from '@solana/wallet-adapter-react';
+import { PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
+import { useCallback } from 'react';
 
 export function useProgram() {
   const wallet = useAnchorWallet();

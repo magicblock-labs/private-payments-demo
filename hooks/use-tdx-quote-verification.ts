@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
 import { EPHEMERAL_RPC_URL } from '../lib/constants';
 import { verifyTeeRpcIntegrity } from '@magicblock-labs/ephemeral-rollups-sdk';
+import { useCallback, useEffect, useState } from 'react';
 
 export function useTdxQuoteVerification() {
   const [isVerified, setIsVerified] = useState<boolean>(false);

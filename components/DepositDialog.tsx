@@ -1,19 +1,19 @@
+import { Button } from './ui/button';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
   DialogTrigger,
 } from './ui/dialog';
-import { Button } from './ui/button';
-import { LucideCircleQuestionMark } from 'lucide-react';
-import { Label } from './ui/label';
 import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { TokenListEntry } from '@/lib/types';
+import { PublicKey } from '@solana/web3.js';
+import { LucideCircleQuestionMark } from 'lucide-react';
 import { CopyIcon } from 'lucide-react';
 import { toast } from 'sonner';
-import { PublicKey } from '@solana/web3.js';
-import { TokenListEntry } from '@/lib/types';
 
 interface DepositDialogProps {
   ata: PublicKey;

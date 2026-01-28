@@ -1,18 +1,17 @@
 'use client';
 
-import { PublicKey } from '@solana/web3.js';
-import React, { useCallback, useState } from 'react';
-
 import { useProgram } from '../hooks/use-program';
-import { Card, CardContent, CardHeader } from './ui/card';
-import { H3 } from './ui/typography';
-import { Label } from './ui/label';
-import { Input } from './ui/input';
 import { Button } from './ui/button';
-import { toast } from 'sonner';
+import { Card, CardContent, CardHeader } from './ui/card';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
 import { Separator } from './ui/separator';
-import { Loader2Icon } from 'lucide-react';
+import { H3 } from './ui/typography';
 import { TokenListEntry } from '@/lib/types';
+import { PublicKey } from '@solana/web3.js';
+import { Loader2Icon } from 'lucide-react';
+import React, { useCallback, useState } from 'react';
+import { toast } from 'sonner';
 
 interface TransferProps {
   token?: TokenListEntry;

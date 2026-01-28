@@ -1,18 +1,17 @@
-import { useAnchorWallet } from '@solana/wallet-adapter-react';
-import { PublicKey } from '@solana/web3.js';
-import React, { useCallback, useMemo, useState } from 'react';
-
-import { useTokenAccount } from '@/hooks/use-token-account';
-import { useProgram } from '@/hooks/use-program';
-import { Loader2Icon } from 'lucide-react';
+import DepositActions from './DepositActions';
+import DepositDialog from './DepositDialog';
+import { Separator } from './ui/separator';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { H3 } from '@/components/ui/typography';
-import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
-import { Separator } from './ui/separator';
-import DepositDialog from './DepositDialog';
-import DepositActions from './DepositActions';
+import { useProgram } from '@/hooks/use-program';
+import { useTokenAccount } from '@/hooks/use-token-account';
 import { TokenListEntry } from '@/lib/types';
+import { useAnchorWallet } from '@solana/wallet-adapter-react';
+import { PublicKey } from '@solana/web3.js';
+import { Loader2Icon } from 'lucide-react';
+import React, { useCallback, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 interface DepositProps {
   user?: PublicKey;

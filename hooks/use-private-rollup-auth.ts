@@ -1,8 +1,7 @@
+import { EPHEMERAL_RPC_URL } from '../lib/constants';
 import { getAuthToken } from '@magicblock-labs/ephemeral-rollups-sdk';
 import { useAnchorWallet, useWallet } from '@solana/wallet-adapter-react';
-import { useCallback, useMemo, useState, useEffect, useRef } from 'react';
-
-import { EPHEMERAL_RPC_URL } from '../lib/constants';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 const TOKENS_STORAGE_KEY = 'private-rollup-auth-tokens';

@@ -1,8 +1,7 @@
 'use client';
 
-import { PublicKey } from '@solana/web3.js';
-
 import { useTokenAccount } from '@/hooks/use-token-account';
+import { PublicKey } from '@solana/web3.js';
 
 export function useTokenAccounts(
   wallet?: PublicKey | string,

@@ -1,8 +1,7 @@
+import { useEphemeralConnection } from './use-ephemeral-connection';
 import { AnchorProvider } from '@coral-xyz/anchor';
 import { useAnchorWallet, useConnection } from '@solana/wallet-adapter-react';
 import { useMemo } from 'react';
-
-import { useEphemeralConnection } from './use-ephemeral-connection';
 
 export function useProvider() {
   const { connection } = useConnection();

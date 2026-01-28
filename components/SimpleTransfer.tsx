@@ -1,21 +1,20 @@
 'use client';
 
-import { PublicKey } from '@solana/web3.js';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { H3, Muted } from '@/components/ui/typography';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { AccountLayout, getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { useSubscription } from '@/hooks/use-subscription';
-import { useAnchorWallet, useConnection } from '@solana/wallet-adapter-react';
-import { Loader2Icon, Wallet, Shield, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
-import useSimpleTransfer from '@/hooks/use-simple-transfer';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { H3, Muted } from '@/components/ui/typography';
 import { useTokenAccountContext } from '@/contexts/TokenAccountContext';
-import { toast } from 'sonner';
+import useSimpleTransfer from '@/hooks/use-simple-transfer';
+import { useSubscription } from '@/hooks/use-subscription';
 import { TokenListEntry } from '@/lib/types';
+import { AccountLayout, TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from '@solana/spl-token';
+import { useAnchorWallet, useConnection } from '@solana/wallet-adapter-react';
+import { PublicKey } from '@solana/web3.js';
+import { ArrowDownLeft, ArrowUpRight, Loader2Icon, Shield, Wallet } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 interface TransferProps {
   token?: TokenListEntry;

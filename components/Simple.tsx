@@ -1,18 +1,17 @@
 'use client';
 
-import React from 'react';
-
-import Tokens from '@/components/Tokens';
-import VerificationToast from '@/components/VerificationToast';
-import { useAnchorWallet } from '@solana/wallet-adapter-react';
-import magicBlockLogo from '@/public/magicblock_white.png';
 import Navbar from './Navbar';
 import SimpleDeposit from './SimpleDeposit';
-import { useTokens } from '@/hooks/use-tokens';
-import { TokenAccountProvider } from '@/contexts/TokenAccountContext';
 import { Muted } from './ui/typography';
-import Link from 'next/link';
+import Tokens from '@/components/Tokens';
+import VerificationToast from '@/components/VerificationToast';
+import { TokenAccountProvider } from '@/contexts/TokenAccountContext';
+import { useTokens } from '@/hooks/use-tokens';
+import magicBlockLogo from '@/public/magicblock_white.png';
+import { useAnchorWallet } from '@solana/wallet-adapter-react';
 import Image from 'next/image';
+import Link from 'next/link';
+import React from 'react';
 
 export default function SimplePage() {
   const wallet = useAnchorWallet();

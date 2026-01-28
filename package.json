@@ -70,6 +70,7 @@
     "@typescript-eslint/eslint-plugin": "^8.35.0",
     "@typescript-eslint/parser": "^8.35.0",
     "assert": "^2.1.0",
+    "@trivago/prettier-plugin-sort-imports": "^4.3.0",
     "autoprefixer": "^10.4.21",
     "browserify-zlib": "^0.2.0",
     "buffer": "^6.0.3",

@@ -1,16 +1,15 @@
-import { PublicKey } from '@solana/web3.js';
-import React, { useState } from 'react';
-
 import { usePrivateRollupAuth } from '../hooks/use-private-rollup-auth';
 import ManageDeposit from './ManageDeposit';
+import MissingAddressCard from './MissingAddressCard';
 import Transfer from './Transfer';
-import { useAnchorWallet } from '@solana/wallet-adapter-react';
+import { Button } from './ui/button';
 import { Card, CardContent, CardHeader } from './ui/card';
 import { H2, H3, Muted } from '@/components/ui/typography';
-import { Button } from './ui/button';
-import { CircleQuestionMark, Loader2Icon } from 'lucide-react';
 import { useTokens } from '@/hooks/use-tokens';
-import MissingAddressCard from './MissingAddressCard';
+import { useAnchorWallet } from '@solana/wallet-adapter-react';
+import { PublicKey } from '@solana/web3.js';
+import { CircleQuestionMark, Loader2Icon } from 'lucide-react';
+import React, { useState } from 'react';
 
 const Deposit: React.FC = () => {
   const { authToken, isAuthenticating, getToken } = usePrivateRollupAuth();

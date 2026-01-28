@@ -128,25 +128,25 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
-  
+
   /* Custom scrollbar */
   ::-webkit-scrollbar {
     width: 6px;
   }
-  
+
   ::-webkit-scrollbar-track {
     background: oklch(0.97 0 0);
   }
-  
+
   ::-webkit-scrollbar-thumb {
     background: oklch(0.8 0 0);
     border-radius: 3px;
   }
-  
+
   .dark ::-webkit-scrollbar-track {
     background: oklch(0.2 0 0);
   }
-  
+
   .dark ::-webkit-scrollbar-thumb {
     background: oklch(0.4 0 0);
   }
@@ -166,7 +166,7 @@
   .animate-fade-in-up {
     animation: fade-in-up 0.5s ease-out;
   }
-  
+
   /* Glass morphism effect */
   .glass {
     backdrop-filter: blur(16px) saturate(180%);
@@ -174,7 +174,7 @@
     background-color: rgba(255, 255, 255, 0.75);
     border: 1px solid rgba(255, 255, 255, 0.125);
   }
-  
+
   .dark .glass {
     background-color: rgba(17, 25, 40, 0.75);
     border: 1px solid rgba(255, 255, 255, 0.125);

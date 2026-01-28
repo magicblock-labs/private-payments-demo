@@ -1,26 +1,8 @@
 'use client';
 
-import {
-  AccountLayout,
-  createAssociatedTokenAccountIdempotentInstruction,
-  createInitializeMint2Instruction,
-  createMintToCheckedInstruction,
-  getAssociatedTokenAddressSync,
-  getMinimumBalanceForRentExemptMint,
-  MINT_SIZE,
-  TOKEN_PROGRAM_ID,
-} from '@solana/spl-token';
-import { useAnchorWallet, useConnection } from '@solana/wallet-adapter-react';
-import { Keypair, SystemProgram, Transaction } from '@solana/web3.js';
-import { PublicKey } from '@solana/web3.js';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-
-import { useSubscription } from '@/hooks/use-subscription';
-import { shortKey } from '@/lib/utils';
 import { Card, CardContent, CardHeader } from './ui/card';
-import { H3 } from '@/components/ui/typography';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -31,9 +13,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2Icon, PlusCircle, Coins, TrendingUp, DollarSign } from 'lucide-react';
-import { toast } from 'sonner';
+import { H3 } from '@/components/ui/typography';
+import { useSubscription } from '@/hooks/use-subscription';
 import { useTokens } from '@/hooks/use-tokens';
+import { shortKey } from '@/lib/utils';
 import {
   createEataPermissionIx,
   deriveEphemeralAta,
@@ -43,6 +26,22 @@ import {
   initVaultIx,
   transferToVaultIx,
 } from '@magicblock-labs/ephemeral-rollups-sdk';
+import {
+  AccountLayout,
+  MINT_SIZE,
+  TOKEN_PROGRAM_ID,
+  createAssociatedTokenAccountIdempotentInstruction,
+  createInitializeMint2Instruction,
+  createMintToCheckedInstruction,
+  getAssociatedTokenAddressSync,
+  getMinimumBalanceForRentExemptMint,
+} from '@solana/spl-token';
+import { useAnchorWallet, useConnection } from '@solana/wallet-adapter-react';
+import { Keypair, SystemProgram, Transaction } from '@solana/web3.js';
+import { PublicKey } from '@solana/web3.js';
+import { Coins, DollarSign, Loader2Icon, PlusCircle, TrendingUp } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
   const { connection } = useConnection();

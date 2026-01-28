@@ -1,17 +1,16 @@
 'use client';
 
-import React from 'react';
-
+import Navbar from './Navbar';
+import { Muted } from './ui/typography';
 import Deposit from '@/components/Deposit';
 import Tokens from '@/components/Tokens';
 import VerificationToast from '@/components/VerificationToast';
-import { useAnchorWallet } from '@solana/wallet-adapter-react';
 import magicBlockLogo from '@/public/magicblock_white.png';
-import Navbar from './Navbar';
-import { Muted } from './ui/typography';
-import Link from 'next/link';
+import { useAnchorWallet } from '@solana/wallet-adapter-react';
 import { Settings } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
+import React from 'react';
 
 export default function HomePage() {
   const wallet = useAnchorWallet();

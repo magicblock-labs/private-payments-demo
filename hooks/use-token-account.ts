@@ -1,17 +1,16 @@
+import { useEphemeralConnection } from '@/hooks/use-ephemeral-connection';
+import { useSubscription } from '@/hooks/use-subscription';
 import {
-  decodeEphemeralAta,
   DELEGATION_PROGRAM_ID,
-  deriveEphemeralAta,
   EphemeralAta,
+  decodeEphemeralAta,
+  deriveEphemeralAta,
   permissionPdaFromAccount,
 } from '@magicblock-labs/ephemeral-rollups-sdk';
+import { Account, getAssociatedTokenAddressSync, unpackAccount } from '@solana/spl-token';
 import { useConnection } from '@solana/wallet-adapter-react';
 import { AccountInfo, PublicKey } from '@solana/web3.js';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-
-import { useEphemeralConnection } from '@/hooks/use-ephemeral-connection';
-import { useSubscription } from '@/hooks/use-subscription';
-import { Account, getAssociatedTokenAddressSync, unpackAccount } from '@solana/spl-token';
 
 export interface TokenAccountProps {
   user?: PublicKey | string;

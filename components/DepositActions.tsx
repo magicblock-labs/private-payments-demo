@@ -1,15 +1,15 @@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 import { Button } from './ui/button';
-import { Label } from './ui/label';
 import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { useProgram } from '@/hooks/use-program';
+import { VALIDATOR_PUBKEY } from '@/lib/constants';
+import { TokenListEntry } from '@/lib/types';
+import { PublicKey } from '@solana/web3.js';
 import { Loader2Icon } from 'lucide-react';
 import { useState } from 'react';
 import { useCallback } from 'react';
-import { useProgram } from '@/hooks/use-program';
 import { toast } from 'sonner';
-import { PublicKey } from '@solana/web3.js';
-import { TokenListEntry } from '@/lib/types';
-import { VALIDATOR_PUBKEY } from '@/lib/constants';
 
 interface DepositActionsProps {
   token: TokenListEntry;

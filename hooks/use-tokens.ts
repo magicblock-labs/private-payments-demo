@@ -1,6 +1,5 @@
-import { useCallback, useState, useEffect, useRef } from 'react';
-
 import { TokenListEntry } from '@/lib/types';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 const TOKENS_STORAGE_KEY = 'token-list';
 const SELECTED_TOKEN_STORAGE_KEY = 'selected-token';

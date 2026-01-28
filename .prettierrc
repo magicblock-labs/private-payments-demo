@@ -12,5 +12,16 @@
   "quoteProps": "as-needed",
   "jsxSingleQuote": true,
   "proseWrap": "preserve",
-  "importOrder": null
+  "plugins": [
+    "@trivago/prettier-plugin-sort-imports"
+  ],
+  "importOrder": [
+    "^components/(.*)$",
+    "^hooks/(.*)$",
+    "^lib/(.*)$",
+    "^styles/(.*)$",
+    "^views/(.*)$"
+  ],
+  "importOrderSeparation": true,
+  "importOrderSortSpecifiers": true
 }
