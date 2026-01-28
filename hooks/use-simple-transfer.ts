@@ -56,7 +56,7 @@ interface SimpleTransferProps {
   senderAccounts: TokenAccounts;
   recipientAccounts: TokenAccounts;
   vaultInfo?: AccountInfo<Buffer>;
-  vaultAtaInfo?: Account;
+  vaultAtaAccount?: Account;
   tokenMint?: PublicKey;
 }
 
@@ -65,7 +65,7 @@ export default function useSimpleTransfer({
   recipientAccounts,
   tokenMint,
   vaultInfo,
-  vaultAtaInfo,
+  vaultAtaAccount,
 }: SimpleTransferProps) {
   const { connection } = useConnection();
   const { ephemeralConnection } = useEphemeralConnection();
@@ -116,7 +116,7 @@ export default function useSimpleTransfer({
         mainnetTx = mainnetTx || new Transaction();
         mainnetTx.add(vaultIx);
       }
-      if (!vaultAtaInfo) {
+      if (!vaultAtaAccount) {
         const vaultAtaIx = initVaultAtaIx(wallet.publicKey, vaultAta, vault, tokenMintPk);
         mainnetTx = mainnetTx || new Transaction();
         mainnetTx.add(vaultAtaIx);
@@ -282,7 +282,7 @@ export default function useSimpleTransfer({
       recipientAccounts,
       tokenMint,
       vaultInfo,
-      vaultAtaInfo,
+      vaultAtaAccount,
       ephemeral.blockhash,
       mainnet.blockhash,
     ],

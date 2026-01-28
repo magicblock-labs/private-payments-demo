@@ -42,8 +42,8 @@ export default function SimpleTransfer({ token }: TransferProps) {
     senderAccounts: walletAccounts,
     recipientAccounts,
     tokenMint: mint,
-    vaultInfo: vaultInfo,
-    vaultAtaInfo: vaultAtaAccount,
+    vaultInfo,
+    vaultAtaAccount,
   });
   const { mainnetEata, ephemeralAta, isDelegated } = walletAccounts;
   const userTokenAccount = useMemo(() => {
