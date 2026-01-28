@@ -89,7 +89,7 @@ export function BlockhashCacheProvider({ children }: { children: React.ReactNode
 
     return () => {
       cancelled = true;
-      if (mainnetSubId.current) {
+      if (mainnetSubId.current !== null) {
         connection.removeSlotChangeListener(mainnetSubId.current);
         mainnetSubId.current = null;
       }
@@ -122,7 +122,7 @@ export function BlockhashCacheProvider({ children }: { children: React.ReactNode
 
     return () => {
       cancelled = true;
-      if (ephemeralSubId.current) {
+      if (ephemeralSubId.current !== null) {
         ephemeralConnection.removeSlotChangeListener(ephemeralSubId.current);
         ephemeralSubId.current = null;
       }
