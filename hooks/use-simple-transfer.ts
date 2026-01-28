@@ -85,7 +85,7 @@ export default function useSimpleTransfer({
       )
         return;
 
-      let tokenAmount = BigInt(10 ** 6 * amount);
+      let tokenAmount = BigInt(Math.round(10 ** 6 * amount));
       const recipientPk = recipientAccounts.user;
       const tokenMintPk = tokenMint;
 
@@ -289,7 +289,7 @@ export default function useSimpleTransfer({
       )
         return;
 
-      let tokenAmount = BigInt(10 ** 6 * amount);
+      let tokenAmount = BigInt(Math.round(10 ** 6 * amount));
 
       let [withdrawerEata] = deriveEphemeralAta(wallet.publicKey, tokenMint);
       const isDelegated = senderAccounts?.isDelegated;
