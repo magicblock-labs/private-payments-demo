@@ -2,11 +2,14 @@
 
 import { Wallet } from '@/components/Wallet';
 import AdvancedPage from '@/components/Advanced';
+import { BlockhashCacheProvider } from '@/contexts/BlockhashCacheContext';
 
 export default function Home() {
   return (
     <Wallet>
-      <AdvancedPage />
+      <BlockhashCacheProvider>
+        <AdvancedPage />
+      </BlockhashCacheProvider>
     </Wallet>
   );
 }

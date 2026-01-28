@@ -13,7 +13,25 @@ import { useEphemeralConnection } from '@/hooks/use-ephemeral-connection';
 import { useSubscription } from '@/hooks/use-subscription';
 import { Account, getAssociatedTokenAddressSync, unpackAccount } from '@solana/spl-token';
 
-export function useTokenAccount(user?: PublicKey | string, tokenMint?: PublicKey | string) {
+export interface TokenAccountProps {
+  user?: PublicKey | string;
+  tokenMint?: PublicKey | string;
+}
+
+export interface TokenAccounts {
+  user?: PublicKey;
+  ata?: PublicKey;
+  eata?: PublicKey;
+  permissionPda?: PublicKey;
+  mainnetAta: Account | null;
+  mainnetEata: EphemeralAta | null;
+  ephemeralAta: Account | null;
+  tokenAccount: Account | null;
+  isDelegated: boolean;
+  accessDenied: boolean;
+}
+
+export function useTokenAccount({ user, tokenMint }: TokenAccountProps): TokenAccounts {
   const { connection } = useConnection();
   const { ephemeralConnection } = useEphemeralConnection();
   const [ephemeralAta, setEphemeralAta] = useState<Account | null>(null);
@@ -46,7 +64,6 @@ export function useTokenAccount(user?: PublicKey | string, tokenMint?: PublicKey
 
     try {
       let [ataInfo, eataInfo] = await connection.getMultipleAccountsInfo([ata, eata]);
-
       if (ataInfo) {
         let mainnetAta = unpackAccount(ata, ataInfo);
         setMainnetAta(mainnetAta);
@@ -80,27 +97,32 @@ export function useTokenAccount(user?: PublicKey | string, tokenMint?: PublicKey
 
   const handleAtaChange = useCallback(
     (mainnet: boolean, notification: AccountInfo<Buffer>) => {
-      const decoded = unpackAccount(ata!, notification);
-      if (decoded) {
-        if (mainnet) {
-          setMainnetAta(decoded);
-        } else {
-          setEphemeralAta(decoded);
+      try {
+        const decoded = unpackAccount(ata!, notification);
+        if (decoded) {
+          if (mainnet) {
+            setMainnetAta(decoded);
+          } else {
+            setEphemeralAta(decoded);
+          }
         }
-      }
+      } catch {}
     },
     [ata],
   );
 
   const handleEataChange = useCallback((notification: AccountInfo<Buffer>) => {
-    if (notification.owner.equals(new PublicKey(DELEGATION_PROGRAM_ID))) {
-      setIsDelegated(true);
-    } else {
-      setIsDelegated(false);
+    try {
       const decoded = decodeEphemeralAta(notification);
       if (decoded) {
         setMainnetEata(decoded);
       }
+    } catch {}
+
+    if (notification.owner.equals(new PublicKey(DELEGATION_PROGRAM_ID))) {
+      setIsDelegated(true);
+    } else {
+      setIsDelegated(false);
     }
   }, []);
 
@@ -121,6 +143,7 @@ export function useTokenAccount(user?: PublicKey | string, tokenMint?: PublicKey
   }, [getAta]);
 
   return {
+    user: user ? new PublicKey(user) : undefined,
     ata,
     eata,
     permissionPda,

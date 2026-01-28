@@ -31,7 +31,7 @@ const ManageDeposit: React.FC<DepositProps> = ({ user, token, isMainnet }) => {
     return depositUser && wallet?.publicKey?.equals(depositUser);
   }, [wallet, depositUser]);
   const { ata, permissionPda, mainnetAta, ephemeralAta, isDelegated, accessDenied } =
-    useTokenAccount(depositUser, token?.mint);
+    useTokenAccount({ user: depositUser, tokenMint: token?.mint });
 
   const handleCreateEata = useCallback(async () => {
     if (!token || !depositUser) return;

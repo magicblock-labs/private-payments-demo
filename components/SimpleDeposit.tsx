@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 import { usePrivateRollupAuth } from '@/hooks/use-private-rollup-auth';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -8,12 +8,13 @@ import { Loader2Icon, Send, Info, Shield } from 'lucide-react';
 import SimpleTransfer from '@/components/SimpleTransfer';
 import { useTokens } from '@/hooks/use-tokens';
 import SimpleRecipient from './SimpleRecipient';
+import { useTokenAccountContext } from '@/contexts/TokenAccountContext';
 import MissingAddressCard from './MissingAddressCard';
 
 export default function SimpleDeposit() {
   const { authToken, isAuthenticating, getToken } = usePrivateRollupAuth();
   const { selectedToken: token } = useTokens();
-  const [selectedAddress, setSelectedAddress] = useState<string | undefined>();
+  const { selectedAddress } = useTokenAccountContext();
 
   return (
     <Card className='gap-3 overflow-hidden bg-white/80 dark:bg-card/80 backdrop-blur-sm border-border/50 shadow-xl p-0!'>
@@ -73,16 +74,12 @@ export default function SimpleDeposit() {
         {authToken && (
           <div className='grid gap-6 lg:grid-cols-2'>
             <div className='lg:col-span-1'>
-              <SimpleTransfer
-                token={token}
-                selectedAddress={selectedAddress}
-                setSelectedAddress={setSelectedAddress}
-              />
+              <SimpleTransfer token={token} />
             </div>
 
             <div className='lg:col-span-1'>
               {selectedAddress ? (
-                <SimpleRecipient user={selectedAddress} token={token} />
+                <SimpleRecipient user={selectedAddress} />
               ) : (
                 <MissingAddressCard />
               )}

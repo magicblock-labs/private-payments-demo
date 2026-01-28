@@ -13,22 +13,15 @@ import { useSubscription } from '@/hooks/use-subscription';
 import { useAnchorWallet, useConnection } from '@solana/wallet-adapter-react';
 import { Loader2Icon, Wallet, Shield, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 import useSimpleTransfer from '@/hooks/use-simple-transfer';
-import { useTokenAccount } from '@/hooks/use-token-account';
+import { useTokenAccountContext } from '@/contexts/TokenAccountContext';
 import { toast } from 'sonner';
 import { TokenListEntry } from '@/lib/types';
 
 interface TransferProps {
   token?: TokenListEntry;
-  selectedAddress?: string;
-  setSelectedAddress: (address: string | undefined) => void;
 }
 
-export default function SimpleTransfer({
-  token,
-  selectedAddress,
-  setSelectedAddress,
-}: TransferProps) {
-  const { transfer, withdraw } = useSimpleTransfer();
+export default function SimpleTransfer({ token }: TransferProps) {
   const { connection } = useConnection();
   const wallet = useAnchorWallet();
   const [isTransferring, setIsTransferring] = useState(false);
@@ -36,10 +29,23 @@ export default function SimpleTransfer({
   const [amount, setAmount] = useState(0);
   const [withdrawAmount, setWithdrawAmount] = useState(0);
   const [balance, setBalance] = useState<number | undefined>();
-  const { mainnetAta, mainnetEata, ephemeralAta, isDelegated } = useTokenAccount(
-    wallet?.publicKey,
-    token?.mint,
-  );
+  const {
+    mint,
+    walletAccounts,
+    recipientAccounts,
+    selectedAddress,
+    setSelectedAddress,
+    vaultInfo,
+    vaultAtaAccount,
+  } = useTokenAccountContext();
+  const { transfer, withdraw } = useSimpleTransfer({
+    senderAccounts: walletAccounts,
+    recipientAccounts,
+    tokenMint: mint,
+    vaultInfo: vaultInfo,
+    vaultAtaInfo: vaultAtaAccount,
+  });
+  const { mainnetEata, ephemeralAta, isDelegated } = walletAccounts;
   const userTokenAccount = useMemo(() => {
     if (!token || !wallet?.publicKey) return;
     return getAssociatedTokenAddressSync(
@@ -56,12 +62,6 @@ export default function SimpleTransfer({
       return Number(mainnetEata?.amount) / Math.pow(10, 6);
     }
   }, [isDelegated, ephemeralAta, mainnetEata]);
-
-  console.log('isDelegated:', isDelegated);
-  console.log('mainnetEata:', mainnetEata?.amount);
-  console.log('mainnetAta:', mainnetAta?.amount);
-  console.log('ephemeralAta:', ephemeralAta?.amount);
-  console.log('withdrawableBalance:', withdrawableBalance);
 
   const handleAddressChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -81,11 +81,11 @@ export default function SimpleTransfer({
     if (!token || !selectedAddress) return;
     setIsTransferring(true);
     try {
-      await transfer(selectedAddress, token.mint, amount);
+      await transfer(amount);
       toast.success(`Transferred ${amount} tokens to ${selectedAddress}`);
     } catch (error) {
+      console.error(error);
       toast.error(`Error transferring tokens: ${error}`);
-      console.error('Error transferring tokens:', error);
     } finally {
       setIsTransferring(false);
     }
@@ -95,11 +95,11 @@ export default function SimpleTransfer({
     if (!token) return;
     setIsWithdrawing(true);
     try {
-      await withdraw(token.mint, withdrawAmount);
+      await withdraw(withdrawAmount);
       toast.success(`Withdrawn ${withdrawAmount} tokens`);
     } catch (error) {
+      console.error(error);
       toast.error(`Error withdrawing tokens: ${error}`);
-      console.error('Error withdrawing tokens:', error);
     } finally {
       setIsWithdrawing(false);
     }
@@ -118,8 +118,7 @@ export default function SimpleTransfer({
           ),
         );
         setBalance(Number(balance.value.uiAmount));
-      } catch (error) {
-        console.error('Error getting balance:', error);
+      } catch {
         setBalance(0);
       }
     };
@@ -130,9 +129,7 @@ export default function SimpleTransfer({
     const account = AccountLayout.decode(Uint8Array.from(notification.data));
     setBalance(Number(account.amount) / Math.pow(10, 6));
   });
-  console.log('userTokenAccount:', userTokenAccount);
-  console.log('mainnetAta:', mainnetAta);
-  console.log('ephemeralAta:', ephemeralAta);
+
   return (
     <div className='space-y-4'>
       {/* Balance Cards */}

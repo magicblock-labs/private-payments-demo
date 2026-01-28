@@ -9,6 +9,7 @@ import magicBlockLogo from '@/public/magicblock_white.png';
 import Navbar from './Navbar';
 import SimpleDeposit from './SimpleDeposit';
 import { useTokens } from '@/hooks/use-tokens';
+import { TokenAccountProvider } from '@/contexts/TokenAccountContext';
 import { Muted } from './ui/typography';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -47,21 +48,23 @@ export default function SimplePage() {
         </div>
 
         {/* Main Content */}
-        <div className='flex flex-col gap-8 max-w-6xl mx-auto w-full'>
-          <Tokens />
-          {token && wallet?.publicKey && (
-            <>
-              <SimpleDeposit />
-              <div className='flex justify-center'>
-                <Link href='/advanced' className='text-center'>
-                  <Muted className='hover:text-foreground transition-colors duration-200 cursor-pointer'>
-                    Go to the advanced view →
-                  </Muted>
-                </Link>
-              </div>
-            </>
-          )}
-        </div>
+        <TokenAccountProvider mint={token?.mint}>
+          <div className='flex flex-col gap-8 max-w-6xl mx-auto w-full'>
+            <Tokens />
+            {token && wallet?.publicKey && (
+              <>
+                <SimpleDeposit />
+                <div className='flex justify-center'>
+                  <Link href='/advanced' className='text-center'>
+                    <Muted className='hover:text-foreground transition-colors duration-200 cursor-pointer'>
+                      Go to the advanced view →
+                    </Muted>
+                  </Link>
+                </div>
+              </>
+            )}
+          </div>
+        </TokenAccountProvider>
 
         <VerificationToast />
       </div>

@@ -1,41 +1,20 @@
 'use client';
 
-import { PublicKey } from '@solana/web3.js';
-import React, { useEffect, useMemo, useState } from 'react';
+import React from 'react';
 
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { H3, Muted } from '@/components/ui/typography';
-import { AccountLayout, getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { useSubscription } from '@/hooks/use-subscription';
-import { useConnection } from '@solana/wallet-adapter-react';
-import { useTokenAccount } from '@/hooks/use-token-account';
-import { TokenListEntry } from '@/lib/types';
+import { useTokenAccountContext } from '@/contexts/TokenAccountContext';
 import { User, Wallet, Shield } from 'lucide-react';
 import { shortKey } from '@/lib/utils';
 
 interface TransferProps {
   user?: string;
-  token?: TokenListEntry;
 }
 
-export default function SimpleRecipient({ user, token }: TransferProps) {
-  const userPk = useMemo(() => {
-    if (!user) return;
-    try {
-      return new PublicKey(user);
-    } catch {}
-  }, [user]);
-  const { connection } = useConnection();
-  const { ephemeralAta, mainnetAta, isDelegated } = useTokenAccount(user, token?.mint);
-  const userTokenAccount = useMemo(() => {
-    if (!token || !userPk) return;
-    return getAssociatedTokenAddressSync(
-      new PublicKey(token?.mint),
-      userPk,
-      true,
-      TOKEN_PROGRAM_ID,
-    );
-  }, [token, userPk]);
+export default function SimpleRecipient({ user }: TransferProps) {
+  const { recipientAccounts } = useTokenAccountContext();
+  const { ephemeralAta, mainnetAta, isDelegated } = recipientAccounts;
 
   function mainnetBalance() {
     if (mainnetAta) {
