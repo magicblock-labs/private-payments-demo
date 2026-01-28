@@ -1,3 +1,5 @@
+# Private Payments Demo
+
 ## 🚀 Getting Started
 
 ### Npm
