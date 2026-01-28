@@ -79,7 +79,9 @@ export default function useSimpleTransfer({
         !connection ||
         !ephemeralConnection ||
         !recipientAccounts.user ||
-        !tokenMint
+        !tokenMint ||
+        !ephemeral.blockhash ||
+        !mainnet.blockhash
       )
         return;
 
@@ -275,7 +277,15 @@ export default function useSimpleTransfer({
 
   const withdraw = useCallback(
     async (amount: number) => {
-      if (!wallet?.publicKey || !connection || !ephemeralConnection || !tokenMint) return;
+      if (
+        !wallet?.publicKey ||
+        !connection ||
+        !ephemeralConnection ||
+        !tokenMint ||
+        !ephemeral.blockhash ||
+        !mainnet.blockhash
+      )
+        return;
 
       let tokenAmount = BigInt(10 ** 6 * amount);
 
