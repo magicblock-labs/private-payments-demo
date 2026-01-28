@@ -185,6 +185,8 @@ export function useProgram() {
 
       const signature = await connection.sendRawTransaction(signedTransaction.serialize());
       await connection.confirmTransaction(signature);
+
+      return signature;
     },
     [wallet, connection],
   );
