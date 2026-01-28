@@ -57,9 +57,9 @@ export default function SimpleTransfer({ token }: TransferProps) {
   }, [token, wallet]);
   const withdrawableBalance = useMemo(() => {
     if (isDelegated) {
-      return Number(ephemeralAta?.amount) / Math.pow(10, 6);
+      return Number(ephemeralAta?.amount ?? 0n) / Math.pow(10, 6);
     } else {
-      return Number(mainnetEata?.amount) / Math.pow(10, 6);
+      return Number(mainnetEata?.amount ?? 0n) / Math.pow(10, 6);
     }
   }, [isDelegated, ephemeralAta, mainnetEata]);
 
