@@ -110,10 +110,8 @@ export function TokenAccountProvider({
   }, [connection, vault, vaultAta]);
 
   useEffect(() => {
-    // Timeout to avoid synchronous setState in useEffect
-    setTimeout(async () => {
-      await fetchVault();
-    }, 0);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchVault();
   }, [fetchVault]);
 
   useSubscription(connection, vault, accountInfo => {

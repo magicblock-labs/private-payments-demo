@@ -133,10 +133,8 @@ export function useTokenAccount({ user, tokenMint }: TokenAccountProps): TokenAc
 
   // Initialize the deposit
   useEffect(() => {
-    // Timeout to avoid synchronous setState in useEffect
-    setTimeout(async () => {
-      await getAta();
-    }, 0);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    getAta();
   }, [getAta]);
 
   return {
