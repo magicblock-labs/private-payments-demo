@@ -56,7 +56,9 @@ export function useTokens() {
           setTokenList(parsedTokens);
         }, 0);
       }
-    } catch {}
+    } catch (error) {
+      console.error('Error loading tokens:', error);
+    }
   }, []); // Only run on mount
 
   // Load selected token from localStorage on mount
@@ -69,7 +71,9 @@ export function useTokens() {
           setSelectedToken(parsedToken);
         }, 0);
       }
-    } catch {}
+    } catch (error) {
+      console.error('Error loading selected token:', error);
+    }
   }, []); // Only run on mount
 
   // Save tokens to localStorage whenever they change
@@ -86,7 +90,9 @@ export function useTokens() {
           // Dispatch custom event to notify other instances
           const event = new CustomEvent(TOKENS_CHANGE_EVENT, { detail: updatedTokens });
           window.dispatchEvent(event);
-        } catch {}
+        } catch (error) {
+          console.error('Error saving tokens:', error);
+        }
         return updatedTokens;
       });
     },
@@ -111,7 +117,9 @@ export function useTokens() {
           // Dispatch custom event to notify other instances
           const event = new CustomEvent(SELECTED_TOKEN_CHANGE_EVENT, { detail: updatedToken });
           window.dispatchEvent(event);
-        } catch {}
+        } catch (error) {
+          console.error('Error saving selected token:', error);
+        }
         return updatedToken;
       });
     },

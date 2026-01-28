@@ -51,6 +51,8 @@ export function BlockhashCacheProvider({ children }: { children: React.ReactNode
     try {
       const latest = await fetchLatestBlockhash(connection);
       setMainnet(latest);
+    } catch (error) {
+      console.error('Error refreshing mainnet blockhash:', error);
     } finally {
       mainnetInFlight.current = false;
     }
@@ -62,6 +64,8 @@ export function BlockhashCacheProvider({ children }: { children: React.ReactNode
     try {
       const latest = await fetchLatestBlockhash(ephemeralConnection);
       setEphemeral(latest);
+    } catch (error) {
+      console.error('Error refreshing ephemeral blockhash:', error);
     } finally {
       ephemeralInFlight.current = false;
     }
@@ -75,7 +79,9 @@ export function BlockhashCacheProvider({ children }: { children: React.ReactNode
       try {
         const latest = await fetchLatestBlockhash(connection);
         if (!cancelled) setMainnet(latest);
-      } catch {}
+      } catch (error) {
+        console.error('Error refreshing mainnet blockhash:', error);
+      }
     };
 
     bootstrap();
@@ -108,7 +114,9 @@ export function BlockhashCacheProvider({ children }: { children: React.ReactNode
       try {
         const latest = await fetchLatestBlockhash(ephemeralConnection);
         if (!cancelled) setEphemeral(latest);
-      } catch {}
+      } catch (error) {
+        console.error('Error refreshing ephemeral blockhash:', error);
+      }
     };
 
     bootstrap();

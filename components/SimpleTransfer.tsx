@@ -68,6 +68,7 @@ export default function SimpleTransfer({ token }: TransferProps) {
       try {
         new PublicKey(e.target.value);
         setSelectedAddress?.(e.target.value);
+        toast.success('Address set');
       } catch {
         setSelectedAddress?.(undefined);
         toast.error('Invalid address');

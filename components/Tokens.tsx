@@ -192,6 +192,8 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
           creator: wallet.publicKey.toString(),
         });
         toast.success(`Token ${mintKp.publicKey.toString()} created successfully`);
+      } catch (error) {
+        toast.error(`Failed to create token: ${error}`);
       } finally {
         setIsCreating(false);
       }

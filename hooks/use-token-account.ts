@@ -71,7 +71,9 @@ export function useTokenAccount({ user, tokenMint }: TokenAccountProps): TokenAc
           let ephemeralAtaInfo = null;
           try {
             ephemeralAtaInfo = await ephemeralConnection?.getAccountInfo(ata);
-          } catch {}
+          } catch (error) {
+            console.error('Error getting account info:', error);
+          }
 
           if (ephemeralAtaInfo) {
             const decodedEphemeralAta = unpackAccount(ata, ephemeralAtaInfo);
@@ -88,7 +90,9 @@ export function useTokenAccount({ user, tokenMint }: TokenAccountProps): TokenAc
         setMainnetEata(null);
         setEphemeralAta(null);
       }
-    } catch {}
+    } catch (error) {
+      console.error('Error getting account info:', error);
+    }
   }, [user, ata, eata, connection, ephemeralConnection]);
 
   const handleAtaChange = useCallback(
@@ -103,7 +107,9 @@ export function useTokenAccount({ user, tokenMint }: TokenAccountProps): TokenAc
             setEphemeralAta(decoded);
           }
         }
-      } catch {}
+      } catch (error) {
+        console.error('Error getting account info:', error);
+      }
     },
     [ata],
   );
@@ -114,7 +120,9 @@ export function useTokenAccount({ user, tokenMint }: TokenAccountProps): TokenAc
       if (decoded) {
         setMainnetEata(decoded);
       }
-    } catch {}
+    } catch (error) {
+      console.error('Error getting account info:', error);
+    }
 
     if (notification.owner.equals(new PublicKey(DELEGATION_PROGRAM_ID))) {
       setIsDelegated(true);

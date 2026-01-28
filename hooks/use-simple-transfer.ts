@@ -215,7 +215,9 @@ export default function useSimpleTransfer({
                 ) {
                   return;
                 }
-              } catch {}
+              } catch (error) {
+                console.error('Error getting account info:', error);
+              }
               retries--;
               await new Promise(resolve => setTimeout(resolve, 400));
             }
@@ -337,7 +339,9 @@ export default function useSimpleTransfer({
             if (accountInfo && !accountInfo.owner.equals(new PublicKey(DELEGATION_PROGRAM_ID))) {
               break;
             }
-          } catch {}
+          } catch (error) {
+            console.error('Error getting account info:', error);
+          }
           retries--;
           await new Promise(resolve => setTimeout(resolve, 400));
           if (retries === 0) {

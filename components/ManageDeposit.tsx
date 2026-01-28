@@ -38,6 +38,8 @@ const ManageDeposit: React.FC<DepositProps> = ({ user, token, isMainnet }) => {
     try {
       await initializeEata(depositUser, new PublicKey(token.mint));
       toast.success(`Deposit initialized for ${depositUser.toBase58()}`);
+    } catch (error) {
+      toast.error(`Failed to initialize deposit: ${error}`);
     } finally {
       setIsCreating(false);
     }
