@@ -11,7 +11,6 @@ const flatconf = [
     rules: {
       ...prettierConfig.rules,
       'prettier/prettier': 'error',
-      'no-unused-vars': 'warn',
       'no-console': 'warn',
     },
   },
