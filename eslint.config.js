@@ -13,6 +13,7 @@ const flatconf = [
       'prettier/prettier': 'error',
       'no-console': 'warn',
       'prefer-const': 'error',
+      'no-console': ['error', { allow: ['error', 'warn'] }],
     },
   },
 ];
