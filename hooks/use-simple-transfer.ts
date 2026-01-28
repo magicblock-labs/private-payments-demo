@@ -183,6 +183,7 @@ export default function useSimpleTransfer({
       }
 
       // Transfer the amount from the sender to the recipient
+      // Uses regular ATAs
       const ephemeralTx = new Transaction().add(
         createTransferCheckedInstruction(
           senderAta,
