@@ -111,18 +111,18 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
           TOKEN_PROGRAM_ID,
         );
 
-        let [eata, eataBump] = deriveEphemeralAta(wallet.publicKey, mintKp.publicKey);
-        let [vault, vaultBump] = deriveVault(mintKp.publicKey);
-        let vaultAta = getAssociatedTokenAddressSync(
+        const [eata, eataBump] = deriveEphemeralAta(wallet.publicKey, mintKp.publicKey);
+        const [vault, vaultBump] = deriveVault(mintKp.publicKey);
+        const vaultAta = getAssociatedTokenAddressSync(
           mintKp.publicKey,
           vault,
           true,
           TOKEN_PROGRAM_ID,
         );
 
-        let vaultIx = initVaultIx(vault, mintKp.publicKey, wallet.publicKey, vaultBump);
-        let vaultAtaIx = initVaultAtaIx(wallet.publicKey, vaultAta, vault, mintKp.publicKey);
-        let initIx = initEphemeralAtaIx(
+        const vaultIx = initVaultIx(vault, mintKp.publicKey, wallet.publicKey, vaultBump);
+        const vaultAtaIx = initVaultAtaIx(wallet.publicKey, vaultAta, vault, mintKp.publicKey);
+        const initIx = initEphemeralAtaIx(
           eata,
           wallet.publicKey,
           mintKp.publicKey,
@@ -154,7 +154,6 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
           initIx,
           createPermissionIx,
         );
-        console.log(finalTx);
         if (deposit) {
           finalTx.add(depositIx!);
         }
@@ -163,8 +162,6 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
         finalTx.partialSign(mintKp);
 
         const txs = await wallet.signAllTransactions([finalTx]);
-        const simulation = await connection.simulateTransaction(finalTx);
-        console.log(simulation);
 
         // Use a for loop to preserve order of transactions
         const sigs = [];
