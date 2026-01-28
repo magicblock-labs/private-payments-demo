@@ -109,7 +109,8 @@ export function useProgram() {
 
   const transfer = useCallback(
     async (tokenMint: PublicKey, amount: number, to: PublicKey, delegated: boolean) => {
-      if (!wallet?.publicKey || !connection || !ephemeralConnection) return;
+      if (!wallet?.publicKey || (!connection && !delegated) || (!ephemeralConnection && delegated))
+        return;
 
       const amountBn = BigInt(amount * Math.pow(10, 6));
 
@@ -131,7 +132,8 @@ export function useProgram() {
       const transaction = new Transaction();
       transaction.add(ix);
 
-      let conn = delegated ? ephemeralConnection : connection;
+      // NOTE: Safe to use ! because we check if the connection is valid above
+      let conn = (delegated ? ephemeralConnection : connection)!;
       const blockhash = (await conn.getLatestBlockhash()).blockhash;
       transaction.recentBlockhash = blockhash;
       transaction.feePayer = wallet.publicKey;
