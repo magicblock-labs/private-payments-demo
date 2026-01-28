@@ -169,7 +169,7 @@ export default function SimpleTransfer({ token }: TransferProps) {
           </CardHeader>
           <CardContent>
             <div className='text-2xl font-bold text-purple-900 dark:text-purple-100'>
-              {withdrawableBalance}
+              {withdrawableBalance.toFixed(2)}
             </div>
             <Muted className='text-purple-600! dark:text-purple-400!'>Private</Muted>
           </CardContent>
