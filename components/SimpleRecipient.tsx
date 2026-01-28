@@ -16,17 +16,17 @@ export default function SimpleRecipient({ user }: TransferProps) {
   const { recipientAccounts } = useTokenAccountContext();
   const { ephemeralAta, mainnetAta, isDelegated } = recipientAccounts;
 
-  function mainnetBalance() {
+  function mainnetBalance(): string {
     if (mainnetAta) {
-      return Number(mainnetAta.amount) / Math.pow(10, 6);
+      return (Number(mainnetAta.amount) / Math.pow(10, 6)).toFixed(2);
     } else {
       return '0';
     }
   }
 
-  function ephemeralBalance() {
+  function ephemeralBalance(): string {
     if (ephemeralAta) {
-      return Number(ephemeralAta.amount) / Math.pow(10, 6);
+      return (Number(ephemeralAta.amount) / Math.pow(10, 6)).toFixed(2);
     } else {
       return '***';
     }
