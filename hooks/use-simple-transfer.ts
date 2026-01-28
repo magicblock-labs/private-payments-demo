@@ -330,6 +330,9 @@ export default function useSimpleTransfer({
           } catch {}
           retries--;
           await new Promise(resolve => setTimeout(resolve, 400));
+          if (retries === 0) {
+            throw new Error('Could not undelegate sender');
+          }
         }
 
         signature = await connection.sendRawTransaction(signedWithdrawTx.serialize());
