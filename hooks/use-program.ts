@@ -61,7 +61,7 @@ export function useProgram() {
       let userAta = getAssociatedTokenAddressSync(tokenMint, user, true, TOKEN_PROGRAM_ID);
       let vaultAta = getAssociatedTokenAddressSync(tokenMint, vault, true, TOKEN_PROGRAM_ID);
 
-      const amountBn = BigInt(amount * Math.pow(10, 6));
+      const amountBn = BigInt(Math.round(amount * Math.pow(10, 6)));
 
       let ix: TransactionInstruction;
       if (isIncrease) {
@@ -71,13 +71,14 @@ export function useProgram() {
       }
 
       const transaction = new Transaction();
-      transaction.add(ix);
 
       const isVaultCreated = await connection.getAccountInfo(vault);
       if (!isVaultCreated) {
         transaction.add(initVaultIx(vault, tokenMint, wallet.publicKey, vaultBump));
         transaction.add(initVaultAtaIx(wallet.publicKey, vaultAta, vault, tokenMint));
       }
+
+      transaction.add(ix);
 
       const blockhash = (await connection.getLatestBlockhash()).blockhash;
       transaction.recentBlockhash = blockhash;
