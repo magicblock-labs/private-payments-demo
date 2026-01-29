@@ -40,17 +40,30 @@ export function BlockhashCacheProvider({ children }: { children: React.ReactNode
   const { ephemeralConnection } = useEphemeralConnection();
   const [mainnet, setMainnet] = useState<BlockhashCacheEntry>(EMPTY_ENTRY);
   const [ephemeral, setEphemeral] = useState<BlockhashCacheEntry>(EMPTY_ENTRY);
+  const mainnetConnectionRef = useRef(connection);
+  const ephemeralConnectionRef = useRef(ephemeralConnection);
   const mainnetInFlight = useRef(false);
   const ephemeralInFlight = useRef(false);
   const mainnetSubId = useRef<number | null>(null);
   const ephemeralSubId = useRef<number | null>(null);
 
+  useEffect(() => {
+    mainnetConnectionRef.current = connection;
+  }, [connection]);
+
+  useEffect(() => {
+    ephemeralConnectionRef.current = ephemeralConnection;
+  }, [ephemeralConnection]);
+
   const refreshMainnet = useCallback(async () => {
     if (!connection || mainnetInFlight.current) return;
+    const activeConnection = connection;
     mainnetInFlight.current = true;
     try {
-      const latest = await fetchLatestBlockhash(connection);
-      setMainnet(latest);
+      const latest = await fetchLatestBlockhash(activeConnection);
+      if (mainnetConnectionRef.current === activeConnection) {
+        setMainnet(latest);
+      }
     } catch (error) {
       console.error('Error refreshing mainnet blockhash:', error);
     } finally {
@@ -61,9 +74,12 @@ export function BlockhashCacheProvider({ children }: { children: React.ReactNode
   const refreshEphemeral = useCallback(async () => {
     if (!ephemeralConnection || ephemeralInFlight.current) return;
     ephemeralInFlight.current = true;
+    const activeConnection = ephemeralConnection;
     try {
-      const latest = await fetchLatestBlockhash(ephemeralConnection);
-      setEphemeral(latest);
+      const latest = await fetchLatestBlockhash(activeConnection);
+      if (ephemeralConnectionRef.current === ephemeralConnection) {
+        setEphemeral(latest);
+      }
     } catch (error) {
       console.error('Error refreshing ephemeral blockhash:', error);
     } finally {

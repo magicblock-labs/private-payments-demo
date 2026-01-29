@@ -39,9 +39,9 @@
     "tweetnacl": "^1.0.3"
   },
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --webpack",
     "build": "next build --webpack",
-    "start": "next start",
+    "start": "next start --webpack",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
     "format": "prettier --write \"{app,components,hooks,lib,styles,views}/**/*.{js,jsx,ts,tsx,json,css,scss,md}\"",
