@@ -18,7 +18,7 @@ export default function SimpleRecipient({ user }: TransferProps) {
     if (mainnetAta) {
       return (Number(mainnetAta.amount) / 10 ** 6).toFixed(2);
     } else {
-      return '0';
+      return '0.00';
     }
   }
 

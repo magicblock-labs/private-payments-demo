@@ -1,12 +1,16 @@
 import { useEphemeralConnection } from './use-ephemeral-connection';
+import { useBlockhashCache } from '@/contexts/BlockhashCacheContext';
 import {
+  AUTHORITY_FLAG,
   createEataPermissionIx,
+  createUpdatePermissionInstruction,
   delegateIx,
   deriveEphemeralAta,
   deriveVault,
   initEphemeralAtaIx,
   initVaultAtaIx,
   initVaultIx,
+  resetEataPermissionIx,
   transferToVaultIx,
   undelegateIx,
   withdrawSplIx,
@@ -24,6 +28,28 @@ export function useProgram() {
   const wallet = useAnchorWallet();
   const { connection } = useConnection();
   const { ephemeralConnection } = useEphemeralConnection();
+  const { mainnet, ephemeral } = useBlockhashCache();
+
+  const sendTransaction = useCallback(
+    async (isEphemeral: boolean, transaction: Transaction) => {
+      if (!wallet?.publicKey) return;
+
+      const conn = isEphemeral ? ephemeralConnection : connection;
+      if (!conn) return;
+
+      const blockhash = isEphemeral ? ephemeral?.blockhash : mainnet?.blockhash;
+      if (!blockhash) return;
+
+      transaction.recentBlockhash = blockhash;
+      transaction.feePayer = wallet.publicKey;
+
+      const signedTransaction = await wallet.signTransaction(transaction);
+      const signature = await conn.sendRawTransaction(signedTransaction.serialize());
+      await conn.confirmTransaction(signature);
+      return signature;
+    },
+    [wallet, connection, ephemeralConnection, mainnet.blockhash, ephemeral.blockhash],
+  );
 
   const initializeEata = useCallback(
     async (user: PublicKey, tokenMint: PublicKey) => {
@@ -38,17 +64,9 @@ export function useProgram() {
       transaction.add(initIx);
       transaction.add(createPermissionIx);
 
-      const blockhash = (await connection.getLatestBlockhash()).blockhash;
-      transaction.recentBlockhash = blockhash;
-      transaction.feePayer = wallet.publicKey;
-      const signedTransaction = await wallet.signTransaction(transaction);
-
-      const signature = await connection.sendRawTransaction(signedTransaction.serialize());
-      await connection.confirmTransaction(signature);
-
-      return signature;
+      return sendTransaction(false, transaction);
     },
-    [wallet, connection],
+    [wallet, sendTransaction],
   );
 
   const modifyEataBalance = useCallback(
@@ -79,17 +97,9 @@ export function useProgram() {
 
       transaction.add(ix);
 
-      const blockhash = (await connection.getLatestBlockhash()).blockhash;
-      transaction.recentBlockhash = blockhash;
-      transaction.feePayer = wallet.publicKey;
-      const signedTransaction = await wallet.signTransaction(transaction);
-
-      const signature = await connection.sendRawTransaction(signedTransaction.serialize());
-      await connection.confirmTransaction(signature);
-
-      return signature;
+      return sendTransaction(false, transaction);
     },
-    [wallet, connection],
+    [wallet, connection, sendTransaction],
   );
 
   const deposit = useCallback(
@@ -108,8 +118,7 @@ export function useProgram() {
 
   const transfer = useCallback(
     async (tokenMint: PublicKey, amount: number, to: PublicKey, delegated: boolean) => {
-      if (!wallet?.publicKey || (!connection && !delegated) || (!ephemeralConnection && delegated))
-        return;
+      if (!wallet?.publicKey) return;
 
       const amountBn = BigInt(Math.round(amount * 10 ** 6));
 
@@ -131,19 +140,9 @@ export function useProgram() {
       const transaction = new Transaction();
       transaction.add(ix);
 
-      // NOTE: Safe to use ! because we check if the connection is valid above
-      const conn = (delegated ? ephemeralConnection : connection)!;
-      const blockhash = (await conn.getLatestBlockhash()).blockhash;
-      transaction.recentBlockhash = blockhash;
-      transaction.feePayer = wallet.publicKey;
-      const signedTransaction = await wallet.signTransaction(transaction);
-
-      const signature = await conn.sendRawTransaction(signedTransaction.serialize());
-      await conn.confirmTransaction(signature);
-
-      return signature;
+      return sendTransaction(delegated, transaction);
     },
-    [wallet, connection, ephemeralConnection],
+    [wallet, sendTransaction],
   );
 
   const delegate = useCallback(
@@ -156,17 +155,9 @@ export function useProgram() {
       const transaction = new Transaction();
       transaction.add(ix);
 
-      const blockhash = (await connection.getLatestBlockhash()).blockhash;
-      transaction.recentBlockhash = blockhash;
-      transaction.feePayer = wallet.publicKey;
-      const signedTransaction = await wallet.signTransaction(transaction);
-
-      const signature = await connection.sendRawTransaction(signedTransaction.serialize());
-      await connection.confirmTransaction(signature);
-
-      return signature;
+      return sendTransaction(false, transaction);
     },
-    [wallet, connection],
+    [wallet, sendTransaction],
   );
 
   const undelegate = useCallback(
@@ -177,17 +168,34 @@ export function useProgram() {
       const transaction = new Transaction();
       transaction.add(ix);
 
-      const blockhash = (await connection.getLatestBlockhash()).blockhash;
-      transaction.recentBlockhash = blockhash;
-      transaction.feePayer = wallet.publicKey;
-      const signedTransaction = await wallet.signTransaction(transaction);
-
-      const signature = await connection.sendRawTransaction(signedTransaction.serialize());
-      await connection.confirmTransaction(signature);
-
-      return signature;
+      return sendTransaction(true, transaction);
     },
-    [wallet, connection],
+    [wallet, sendTransaction],
+  );
+
+  const updatePermission = useCallback(
+    async (tokenMint: PublicKey, isPublic: boolean) => {
+      if (!wallet?.publicKey) return;
+
+      const [eata, eataBump] = deriveEphemeralAta(wallet.publicKey, tokenMint);
+      let ix;
+      if (isPublic) {
+        ix = createUpdatePermissionInstruction(
+          {
+            authority: [wallet.publicKey, true],
+            permissionedAccount: [eata, false],
+          },
+          { members: isPublic ? null : [{ flags: AUTHORITY_FLAG, pubkey: wallet.publicKey }] },
+        );
+      } else {
+        ix = resetEataPermissionIx(eata, wallet.publicKey, eataBump, 0);
+      }
+      const transaction = new Transaction();
+      transaction.add(ix);
+
+      return sendTransaction(true, transaction);
+    },
+    [wallet, sendTransaction],
   );
 
   return {
@@ -197,5 +205,6 @@ export function useProgram() {
     transfer,
     delegate,
     undelegate,
+    updatePermission,
   };
 }

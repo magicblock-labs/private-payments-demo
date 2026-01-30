@@ -20,10 +20,7 @@ export function useSubscription(
         subscriptionId.current = null;
       }
 
-      // Try to get the account first to see if we have the permission to subscribe
       try {
-        await connection.getAccountInfo(new PublicKey(account));
-
         const publicKey = new PublicKey(account);
         subscriptionId.current = connection.onAccountChange(publicKey, onAccountChange);
       } catch (error) {

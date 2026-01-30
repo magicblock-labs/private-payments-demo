@@ -885,10 +885,10 @@
   dependencies:
     "@lit-labs/ssr-dom-shim" "^1.4.0"
 
-"@magicblock-labs/ephemeral-rollups-sdk@0.8.4":
-  version "0.8.4"
-  resolved "https://registry.yarnpkg.com/@magicblock-labs/ephemeral-rollups-sdk/-/ephemeral-rollups-sdk-0.8.4.tgz#1ba197531a864cccb67d2616958ba24898d4a68f"
-  integrity sha512-VatBTjsjp8/S6V8wjdDg0AKr4yBh9pRoKYR3SIs2UUeyaCZoBtReKOcYF4aqkUck2gNBDbIz8o6sh5wxtDCIHw==
+"@magicblock-labs/ephemeral-rollups-sdk@^0.8.5":
+  version "0.8.5"
+  resolved "https://registry.yarnpkg.com/@magicblock-labs/ephemeral-rollups-sdk/-/ephemeral-rollups-sdk-0.8.5.tgz#251752cd5f35cb8066734ef6c09a44f9be4e0418"
+  integrity sha512-W+k38iQ6XSllc4xV0kehTyWSx+j4juozfTxcA3tmZQD61lWzYm9n0m2iyclSxF/KEi3phUwF73Z0+ZE2aIpy1Q==
   dependencies:
     "@phala/dcap-qvl-web" "^0.2.7"
     "@solana/spl-token" "^0.4.9"

@@ -3,8 +3,10 @@ import { useSubscription } from '@/hooks/use-subscription';
 import {
   DELEGATION_PROGRAM_ID,
   EphemeralAta,
+  Permission,
   decodeEphemeralAta,
   deriveEphemeralAta,
+  deserializePermission,
   permissionPdaFromAccount,
 } from '@magicblock-labs/ephemeral-rollups-sdk';
 import { Account, getAssociatedTokenAddressSync, unpackAccount } from '@solana/spl-token';
@@ -24,9 +26,12 @@ export interface TokenAccounts {
   permissionPda?: PublicKey;
   mainnetAta: Account | null;
   mainnetEata: EphemeralAta | null;
+  mainnetPermission: Permission | null;
   ephemeralAta: Account | null;
+  ephemeralPermission: Permission | null;
   tokenAccount: Account | null;
   isDelegated: boolean;
+  isPermissionDelegated: boolean;
   accessDenied: boolean;
 }
 
@@ -36,7 +41,10 @@ export function useTokenAccount({ user, tokenMint }: TokenAccountProps): TokenAc
   const [ephemeralAta, setEphemeralAta] = useState<Account | null>(null);
   const [mainnetAta, setMainnetAta] = useState<Account | null>(null);
   const [mainnetEata, setMainnetEata] = useState<EphemeralAta | null>(null);
+  const [mainnetPermission, setMainnetPermission] = useState<Permission | null>(null);
+  const [ephemeralPermission, setEphemeralPermission] = useState<Permission | null>(null);
   const [isDelegated, setIsDelegated] = useState(false);
+  const [isPermissionDelegated, setIsPermissionDelegated] = useState(false);
   const tokenAccount = useMemo(() => {
     return isDelegated ? ephemeralAta : mainnetAta;
   }, [ephemeralAta, mainnetAta, isDelegated]);
@@ -57,9 +65,33 @@ export function useTokenAccount({ user, tokenMint }: TokenAccountProps): TokenAc
   }, [eata]);
 
   const getAta = useCallback(async () => {
-    if (!user || !ata || !eata) return;
+    if (!user || !ata || !eata || !permissionPda) return;
 
-    const [ataInfo, eataInfo] = await connection.getMultipleAccountsInfo([ata, eata]);
+    const [ataInfo, eataInfo, permissionPdaInfo] = await connection.getMultipleAccountsInfo([
+      ata,
+      eata,
+      permissionPda,
+    ]);
+
+    if (permissionPdaInfo) {
+      const delegated = permissionPdaInfo.owner.equals(new PublicKey(DELEGATION_PROGRAM_ID));
+      setIsPermissionDelegated(delegated);
+      setMainnetPermission(deserializePermission(permissionPdaInfo.data));
+
+      try {
+        const epehemeralPermissionInfo = await ephemeralConnection?.getAccountInfo(permissionPda);
+        if (epehemeralPermissionInfo) {
+          setEphemeralPermission(deserializePermission(epehemeralPermissionInfo.data));
+        }
+      } catch (error) {
+        console.error('Error getting ephemeral permission info:', error);
+      }
+    } else {
+      setIsPermissionDelegated(false);
+      setMainnetPermission(null);
+      setEphemeralPermission(null);
+    }
+
     try {
       if (ataInfo) {
         const decodedMainnetAta = unpackAccount(ata, ataInfo);
@@ -93,7 +125,7 @@ export function useTokenAccount({ user, tokenMint }: TokenAccountProps): TokenAc
     } catch (error) {
       console.error('Error getting account info:', error);
     }
-  }, [user, ata, eata, connection, ephemeralConnection]);
+  }, [user, ata, eata, connection, ephemeralConnection, permissionPda]);
 
   const handleAtaChange = useCallback(
     (mainnet: boolean, notification: AccountInfo<Buffer>) => {
@@ -131,6 +163,25 @@ export function useTokenAccount({ user, tokenMint }: TokenAccountProps): TokenAc
     }
   }, []);
 
+  const handlePermissionChange = useCallback(
+    (mainnet: boolean, notification: AccountInfo<Buffer>) => {
+      if (!permissionPda) return;
+      try {
+        const decoded = deserializePermission(notification.data);
+        if (decoded) {
+          if (mainnet) {
+            setMainnetPermission(decoded);
+          } else {
+            setEphemeralPermission(decoded);
+          }
+        }
+      } catch (error) {
+        console.error('Error getting account info:', error);
+      }
+    },
+    [permissionPda],
+  );
+
   useSubscription(connection, ata, (notification: AccountInfo<Buffer>) =>
     handleAtaChange(true, notification),
   );
@@ -138,11 +189,17 @@ export function useTokenAccount({ user, tokenMint }: TokenAccountProps): TokenAc
     handleAtaChange(false, notification),
   );
   useSubscription(connection, eata, handleEataChange);
+  useSubscription(connection, permissionPda, (notification: AccountInfo<Buffer>) =>
+    handlePermissionChange(true, notification),
+  );
+  useSubscription(ephemeralConnection, permissionPda, (notification: AccountInfo<Buffer>) =>
+    handlePermissionChange(false, notification),
+  );
 
   // Initialize the deposit
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    getAta();
+    void getAta();
   }, [getAta]);
 
   return {
@@ -152,9 +209,12 @@ export function useTokenAccount({ user, tokenMint }: TokenAccountProps): TokenAc
     permissionPda,
     mainnetAta,
     mainnetEata,
+    mainnetPermission,
     ephemeralAta,
+    ephemeralPermission,
     tokenAccount,
     isDelegated,
+    isPermissionDelegated,
     accessDenied: isDelegated && !ephemeralAta,
   };
 }

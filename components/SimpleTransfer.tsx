@@ -6,13 +6,22 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { H3, Muted } from '@/components/ui/typography';
 import { useTokenAccountContext } from '@/contexts/TokenAccountContext';
+import { useProgram } from '@/hooks/use-program';
 import useSimpleTransfer from '@/hooks/use-simple-transfer';
 import { useSubscription } from '@/hooks/use-subscription';
 import { TokenListEntry } from '@/lib/types';
 import { AccountLayout, TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { useAnchorWallet, useConnection } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
-import { ArrowDownLeft, ArrowUpRight, Loader2Icon, Shield, Wallet } from 'lucide-react';
+import {
+  ArrowDownLeft,
+  ArrowUpRight,
+  Eye,
+  EyeOff,
+  Loader2Icon,
+  Shield,
+  Wallet,
+} from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -25,6 +34,7 @@ export default function SimpleTransfer({ token }: TransferProps) {
   const wallet = useAnchorWallet();
   const [isTransferring, setIsTransferring] = useState(false);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
+  const [isUpdatingPermission, setIsUpdatingPermission] = useState(false);
   const [amount, setAmount] = useState(0);
   const [withdrawAmount, setWithdrawAmount] = useState(0);
   const [balance, setBalance] = useState<number | undefined>();
@@ -37,6 +47,7 @@ export default function SimpleTransfer({ token }: TransferProps) {
     vaultInfo,
     vaultAtaAccount,
   } = useTokenAccountContext();
+  const { updatePermission } = useProgram();
   const { transfer, withdraw } = useSimpleTransfer({
     senderAccounts: walletAccounts,
     recipientAccounts,
@@ -45,6 +56,7 @@ export default function SimpleTransfer({ token }: TransferProps) {
     vaultAtaAccount,
   });
   const { mainnetEata, ephemeralAta, isDelegated } = walletAccounts;
+
   const userTokenAccount = useMemo(() => {
     if (!token || !wallet?.publicKey) return;
     return getAssociatedTokenAddressSync(
@@ -54,6 +66,7 @@ export default function SimpleTransfer({ token }: TransferProps) {
       TOKEN_PROGRAM_ID,
     );
   }, [token, wallet]);
+
   const withdrawableBalance = useMemo(() => {
     if (isDelegated) {
       return Number(ephemeralAta?.amount ?? 0n) / 10 ** 6;
@@ -61,6 +74,14 @@ export default function SimpleTransfer({ token }: TransferProps) {
       return Number(mainnetEata?.amount ?? 0n) / 10 ** 6;
     }
   }, [isDelegated, ephemeralAta, mainnetEata]);
+
+  const isPublic = useMemo(() => {
+    if (!walletAccounts?.isPermissionDelegated && walletAccounts?.mainnetPermission)
+      return walletAccounts.mainnetPermission.members === undefined;
+    if (walletAccounts?.isPermissionDelegated && walletAccounts?.ephemeralPermission)
+      return walletAccounts.ephemeralPermission.members === undefined;
+    return false;
+  }, [walletAccounts]);
 
   const handleAddressChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -104,6 +125,20 @@ export default function SimpleTransfer({ token }: TransferProps) {
       setIsWithdrawing(false);
     }
   }, [token, withdraw, withdrawAmount]);
+
+  const handleTogglePrivate = useCallback(async () => {
+    if (!token?.mint) return;
+    try {
+      setIsUpdatingPermission(true);
+      await updatePermission(new PublicKey(token?.mint), !isPublic);
+      toast.success('Permission updated');
+    } catch (error) {
+      console.error(error);
+      toast.error(`Error updating permission: ${error}`);
+    } finally {
+      setIsUpdatingPermission(false);
+    }
+  }, [isPublic, updatePermission, token?.mint]);
 
   useEffect(() => {
     const getBalance = async () => {
@@ -151,7 +186,7 @@ export default function SimpleTransfer({ token }: TransferProps) {
           </CardHeader>
           <CardContent>
             <div className='text-2xl font-bold text-blue-900 dark:text-blue-100'>
-              {balance ?? 0}
+              {(balance ?? 0).toFixed(2)}
             </div>
             <Muted className='text-blue-600! dark:text-blue-400!'>SPL Tokens</Muted>
           </CardContent>
@@ -172,7 +207,29 @@ export default function SimpleTransfer({ token }: TransferProps) {
             <div className='text-2xl font-bold text-purple-900 dark:text-purple-100'>
               {withdrawableBalance.toFixed(2)}
             </div>
-            <Muted className='text-purple-600! dark:text-purple-400!'>Private</Muted>
+            <div className='flex flex-row items-center gap-2'>
+              <Muted className='text-purple-600! dark:text-purple-400!'>
+                {isPublic ? 'Public' : 'Private'}
+              </Muted>
+              {walletAccounts?.isPermissionDelegated && (
+                <>
+                  {isUpdatingPermission ? (
+                    <Loader2Icon className='animate-spin mr-2 w-4 h-4' />
+                  ) : (
+                    <span className='relative group cursor-pointer'>
+                      {isPublic ? (
+                        <EyeOff className='w-4 h-4 text-purple-600' onClick={handleTogglePrivate} />
+                      ) : (
+                        <Eye className='w-4 h-4 text-purple-600' onClick={handleTogglePrivate} />
+                      )}
+                      <span className='pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity absolute bottom-full mb-2 left-1/2 -translate-x-1/2 whitespace-nowrap bg-gray-800 text-white text-xs rounded px-2 py-1 z-10'>
+                        Toggle between public and private
+                      </span>
+                    </span>
+                  )}
+                </>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>

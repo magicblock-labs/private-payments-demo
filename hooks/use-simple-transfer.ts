@@ -4,8 +4,8 @@ import { useBlockhashCache } from '@/contexts/BlockhashCacheContext';
 import { VALIDATOR_PUBKEY } from '@/lib/constants';
 import {
   DELEGATION_PROGRAM_ID,
-  GetCommitmentSignature,
   createEataPermissionIx,
+  delegateEataPermissionIx,
   delegateIx,
   deriveEphemeralAta,
   deriveVault,
@@ -22,7 +22,6 @@ import {
   createAssociatedTokenAccountIdempotentInstruction,
   createTransferCheckedInstruction,
   getAssociatedTokenAddressSync,
-  unpackAccount,
 } from '@solana/spl-token';
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
 import { useConnection } from '@solana/wallet-adapter-react';
@@ -90,7 +89,8 @@ export default function useSimpleTransfer({
       const tokenMintPk = tokenMint;
 
       let preliminaryTx: Transaction | undefined;
-      let mainnetTx: Transaction | undefined;
+      let initTx: Transaction | undefined;
+      let delegateTx: Transaction | undefined;
 
       const [vault, vaultBump] = deriveVault(tokenMintPk);
       const vaultAta = getAssociatedTokenAddressSync(tokenMintPk, vault, true, TOKEN_PROGRAM_ID);
@@ -111,22 +111,22 @@ export default function useSimpleTransfer({
       // If the vault does not exist, we need to initialize it
       if (!vaultInfo) {
         const vaultIx = initVaultIx(vault, tokenMintPk, wallet.publicKey, vaultBump);
-        mainnetTx = mainnetTx || new Transaction();
-        mainnetTx.add(vaultIx);
+        initTx = initTx || new Transaction();
+        initTx.add(vaultIx);
       }
       if (!vaultAtaAccount) {
         const vaultAtaIx = initVaultAtaIx(wallet.publicKey, vaultAta, vault, tokenMintPk);
-        mainnetTx = mainnetTx || new Transaction();
-        mainnetTx.add(vaultAtaIx);
+        initTx = initTx || new Transaction();
+        initTx.add(vaultAtaIx);
       }
 
       if (!senderAccounts.ephemeralAta) {
         // Sender EATA does not exist, we need to initialize it
-        mainnetTx = await initializeDeposit({
+        initTx = await initializeDeposit({
           payer: wallet.publicKey,
           user: wallet.publicKey,
           tokenMint: tokenMintPk,
-          transaction: mainnetTx,
+          transaction: initTx,
         });
       } else {
         // If the sender has a deposit, we need to undelegate to transfer more tokens to it
@@ -144,11 +144,11 @@ export default function useSimpleTransfer({
       const recipientIsDelegated = recipientAccounts?.isDelegated;
 
       if (!recipientAccounts.mainnetEata) {
-        mainnetTx = await initializeDeposit({
+        initTx = await initializeDeposit({
           payer: wallet.publicKey,
           user: recipientPk,
           tokenMint: tokenMintPk,
-          transaction: mainnetTx,
+          transaction: initTx,
         });
       }
 
@@ -162,17 +162,30 @@ export default function useSimpleTransfer({
           wallet.publicKey,
           amountToDeposit,
         );
-        mainnetTx = mainnetTx || new Transaction();
-        mainnetTx.add(depositIx);
+        initTx = initTx || new Transaction();
+        initTx.add(depositIx);
       }
 
       // Make sure both deposits are delegated
       if (!senderIsDelegated || preliminaryTx) {
         const delegIx = delegateIx(wallet.publicKey, senderEata, senderEataBump, VALIDATOR_PUBKEY);
-        mainnetTx = mainnetTx || new Transaction();
-        mainnetTx.add(delegIx);
+        delegateTx = delegateTx || new Transaction();
+        delegateTx.add(delegIx);
       }
 
+      // Make sure the sender has permission to delegate
+      if (!senderAccounts.isPermissionDelegated) {
+        const delegIx = delegateEataPermissionIx(
+          wallet.publicKey,
+          senderEata,
+          senderEataBump,
+          VALIDATOR_PUBKEY,
+        );
+        delegateTx = delegateTx || new Transaction();
+        delegateTx.add(delegIx);
+      }
+
+      // Make sure the recipient eata is delegated
       if (!recipientIsDelegated) {
         const delegIx = delegateIx(
           wallet.publicKey,
@@ -180,8 +193,20 @@ export default function useSimpleTransfer({
           recipientEataBump,
           VALIDATOR_PUBKEY,
         );
-        mainnetTx = mainnetTx || new Transaction();
-        mainnetTx.add(delegIx);
+        delegateTx = delegateTx || new Transaction();
+        delegateTx.add(delegIx);
+      }
+
+      // Make sure the recipient eata has permission to delegate
+      if (!recipientAccounts.isPermissionDelegated) {
+        const delegIx = delegateEataPermissionIx(
+          wallet.publicKey,
+          recipientEata,
+          recipientEataBump,
+          VALIDATOR_PUBKEY,
+        );
+        delegateTx = delegateTx || new Transaction();
+        delegateTx.add(delegIx);
       }
 
       // Transfer the amount from the sender to the recipient
@@ -225,9 +250,17 @@ export default function useSimpleTransfer({
           },
         },
         {
-          name: 'mainnetTx',
-          tx: mainnetTx,
-          signedTx: mainnetTx,
+          name: 'initTx',
+          tx: initTx,
+          signedTx: initTx,
+          blockhash: mainnet.blockhash,
+          connection,
+          callback: (signature: string) => connection.confirmTransaction(signature),
+        },
+        {
+          name: 'delegateTx',
+          tx: delegateTx,
+          signedTx: delegateTx,
           blockhash: mainnet.blockhash,
           connection,
           callback: (signature: string) => connection.confirmTransaction(signature),
