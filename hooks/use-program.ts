@@ -48,7 +48,7 @@ export function useProgram() {
       await conn.confirmTransaction(signature);
       return signature;
     },
-    [wallet, connection, ephemeralConnection, mainnet.blockhash, ephemeral.blockhash],
+    [wallet, connection, ephemeralConnection, mainnet?.blockhash, ephemeral?.blockhash],
   );
 
   const initializeEata = useCallback(
