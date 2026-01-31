@@ -67,63 +67,67 @@ export function useTokenAccount({ user, tokenMint }: TokenAccountProps): TokenAc
   const getAta = useCallback(async () => {
     if (!user || !ata || !eata || !permissionPda) return;
 
-    const [ataInfo, eataInfo, permissionPdaInfo] = await connection.getMultipleAccountsInfo([
-      ata,
-      eata,
-      permissionPda,
-    ]);
+    try {
+      const [ataInfo, eataInfo, permissionPdaInfo] = await connection.getMultipleAccountsInfo([
+        ata,
+        eata,
+        permissionPda,
+      ]);
 
-    if (permissionPdaInfo) {
-      const delegated = permissionPdaInfo.owner.equals(new PublicKey(DELEGATION_PROGRAM_ID));
-      setIsPermissionDelegated(delegated);
-      setMainnetPermission(deserializePermission(permissionPdaInfo.data));
+      if (permissionPdaInfo) {
+        const delegated = permissionPdaInfo.owner.equals(new PublicKey(DELEGATION_PROGRAM_ID));
+        setIsPermissionDelegated(delegated);
+        setMainnetPermission(deserializePermission(permissionPdaInfo.data));
+
+        try {
+          const epehemeralPermissionInfo = await ephemeralConnection?.getAccountInfo(permissionPda);
+          if (epehemeralPermissionInfo) {
+            setEphemeralPermission(deserializePermission(epehemeralPermissionInfo.data));
+          }
+        } catch (error) {
+          console.error('Error getting ephemeral permission info:', error);
+        }
+      } else {
+        setIsPermissionDelegated(false);
+        setMainnetPermission(null);
+        setEphemeralPermission(null);
+      }
 
       try {
-        const epehemeralPermissionInfo = await ephemeralConnection?.getAccountInfo(permissionPda);
-        if (epehemeralPermissionInfo) {
-          setEphemeralPermission(deserializePermission(epehemeralPermissionInfo.data));
-        }
-      } catch (error) {
-        console.error('Error getting ephemeral permission info:', error);
-      }
-    } else {
-      setIsPermissionDelegated(false);
-      setMainnetPermission(null);
-      setEphemeralPermission(null);
-    }
+        if (ataInfo) {
+          const decodedMainnetAta = unpackAccount(ata, ataInfo);
+          setMainnetAta(decodedMainnetAta);
+          setMainnetEata(eataInfo ? decodeEphemeralAta(eataInfo) : null);
+          if (eataInfo?.owner.equals(new PublicKey(DELEGATION_PROGRAM_ID))) {
+            setIsDelegated(true);
 
-    try {
-      if (ataInfo) {
-        const decodedMainnetAta = unpackAccount(ata, ataInfo);
-        setMainnetAta(decodedMainnetAta);
-        setMainnetEata(eataInfo ? decodeEphemeralAta(eataInfo) : null);
-        if (eataInfo?.owner.equals(new PublicKey(DELEGATION_PROGRAM_ID))) {
-          setIsDelegated(true);
+            let ephemeralAtaInfo = null;
+            try {
+              ephemeralAtaInfo = await ephemeralConnection?.getAccountInfo(ata);
+            } catch (error) {
+              console.error('Error getting ephemeral account info:', error);
+            }
 
-          let ephemeralAtaInfo = null;
-          try {
-            ephemeralAtaInfo = await ephemeralConnection?.getAccountInfo(ata);
-          } catch (error) {
-            console.error('Error getting account info:', error);
-          }
-
-          if (ephemeralAtaInfo) {
-            const decodedEphemeralAta = unpackAccount(ata, ephemeralAtaInfo);
-            setEphemeralAta(decodedEphemeralAta);
+            if (ephemeralAtaInfo) {
+              const decodedEphemeralAta = unpackAccount(ata, ephemeralAtaInfo);
+              setEphemeralAta(decodedEphemeralAta);
+            } else {
+              setEphemeralAta(null);
+            }
           } else {
+            setIsDelegated(false);
             setEphemeralAta(null);
           }
         } else {
-          setIsDelegated(false);
+          setMainnetAta(null);
+          setMainnetEata(null);
           setEphemeralAta(null);
         }
-      } else {
-        setMainnetAta(null);
-        setMainnetEata(null);
-        setEphemeralAta(null);
+      } catch (error) {
+        console.error('Error decoding account info:', error);
       }
     } catch (error) {
-      console.error('Error getting account info:', error);
+      console.error('Error getting multiple accounts info:', error);
     }
   }, [user, ata, eata, connection, ephemeralConnection, permissionPda]);
 
