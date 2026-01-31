@@ -41,7 +41,7 @@
   "scripts": {
     "dev": "next dev --webpack",
     "build": "next build --webpack",
-    "start": "next start --webpack",
+    "start": "next start",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
     "format": "prettier --write \"{app,components,hooks,lib,styles,views}/**/*.{js,jsx,ts,tsx,json,css,scss,md}\"",
