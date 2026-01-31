@@ -120,7 +120,7 @@ export default function useSimpleTransfer({
         initTx.add(vaultAtaIx);
       }
 
-      if (!senderAccounts.ephemeralAta) {
+      if (!senderAccounts.mainnetEata) {
         // Sender EATA does not exist, we need to initialize it
         initTx = await initializeDeposit({
           payer: wallet.publicKey,
