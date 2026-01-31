@@ -82,7 +82,7 @@ export default function useSimpleTransfer({
         !ephemeral.blockhash ||
         !mainnet.blockhash
       )
-        return;
+        throw new Error('Transfer prerequisites not ready');
 
       const tokenAmount = BigInt(Math.round(10 ** 6 * amount));
       const recipientPk = recipientAccounts.user;
@@ -318,7 +318,7 @@ export default function useSimpleTransfer({
         !ephemeral.blockhash ||
         !mainnet.blockhash
       )
-        return;
+        throw new Error('Withdraw prerequisites not ready');
 
       const tokenAmount = BigInt(Math.round(10 ** 6 * amount));
 
