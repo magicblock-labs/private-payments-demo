@@ -220,7 +220,7 @@ export default function useSimpleTransfer() {
               true,
               TOKEN_PROGRAM_ID,
             ),
-            tokenMint,
+            tokenMint: tokenMintPk,
             tokenProgram: TOKEN_PROGRAM_ID,
           })
           .instruction();
