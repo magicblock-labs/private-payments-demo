@@ -19,6 +19,8 @@ import { useTokens } from '@/hooks/use-tokens';
 import { shortKey } from '@/lib/utils';
 import {
   createEataPermissionIx,
+  DEFAULT_PRIVATE_VALIDATOR,
+  delegateEataPermissionIx,
   deriveEphemeralAta,
   deriveVault,
   initEphemeralAtaIx,
@@ -129,6 +131,12 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
           eataBump,
         );
         const createPermissionIx = createEataPermissionIx(eata, wallet.publicKey, eataBump);
+        const delegatePermissionIx = delegateEataPermissionIx(
+          wallet.publicKey,
+          eata,
+          eataBump,
+          DEFAULT_PRIVATE_VALIDATOR,
+        );
 
         let depositIx = null;
         if (deposit) {
@@ -152,6 +160,7 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
           vaultAtaIx,
           initIx,
           createPermissionIx,
+          delegatePermissionIx,
         );
         if (deposit) {
           finalTx.add(depositIx!);

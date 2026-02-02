@@ -3,8 +3,8 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { useProgram } from '@/hooks/use-program';
-import { VALIDATOR_PUBKEY } from '@/lib/constants';
 import { TokenListEntry } from '@/lib/types';
+import { DEFAULT_PRIVATE_VALIDATOR } from '@magicblock-labs/ephemeral-rollups-sdk';
 import { PublicKey } from '@solana/web3.js';
 import { Loader2Icon } from 'lucide-react';
 import { useState } from 'react';
@@ -63,7 +63,7 @@ export default function DepositActions({
     if (!token || !depositUser) return;
     setIsDelegating(true);
     try {
-      await delegate(depositUser, new PublicKey(token.mint), VALIDATOR_PUBKEY);
+      await delegate(depositUser, new PublicKey(token.mint), DEFAULT_PRIVATE_VALIDATOR);
       toast.success(`Delegated successfully`);
     } catch (error) {
       toast.error(`Failed to delegate: ${error}`);
