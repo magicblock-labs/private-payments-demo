@@ -8,8 +8,32 @@ const SELECTED_TOKEN_CHANGE_EVENT = 'selected-token-changed';
 
 export function useTokens() {
   const isMountedRef = useRef(true);
-  const [tokenList, setTokenList] = useState<TokenListEntry[]>([]);
-  const [selectedToken, setSelectedToken] = useState<TokenListEntry | undefined>();
+  const hasHydratedTokensRef = useRef(false);
+  const hasHydratedSelectedTokenRef = useRef(false);
+  const [tokenList, setTokenList] = useState<TokenListEntry[]>(() => {
+    if (typeof window === 'undefined') {
+      return [];
+    }
+    try {
+      const storedTokens = localStorage.getItem(TOKENS_STORAGE_KEY);
+      return storedTokens ? (JSON.parse(storedTokens) as TokenListEntry[]) : [];
+    } catch (error) {
+      console.error('Error loading tokens:', error);
+      return [];
+    }
+  });
+  const [selectedToken, setSelectedToken] = useState<TokenListEntry | undefined>(() => {
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+    try {
+      const storedSelectedToken = localStorage.getItem(SELECTED_TOKEN_STORAGE_KEY);
+      return storedSelectedToken ? (JSON.parse(storedSelectedToken) as TokenListEntry) : undefined;
+    } catch (error) {
+      console.error('Error loading selected token:', error);
+      return undefined;
+    }
+  });
 
   // Track component lifecycle
   useEffect(() => {
@@ -43,55 +67,15 @@ export function useTokens() {
     };
   }, []);
 
-  // Load tokens from localStorage on mount
-  useEffect(() => {
-    try {
-      const storedTokens = localStorage.getItem(TOKENS_STORAGE_KEY);
-      if (storedTokens) {
-        const parsedTokens = JSON.parse(storedTokens);
-        setTimeout(() => {
-          setTokenList(parsedTokens);
-        }, 0);
-      }
-    } catch (error) {
-      console.error('Error loading tokens:', error);
-    }
-  }, []); // Only run on mount
-
-  // Load selected token from localStorage on mount
-  useEffect(() => {
-    try {
-      const storedSelectedToken = localStorage.getItem(SELECTED_TOKEN_STORAGE_KEY);
-      if (storedSelectedToken) {
-        const parsedToken = JSON.parse(storedSelectedToken);
-        setTimeout(() => {
-          setSelectedToken(parsedToken);
-        }, 0);
-      }
-    } catch (error) {
-      console.error('Error loading selected token:', error);
-    }
-  }, []); // Only run on mount
-
   // Save tokens to localStorage whenever they change
   const setTokens = useCallback(
     (newTokens: TokenListEntry[] | ((prev: TokenListEntry[]) => TokenListEntry[])) => {
       if (!isMountedRef.current) {
         return;
       }
-      setTokenList(prevTokens => {
-        const updatedTokens = typeof newTokens === 'function' ? newTokens(prevTokens) : newTokens;
-        try {
-          localStorage.setItem(TOKENS_STORAGE_KEY, JSON.stringify(updatedTokens));
-
-          // Dispatch custom event to notify other instances
-          const event = new CustomEvent(TOKENS_CHANGE_EVENT, { detail: updatedTokens });
-          window.dispatchEvent(event);
-        } catch (error) {
-          console.error('Error saving tokens:', error);
-        }
-        return updatedTokens;
-      });
+      setTokenList(prevTokens =>
+        typeof newTokens === 'function' ? newTokens(prevTokens) : newTokens,
+      );
     },
     [],
   );
@@ -106,22 +90,46 @@ export function useTokens() {
       if (!isMountedRef.current) {
         return;
       }
-      setSelectedToken(prevToken => {
-        const updatedToken = typeof newToken === 'function' ? newToken(prevToken) : newToken;
-        try {
-          localStorage.setItem(SELECTED_TOKEN_STORAGE_KEY, JSON.stringify(updatedToken));
-
-          // Dispatch custom event to notify other instances
-          const event = new CustomEvent(SELECTED_TOKEN_CHANGE_EVENT, { detail: updatedToken });
-          window.dispatchEvent(event);
-        } catch (error) {
-          console.error('Error saving selected token:', error);
-        }
-        return updatedToken;
-      });
+      setSelectedToken(prevToken =>
+        typeof newToken === 'function' ? newToken(prevToken) : newToken,
+      );
     },
     [],
   );
+
+  useEffect(() => {
+    if (!hasHydratedTokensRef.current) {
+      hasHydratedTokensRef.current = true;
+      return;
+    }
+    if (!isMountedRef.current) {
+      return;
+    }
+    try {
+      localStorage.setItem(TOKENS_STORAGE_KEY, JSON.stringify(tokenList));
+      const event = new CustomEvent(TOKENS_CHANGE_EVENT, { detail: tokenList });
+      window.dispatchEvent(event);
+    } catch (error) {
+      console.error('Error saving tokens:', error);
+    }
+  }, [tokenList]);
+
+  useEffect(() => {
+    if (!hasHydratedSelectedTokenRef.current) {
+      hasHydratedSelectedTokenRef.current = true;
+      return;
+    }
+    if (!isMountedRef.current) {
+      return;
+    }
+    try {
+      localStorage.setItem(SELECTED_TOKEN_STORAGE_KEY, JSON.stringify(selectedToken));
+      const event = new CustomEvent(SELECTED_TOKEN_CHANGE_EVENT, { detail: selectedToken });
+      window.dispatchEvent(event);
+    } catch (error) {
+      console.error('Error saving selected token:', error);
+    }
+  }, [selectedToken]);
 
   return { tokenList, selectedToken, setTokens, setToken };
 }
