@@ -69,7 +69,6 @@
     "@types/react": "^19.2.10",
     "@types/react-dom": "^19.2.3",
     "assert": "^2.1.0",
-    "autoprefixer": "^10.4.21",
     "browserify-zlib": "^0.2.0",
     "buffer": "^6.0.3",
     "buffer-browserify": "^0.2.5",
@@ -91,7 +90,7 @@
     "process": "^0.11.10",
     "stream-browserify": "^3.0.0",
     "stream-http": "^3.2.0",
-    "tailwindcss": "^4.0.0",
+    "tailwindcss": "^4.1.11",
     "typescript": "^5.4.3",
     "typescript-eslint": "^8.35.0"
   },
