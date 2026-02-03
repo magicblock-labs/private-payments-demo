@@ -13,6 +13,16 @@ const flatconf = [
       'prettier/prettier': 'error',
       'prefer-const': 'error',
       'no-console': ['error', { allow: ['error', 'warn'] }],
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          vars: "all",
+          args: 'after-used',
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+        },
+      ],
     },
   },
 ];

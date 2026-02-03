@@ -1,21 +1,22 @@
+import { useTokenAccountContext } from '@/contexts/TokenAccountContext';
 import { usePrivateRollupAuth } from '../hooks/use-private-rollup-auth';
 import ManageDeposit from './ManageDeposit';
 import MissingAddressCard from './MissingAddressCard';
 import Transfer from './Transfer';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader } from './ui/card';
-import { H2, H3, Muted } from '@/components/ui/typography';
+import { H2 } from '@/components/ui/typography';
 import { useTokens } from '@/hooks/use-tokens';
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
-import { CircleQuestionMark, Loader2Icon } from 'lucide-react';
-import React, { useState } from 'react';
+import { Loader2Icon } from 'lucide-react';
+import React from 'react';
 
 const Deposit: React.FC = () => {
   const { authToken, isAuthenticating, getToken } = usePrivateRollupAuth();
   const { selectedToken: token } = useTokens();
   const wallet = useAnchorWallet();
-  const [selectedAddress, setSelectedAddress] = useState<string | undefined>();
+  const { selectedAddress } = useTokenAccountContext();
 
   return (
     <>
@@ -30,12 +31,7 @@ const Deposit: React.FC = () => {
             ) : (
               <Loader2Icon className='animate-spin' />
             )}
-            <Transfer
-              token={token}
-              setSelectedAddress={setSelectedAddress}
-              user={wallet?.publicKey?.toBase58()}
-              isMainnet
-            />
+            <Transfer token={token} user={wallet?.publicKey?.toBase58()} isMainnet />
             {selectedAddress ? (
               <ManageDeposit token={token} user={new PublicKey(selectedAddress)} isMainnet />
             ) : (
@@ -61,7 +57,7 @@ const Deposit: React.FC = () => {
             ) : (
               <Loader2Icon className='animate-spin' />
             )}
-            <Transfer token={token} setSelectedAddress={setSelectedAddress} />
+            <Transfer token={token} />
             {selectedAddress ? (
               <ManageDeposit token={token} user={new PublicKey(selectedAddress)} />
             ) : (

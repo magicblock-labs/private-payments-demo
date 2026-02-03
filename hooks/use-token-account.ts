@@ -12,7 +12,7 @@ import {
 import { Account, getAssociatedTokenAddressSync, unpackAccount } from '@solana/spl-token';
 import { useConnection } from '@solana/wallet-adapter-react';
 import { AccountInfo, PublicKey } from '@solana/web3.js';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 export interface TokenAccountProps {
   user?: PublicKey | string;
@@ -33,6 +33,7 @@ export interface TokenAccounts {
   isDelegated: boolean;
   isPermissionDelegated: boolean;
   accessDenied: boolean;
+  getAtas: () => Promise<void>;
 }
 
 export function useTokenAccount({ user, tokenMint }: TokenAccountProps): TokenAccounts {
@@ -45,34 +46,50 @@ export function useTokenAccount({ user, tokenMint }: TokenAccountProps): TokenAc
   const [ephemeralPermission, setEphemeralPermission] = useState<Permission | null>(null);
   const [isDelegated, setIsDelegated] = useState(false);
   const [isPermissionDelegated, setIsPermissionDelegated] = useState(false);
+  const requestId = useRef(0);
   const tokenAccount = useMemo(() => {
     return isDelegated ? ephemeralAta : mainnetAta;
   }, [ephemeralAta, mainnetAta, isDelegated]);
 
+  const userKey = useMemo(() => {
+    if (!user) return;
+    return new PublicKey(user);
+  }, [user]);
+
+  const tokenMintKey = useMemo(() => {
+    if (!tokenMint) return;
+    return new PublicKey(tokenMint);
+  }, [tokenMint]);
+
   const ata = useMemo(() => {
-    if (!user || !tokenMint) return;
-    return getAssociatedTokenAddressSync(new PublicKey(tokenMint), new PublicKey(user), true);
-  }, [user, tokenMint]);
+    if (!userKey || !tokenMintKey) return;
+    return getAssociatedTokenAddressSync(tokenMintKey, userKey, true);
+  }, [userKey, tokenMintKey]);
 
   const eata = useMemo(() => {
-    if (!user || !tokenMint) return;
-    return deriveEphemeralAta(new PublicKey(user), new PublicKey(tokenMint))[0];
-  }, [user, tokenMint]);
+    if (!userKey || !tokenMintKey) return;
+    return deriveEphemeralAta(userKey, tokenMintKey)[0];
+  }, [userKey, tokenMintKey]);
 
   const permissionPda = useMemo(() => {
     if (!eata) return;
     return permissionPdaFromAccount(eata);
   }, [eata]);
 
-  const getAta = useCallback(async () => {
-    if (!user || !ata || !eata || !permissionPda) return;
+  const getAtas = useCallback(async () => {
+    if (!userKey || !ata || !eata || !permissionPda) return;
+    const currentRequestId = ++requestId.current;
+
+    const mainnetSlot = await connection.getSlot();
+    const ephemeralSlot = await ephemeralConnection?.getSlot();
 
     try {
-      const [ataInfo, eataInfo, permissionPdaInfo] = await connection.getMultipleAccountsInfo([
-        ata,
-        eata,
-        permissionPda,
-      ]);
+      const [ataInfo, eataInfo, permissionPdaInfo] = await connection.getMultipleAccountsInfo(
+        [ata, eata, permissionPda],
+        { minContextSlot: mainnetSlot },
+      );
+
+      if (requestId.current !== currentRequestId) return;
 
       if (permissionPdaInfo) {
         const delegated = permissionPdaInfo.owner.equals(new PublicKey(DELEGATION_PROGRAM_ID));
@@ -80,8 +97,12 @@ export function useTokenAccount({ user, tokenMint }: TokenAccountProps): TokenAc
         setMainnetPermission(deserializePermission(permissionPdaInfo.data));
 
         try {
-          const epehemeralPermissionInfo = await ephemeralConnection?.getAccountInfo(permissionPda);
+          const epehemeralPermissionInfo = await ephemeralConnection?.getAccountInfo(
+            permissionPda,
+            { minContextSlot: ephemeralSlot },
+          );
           if (epehemeralPermissionInfo) {
+            if (requestId.current !== currentRequestId) return;
             setEphemeralPermission(deserializePermission(epehemeralPermissionInfo.data));
           }
         } catch (error) {
@@ -103,12 +124,15 @@ export function useTokenAccount({ user, tokenMint }: TokenAccountProps): TokenAc
 
             let ephemeralAtaInfo = null;
             try {
-              ephemeralAtaInfo = await ephemeralConnection?.getAccountInfo(ata);
+              ephemeralAtaInfo = await ephemeralConnection?.getAccountInfo(ata, {
+                minContextSlot: ephemeralSlot,
+              });
             } catch (error) {
               console.error('Error getting ephemeral account info:', error);
             }
 
             if (ephemeralAtaInfo) {
+              if (requestId.current !== currentRequestId) return;
               const decodedEphemeralAta = unpackAccount(ata, ephemeralAtaInfo);
               setEphemeralAta(decodedEphemeralAta);
             } else {
@@ -129,13 +153,14 @@ export function useTokenAccount({ user, tokenMint }: TokenAccountProps): TokenAc
     } catch (error) {
       console.error('Error getting multiple accounts info:', error);
     }
-  }, [user, ata, eata, connection, ephemeralConnection, permissionPda]);
+  }, [userKey, ata, eata, connection, ephemeralConnection, permissionPda]);
 
   const handleAtaChange = useCallback(
     (mainnet: boolean, notification: AccountInfo<Buffer>) => {
       if (!ata) return;
       try {
-        const decoded = unpackAccount(ata, notification);
+        // Skipping owner check to account for undelegation on ER
+        const decoded = unpackAccount(ata, notification, notification.owner);
         if (decoded) {
           if (mainnet) {
             setMainnetAta(decoded);
@@ -144,13 +169,13 @@ export function useTokenAccount({ user, tokenMint }: TokenAccountProps): TokenAc
           }
         }
       } catch (error) {
-        console.error('Error getting account info:', error);
+        console.error('Error getting account info:', error, notification);
       }
     },
     [ata],
   );
 
-  const handleEataChange = useCallback((notification: AccountInfo<Buffer>) => {
+  const handleEataChange = useCallback(async (notification: AccountInfo<Buffer>) => {
     try {
       const decoded = decodeEphemeralAta(notification);
       if (decoded) {
@@ -202,12 +227,24 @@ export function useTokenAccount({ user, tokenMint }: TokenAccountProps): TokenAc
 
   // Initialize the deposit
   useEffect(() => {
+    requestId.current += 1;
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    void getAta();
-  }, [getAta]);
+    setEphemeralAta(null);
+    setMainnetAta(null);
+    setMainnetEata(null);
+    setMainnetPermission(null);
+    setEphemeralPermission(null);
+    setIsDelegated(false);
+    setIsPermissionDelegated(false);
+  }, [userKey, tokenMintKey]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void getAtas();
+  }, [getAtas]);
 
   return {
-    user: user ? new PublicKey(user) : undefined,
+    user: userKey,
     ata,
     eata,
     permissionPda,
@@ -220,5 +257,6 @@ export function useTokenAccount({ user, tokenMint }: TokenAccountProps): TokenAc
     isDelegated,
     isPermissionDelegated,
     accessDenied: isDelegated && !ephemeralAta,
+    getAtas,
   };
 }

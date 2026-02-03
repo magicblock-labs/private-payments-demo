@@ -14,12 +14,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { H3 } from '@/components/ui/typography';
-import { useSubscription } from '@/hooks/use-subscription';
+import { useTokenAccountContext } from '@/contexts/TokenAccountContext';
 import { useTokens } from '@/hooks/use-tokens';
 import { shortKey } from '@/lib/utils';
 import {
-  createEataPermissionIx,
   DEFAULT_PRIVATE_VALIDATOR,
+  createEataPermissionIx,
   delegateEataPermissionIx,
   deriveEphemeralAta,
   deriveVault,
@@ -29,7 +29,6 @@ import {
   transferToVaultIx,
 } from '@magicblock-labs/ephemeral-rollups-sdk';
 import {
-  AccountLayout,
   MINT_SIZE,
   TOKEN_PROGRAM_ID,
   createAssociatedTokenAccountIdempotentInstruction,
@@ -40,27 +39,19 @@ import {
 } from '@solana/spl-token';
 import { useAnchorWallet, useConnection } from '@solana/wallet-adapter-react';
 import { Keypair, SystemProgram, Transaction } from '@solana/web3.js';
-import { PublicKey } from '@solana/web3.js';
 import { Coins, DollarSign, Loader2Icon, PlusCircle, TrendingUp } from 'lucide-react';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
   const { connection } = useConnection();
   const wallet = useAnchorWallet();
   const [amount, setAmount] = useState(1000);
-  const [balance, setBalance] = useState<number | null>(null);
   const { tokenList, setTokens, selectedToken, setToken } = useTokens();
+  const {
+    walletAccounts: { mainnetAta },
+  } = useTokenAccountContext();
   const [isCreating, setIsCreating] = useState(false);
-  const userTokenAccount = useMemo(() => {
-    if (!selectedToken || !wallet?.publicKey) return;
-    return getAssociatedTokenAddressSync(
-      new PublicKey(selectedToken?.mint),
-      wallet.publicKey,
-      true,
-      TOKEN_PROGRAM_ID,
-    );
-  }, [selectedToken, wallet]);
 
   const createToken = useCallback(
     async (mintKp: Keypair, deposit: boolean) => {
@@ -210,44 +201,12 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
     [amount, wallet, connection, tokenList, setTokens, setToken],
   );
 
-  useEffect(() => {
-    const getBalance = async () => {
-      if (!selectedToken || !wallet?.publicKey) return;
-      try {
-        const balance = await connection.getTokenAccountBalance(
-          getAssociatedTokenAddressSync(
-            new PublicKey(selectedToken.mint),
-            wallet.publicKey,
-            true,
-            TOKEN_PROGRAM_ID,
-          ),
-        );
-        setBalance(Number(balance.value.uiAmount));
-      } catch (error) {
-        console.error('Error getting balance:', error);
-        setBalance(0);
-      }
-    };
-    getBalance();
-  }, [selectedToken, wallet, connection]);
-
   // Set default selected token
   useEffect(() => {
     if (tokenList.length > 0 && !selectedToken) {
       setToken(tokenList[0]);
     }
   }, [tokenList, setToken, selectedToken]);
-
-  useSubscription(connection, userTokenAccount, notification => {
-    const account = AccountLayout.decode(Uint8Array.from(notification.data));
-    setBalance(Number(account.amount) / 10 ** 6);
-  });
-
-  useEffect(() => {
-    if (wallet?.publicKey) {
-      setBalance(null);
-    }
-  }, [wallet?.publicKey]);
 
   const EmptyState = () => (
     <div className='text-center py-6 px-6'>
@@ -296,8 +255,10 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
         <div className='flex flex-col gap-3'>
           <Label className='text-sm font-medium text-foreground'>
             Select Token{' '}
-            {balance !== null && (
-              <span className='text-muted-foreground font-normal'>(Balance: {balance})</span>
+            {mainnetAta !== null && (
+              <span className='text-muted-foreground font-normal'>
+                (Balance: {Number(mainnetAta.amount) / 10 ** 6})
+              </span>
             )}
           </Label>
           <Select

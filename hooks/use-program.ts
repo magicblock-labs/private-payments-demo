@@ -1,9 +1,12 @@
 import { useEphemeralConnection } from './use-ephemeral-connection';
 import { useBlockhashCache } from '@/contexts/BlockhashCacheContext';
+import { useTokenAccountContext } from '@/contexts/TokenAccountContext';
 import {
   AUTHORITY_FLAG,
   createEataPermissionIx,
   createUpdatePermissionInstruction,
+  DEFAULT_PRIVATE_VALIDATOR,
+  delegateEataPermissionIx,
   delegateIx,
   deriveEphemeralAta,
   deriveVault,
@@ -17,6 +20,7 @@ import {
 } from '@magicblock-labs/ephemeral-rollups-sdk';
 import {
   TOKEN_PROGRAM_ID,
+  createAssociatedTokenAccountIdempotentInstruction,
   createTransferCheckedInstruction,
   getAssociatedTokenAddressSync,
 } from '@solana/spl-token';
@@ -29,6 +33,7 @@ export function useProgram() {
   const { connection } = useConnection();
   const { ephemeralConnection } = useEphemeralConnection();
   const { mainnet, ephemeral } = useBlockhashCache();
+  const { walletAccounts, recipientAccounts } = useTokenAccountContext();
 
   const sendTransaction = useCallback(
     async (isEphemeral: boolean, transaction: Transaction) => {
@@ -57,10 +62,17 @@ export function useProgram() {
 
       const [eata, eataBump] = deriveEphemeralAta(user, tokenMint)!;
 
+      const ataIx = createAssociatedTokenAccountIdempotentInstruction(
+        wallet.publicKey,
+        getAssociatedTokenAddressSync(tokenMint, user, true),
+        user,
+        tokenMint,
+      );
       const initIx = initEphemeralAtaIx(eata, user, tokenMint, wallet.publicKey, eataBump);
       const createPermissionIx = createEataPermissionIx(eata, wallet.publicKey, eataBump);
 
       const transaction = new Transaction();
+      transaction.add(ataIx);
       transaction.add(initIx);
       transaction.add(createPermissionIx);
 
@@ -152,12 +164,33 @@ export function useProgram() {
       const [eata, eataBump] = deriveEphemeralAta(user, tokenMint);
 
       const ix = delegateIx(wallet.publicKey, eata, eataBump, validator);
+      const permissionIx = delegateEataPermissionIx(
+        wallet.publicKey,
+        eata,
+        eataBump,
+        DEFAULT_PRIVATE_VALIDATOR,
+      );
       const transaction = new Transaction();
       transaction.add(ix);
 
-      return sendTransaction(false, transaction);
+      const accounts =
+        user === walletAccounts.user
+          ? walletAccounts
+          : user === recipientAccounts.user
+            ? recipientAccounts
+            : undefined;
+      if (accounts && !accounts.isPermissionDelegated) {
+        transaction.add(permissionIx);
+      }
+
+      const signature = await sendTransaction(false, transaction);
+
+      // Refresh data of the delegate account
+      await accounts?.getAtas();
+
+      return signature;
     },
-    [wallet, sendTransaction],
+    [wallet, sendTransaction, walletAccounts, recipientAccounts],
   );
 
   const undelegate = useCallback(
@@ -168,9 +201,15 @@ export function useProgram() {
       const transaction = new Transaction();
       transaction.add(ix);
 
-      return sendTransaction(true, transaction);
+      const signature = await sendTransaction(true, transaction);
+
+      // Refresh data of the undelegate account
+      const accounts = wallet.publicKey === walletAccounts.user ? walletAccounts : undefined;
+      await accounts?.getAtas();
+
+      return signature;
     },
-    [wallet, sendTransaction],
+    [wallet, sendTransaction, walletAccounts],
   );
 
   const updatePermission = useCallback(

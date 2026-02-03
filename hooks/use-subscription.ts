@@ -1,12 +1,11 @@
-import { Connection } from '@solana/web3.js';
+import { AccountChangeCallback, Connection } from '@solana/web3.js';
 import { PublicKey } from '@solana/web3.js';
-import { AccountInfo } from '@solana/web3.js';
 import { useEffect, useRef } from 'react';
 
 export function useSubscription(
   connection: Connection | null,
   account?: PublicKey | string,
-  onAccountChange?: (accountInfo: AccountInfo<Buffer>) => void,
+  onAccountChange?: AccountChangeCallback,
 ) {
   const subscriptionId = useRef<number | null>(null);
 

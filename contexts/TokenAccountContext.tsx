@@ -27,7 +27,7 @@ interface TokenAccountContextValue {
   recipient?: PublicKey;
   mint?: PublicKey;
   selectedAddress?: string;
-  setSelectedAddress: React.Dispatch<React.SetStateAction<string | undefined>>;
+  setSelectedAddress: (address: string | undefined) => void;
   vault?: PublicKey;
   vaultAta?: PublicKey;
   vaultInfo?: AccountInfo<Buffer>;
@@ -133,7 +133,18 @@ export function TokenAccountProvider({
       recipient: recipientKey,
       mint: mintKey,
       selectedAddress,
-      setSelectedAddress,
+      setSelectedAddress: (address: string | undefined) => {
+        if (!address) {
+          setSelectedAddress(undefined);
+          return;
+        }
+        try {
+          new PublicKey(address);
+          setSelectedAddress(address);
+        } catch {
+          setSelectedAddress(undefined);
+        }
+      },
       vault,
       vaultAta,
       vaultInfo,

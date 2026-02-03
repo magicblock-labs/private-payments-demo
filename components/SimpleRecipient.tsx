@@ -5,6 +5,7 @@ import { H3, Muted } from '@/components/ui/typography';
 import { useTokenAccountContext } from '@/contexts/TokenAccountContext';
 import { shortKey } from '@/lib/utils';
 import { Shield, User, Wallet } from 'lucide-react';
+import { useMemo } from 'react';
 
 interface TransferProps {
   user?: string;
@@ -12,7 +13,12 @@ interface TransferProps {
 
 export default function SimpleRecipient({ user }: TransferProps) {
   const { recipientAccounts } = useTokenAccountContext();
-  const { ephemeralAta, mainnetAta, isDelegated } = recipientAccounts;
+  const { ephemeralAta, mainnetAta, mainnetPermission, ephemeralPermission } = recipientAccounts;
+  const isPublic = useMemo(() => {
+    if (ephemeralPermission) return ephemeralPermission.members === undefined;
+    if (mainnetPermission) return mainnetPermission.members === undefined;
+    return true;
+  }, [mainnetPermission, ephemeralPermission]);
 
   function mainnetBalance(): string {
     if (mainnetAta) {
@@ -72,7 +78,7 @@ export default function SimpleRecipient({ user }: TransferProps) {
                 {ephemeralBalance()}
               </div>
               <Muted className='text-purple-600! dark:text-purple-400!'>
-                {isDelegated ? 'Private' : 'Encrypted'}
+                {isPublic ? 'Public' : 'Private'}
               </Muted>
             </div>
           </div>

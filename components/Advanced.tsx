@@ -5,6 +5,8 @@ import { Muted } from './ui/typography';
 import Deposit from '@/components/Deposit';
 import Tokens from '@/components/Tokens';
 import VerificationToast from '@/components/VerificationToast';
+import { TokenAccountProvider } from '@/contexts/TokenAccountContext';
+import { useTokens } from '@/hooks/use-tokens';
 import magicBlockLogo from '@/public/magicblock_white.png';
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
 import { Settings } from 'lucide-react';
@@ -14,6 +16,7 @@ import React from 'react';
 
 export default function HomePage() {
   const wallet = useAnchorWallet();
+  const { selectedToken: token } = useTokens();
 
   return (
     <div className='min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800'>
@@ -48,19 +51,21 @@ export default function HomePage() {
 
         {/* Main Content */}
         <div className='flex flex-col gap-8 max-w-6xl mx-auto w-full'>
-          <Tokens deposit />
-          {wallet?.publicKey && (
-            <>
-              <Deposit />
-              <div className='flex justify-center'>
-                <Link href='/' className='text-center'>
-                  <Muted className='hover:text-foreground transition-colors duration-200 cursor-pointer'>
-                    ← Go to the simple view
-                  </Muted>
-                </Link>
-              </div>
-            </>
-          )}
+          <TokenAccountProvider mint={token?.mint}>
+            {wallet?.publicKey && (
+              <>
+                <Tokens deposit />
+                <Deposit />
+                <div className='flex justify-center'>
+                  <Link href='/' className='text-center'>
+                    <Muted className='hover:text-foreground transition-colors duration-200 cursor-pointer'>
+                      ← Go to the simple view
+                    </Muted>
+                  </Link>
+                </div>
+              </>
+            )}
+          </TokenAccountProvider>
         </div>
 
         <VerificationToast />

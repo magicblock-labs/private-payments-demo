@@ -1,5 +1,6 @@
 'use client';
 
+import { useTokenAccountContext } from '@/contexts/TokenAccountContext';
 import { useProgram } from '../hooks/use-program';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader } from './ui/card';
@@ -15,45 +16,35 @@ import { toast } from 'sonner';
 
 interface TransferProps {
   token?: TokenListEntry;
-  setSelectedAddress?: (address: string | undefined) => void;
   isMainnet?: boolean;
   user?: string;
 }
 
-const Transfer: React.FC<TransferProps> = ({ token, setSelectedAddress, user, isMainnet }) => {
+const Transfer: React.FC<TransferProps> = ({ token, user, isMainnet }) => {
   const { transfer } = useProgram();
   const [isTransferring, setIsTransferring] = useState(false);
   const [amount, setAmount] = useState(0);
-  const [address, setAddress] = useState<string | undefined>(undefined);
-
-  const handleAddressChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      try {
-        new PublicKey(e.target.value);
-        setAddress(e.target.value);
-        setSelectedAddress?.(e.target.value);
-      } catch {
-        setSelectedAddress?.(undefined);
-        toast.error('Invalid address');
-      }
-    },
-    [setSelectedAddress],
-  );
+  const { selectedAddress, setSelectedAddress } = useTokenAccountContext();
 
   const handleTransfer = useCallback(
     async (delegated: boolean) => {
-      if (!token || !address) return;
+      if (!token || !selectedAddress) return;
       setIsTransferring(true);
       try {
-        await transfer(new PublicKey(token.mint), amount, new PublicKey(address), delegated);
-        toast.success(`Transferred ${amount} tokens to ${address}`);
+        await transfer(
+          new PublicKey(token.mint),
+          amount,
+          new PublicKey(selectedAddress),
+          delegated,
+        );
+        toast.success(`Transferred ${amount} tokens to ${selectedAddress}`);
       } catch (error) {
         toast.error(`Error transferring tokens: ${error}`);
       } finally {
         setIsTransferring(false);
       }
     },
-    [token, transfer, amount, address],
+    [token, transfer, amount, selectedAddress],
   );
 
   return (
@@ -65,7 +56,7 @@ const Transfer: React.FC<TransferProps> = ({ token, setSelectedAddress, user, is
       <CardContent className='flex flex-col gap-4'>
         <div className='flex flex-col gap-2'>
           <Label htmlFor='address'>Address</Label>
-          <Input id='address' type='text' onChange={handleAddressChange} />
+          <Input id='address' type='text' onChange={e => setSelectedAddress(e.target.value)} />
         </div>
         <div className='flex flex-col gap-2'>
           <Label htmlFor='amount'>Amount</Label>
@@ -80,7 +71,7 @@ const Transfer: React.FC<TransferProps> = ({ token, setSelectedAddress, user, is
           <Button
             className='w-full'
             onClick={() => handleTransfer(false)}
-            disabled={isTransferring || !address || user === address}
+            disabled={isTransferring || !selectedAddress || user === selectedAddress}
           >
             Transfer
             {isTransferring && <Loader2Icon className='animate-spin' />}
@@ -89,7 +80,7 @@ const Transfer: React.FC<TransferProps> = ({ token, setSelectedAddress, user, is
           <Button
             className='w-full'
             onClick={() => handleTransfer(true)}
-            disabled={isTransferring || !address || user === address}
+            disabled={isTransferring || !selectedAddress || user === selectedAddress}
           >
             Delegated transfer
             {isTransferring && <Loader2Icon className='animate-spin' />}

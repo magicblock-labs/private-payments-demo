@@ -7,13 +7,9 @@ import { toast } from 'sonner';
 const TOKENS_STORAGE_KEY = 'private-rollup-auth-tokens';
 const TOKENS_CHANGE_EVENT = 'private-rollup-auth-tokens-changed';
 
-// Generate a unique instance ID
-let instanceCounter = 0;
-
 type AuthToken = { token: string; expiresAt: number };
 
 export function usePrivateRollupAuth() {
-  const instanceId = useRef(++instanceCounter);
   const wallet = useAnchorWallet();
   const { signMessage } = useWallet();
   const [tokens, setTokensState] = useState<Record<string, AuthToken>>({});

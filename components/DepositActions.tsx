@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 
 interface DepositActionsProps {
   token: TokenListEntry;
-  depositUser: PublicKey;
+  owner: PublicKey;
   isMainnet?: boolean;
   isDelegated: boolean;
   isWalletOwner?: boolean;
@@ -21,7 +21,7 @@ interface DepositActionsProps {
 
 export default function DepositActions({
   token,
-  depositUser,
+  owner,
   isMainnet,
   isDelegated,
   isWalletOwner,
@@ -34,43 +34,43 @@ export default function DepositActions({
   const [amount, setAmount] = useState(0);
 
   const handleDeposit = useCallback(async () => {
-    if (!token || !depositUser) return;
+    if (!token || !owner) return;
     setIsDepositing(true);
     try {
-      await depositTokens(depositUser, new PublicKey(token.mint), amount);
+      await depositTokens(owner, new PublicKey(token.mint), amount);
       toast.success(`Deposited ${amount} tokens`);
     } catch (error) {
       toast.error(`Failed to deposit ${amount} tokens: ${error}`);
     } finally {
       setIsDepositing(false);
     }
-  }, [token, depositUser, amount, depositTokens]);
+  }, [token, owner, amount, depositTokens]);
 
   const handleWithdraw = useCallback(async () => {
-    if (!token || !depositUser) return;
+    if (!token || !owner) return;
     setIsWithdrawing(true);
     try {
-      await withdraw(depositUser, new PublicKey(token.mint), amount);
+      await withdraw(owner, new PublicKey(token.mint), amount);
       toast.success(`Withdrawn ${amount} tokens`);
     } catch (error) {
       toast.error(`Failed to withdraw ${amount} tokens: ${error}`);
     } finally {
       setIsWithdrawing(false);
     }
-  }, [token, depositUser, amount, withdraw]);
+  }, [token, owner, amount, withdraw]);
 
   const handleDelegate = useCallback(async () => {
-    if (!token || !depositUser) return;
+    if (!token || !owner) return;
     setIsDelegating(true);
     try {
-      await delegate(depositUser, new PublicKey(token.mint), DEFAULT_PRIVATE_VALIDATOR);
+      await delegate(owner, new PublicKey(token.mint), DEFAULT_PRIVATE_VALIDATOR);
       toast.success(`Delegated successfully`);
     } catch (error) {
       toast.error(`Failed to delegate: ${error}`);
     } finally {
       setIsDelegating(false);
     }
-  }, [token, depositUser, delegate]);
+  }, [token, owner, delegate]);
 
   const handleUndelegate = useCallback(async () => {
     if (!token) return;

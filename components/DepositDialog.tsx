@@ -17,15 +17,17 @@ import { toast } from 'sonner';
 
 interface DepositDialogProps {
   ata: PublicKey;
+  eata: PublicKey;
   token: TokenListEntry;
-  depositUser: PublicKey;
+  owner: PublicKey;
   permissionPda: PublicKey;
 }
 
 export default function DepositDialog({
   ata,
+  eata,
   token,
-  depositUser,
+  owner,
   permissionPda,
 }: DepositDialogProps) {
   return (
@@ -43,11 +45,11 @@ export default function DepositDialog({
           </DialogHeader>
           <div className='grid gap-4'>
             <div className='grid gap-3'>
-              <Label htmlFor='deposit-address'>Deposit address</Label>
+              <Label htmlFor='deposit-address'>ATA address</Label>
               <div className='flex flex-row'>
                 <Input
-                  id='deposit-address'
-                  name='name'
+                  id='ata-address'
+                  name='ata'
                   className='rounded-r-none'
                   defaultValue={ata.toBase58()}
                   disabled
@@ -57,6 +59,28 @@ export default function DepositDialog({
                   className='rounded-l-none'
                   onClick={() => {
                     navigator.clipboard.writeText(ata.toBase58());
+                    toast.info('Copied to clipboard');
+                  }}
+                >
+                  <CopyIcon />
+                </Button>
+              </div>
+            </div>
+            <div className='grid gap-3'>
+              <Label htmlFor='deposit-address'>EATA address</Label>
+              <div className='flex flex-row'>
+                <Input
+                  id='eata-address'
+                  name='eata'
+                  className='rounded-r-none'
+                  defaultValue={eata.toBase58()}
+                  disabled
+                />
+                <Button
+                  variant='outline'
+                  className='rounded-l-none'
+                  onClick={() => {
+                    navigator.clipboard.writeText(eata.toBase58());
                     toast.info('Copied to clipboard');
                   }}
                 >
@@ -81,20 +105,20 @@ export default function DepositDialog({
               </div>
             </div>
             <div className='grid gap-3'>
-              <Label htmlFor='username'>Deposit owner</Label>
+              <Label htmlFor='username'>Owner</Label>
               <div className='flex flex-row'>
                 <Input
                   id='username'
                   name='username'
                   className='rounded-r-none'
-                  defaultValue={depositUser?.toBase58()}
+                  defaultValue={owner?.toBase58()}
                   disabled
                 />
                 <Button
                   variant='outline'
                   className='rounded-l-none'
                   onClick={() => {
-                    navigator.clipboard.writeText(depositUser?.toBase58() ?? '');
+                    navigator.clipboard.writeText(owner?.toBase58() ?? '');
                     toast.info('Copied to clipboard');
                   }}
                 >

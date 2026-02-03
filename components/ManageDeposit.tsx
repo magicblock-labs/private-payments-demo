@@ -1,3 +1,4 @@
+import { useTokenAccountContext } from '@/contexts/TokenAccountContext';
 import DepositActions from './DepositActions';
 import DepositDialog from './DepositDialog';
 import { Separator } from './ui/separator';
@@ -5,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { H3 } from '@/components/ui/typography';
 import { useProgram } from '@/hooks/use-program';
-import { useTokenAccount } from '@/hooks/use-token-account';
 import { TokenListEntry } from '@/lib/types';
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
@@ -23,31 +23,52 @@ const ManageDeposit: React.FC<DepositProps> = ({ user, token, isMainnet }) => {
   const wallet = useAnchorWallet();
   const { initializeEata } = useProgram();
   const [isCreating, setIsCreating] = useState(false);
-  const depositUser = useMemo(() => {
+  const owner = useMemo(() => {
     return user || wallet?.publicKey;
   }, [user, wallet]);
   const isWalletOwner = useMemo(() => {
-    return depositUser && wallet?.publicKey?.equals(depositUser);
-  }, [wallet, depositUser]);
-  const { ata, permissionPda, mainnetAta, ephemeralAta, isDelegated, accessDenied } =
-    useTokenAccount({ user: depositUser, tokenMint: token?.mint });
+    return owner && wallet?.publicKey?.equals(owner);
+  }, [wallet, owner]);
+  const { walletAccounts, recipientAccounts } = useTokenAccountContext();
+  const {
+    mainnetAta,
+    mainnetEata,
+    accessDenied,
+    ata,
+    eata,
+    permissionPda,
+    ephemeralAta,
+    isDelegated,
+  } = useMemo(() => {
+    return isWalletOwner ? walletAccounts : recipientAccounts;
+  }, [walletAccounts, recipientAccounts, isWalletOwner]);
+
+  const displayAmount = useMemo(() => {
+    if (isMainnet) {
+      return mainnetEata?.amount ?? 0n;
+    }
+    if (isDelegated) {
+      return ephemeralAta?.amount ?? 0n;
+    }
+    return mainnetEata?.amount ?? 0n;
+  }, [isMainnet, isDelegated, mainnetEata, ephemeralAta]);
 
   const handleCreateEata = useCallback(async () => {
-    if (!token || !depositUser) return;
+    if (!token || !owner) return;
     setIsCreating(true);
     try {
-      await initializeEata(depositUser, new PublicKey(token.mint));
-      toast.success(`Deposit initialized for ${depositUser.toBase58()}`);
+      await initializeEata(owner, new PublicKey(token.mint));
+      toast.success(`Deposit initialized for ${owner.toBase58()}`);
     } catch (error) {
       toast.error(`Failed to initialize deposit: ${error}`);
     } finally {
       setIsCreating(false);
     }
-  }, [token, depositUser, initializeEata]);
+  }, [token, owner, initializeEata]);
 
   const title = useMemo(() => {
     if (!accessDenied && (isWalletOwner || isMainnet) && !mainnetAta) return 'Create deposit';
-    if (isWalletOwner) return 'My deposit';
+    if (isWalletOwner) return 'My account';
     return 'Recipient';
   }, [accessDenied, isWalletOwner, isMainnet, mainnetAta]);
 
@@ -58,11 +79,12 @@ const ManageDeposit: React.FC<DepositProps> = ({ user, token, isMainnet }) => {
           <div className='w-full'>
             <H3>{title}</H3>
           </div>
-          {ata && token && depositUser && permissionPda && (
+          {ata && eata && token && owner && permissionPda && (
             <DepositDialog
               ata={ata}
+              eata={eata}
               token={token}
-              depositUser={depositUser}
+              owner={owner}
               permissionPda={permissionPda}
             />
           )}
@@ -81,15 +103,13 @@ const ManageDeposit: React.FC<DepositProps> = ({ user, token, isMainnet }) => {
           <CardContent className='flex flex-col gap-4 h-full justify-between'>
             <div />
             <div className='flex flex-row gap-2 items-center justify-center-safe text-5xl font-bold text-center hyphens-auto'>
-              {!accessDenied || isMainnet
-                ? Number((isMainnet ? mainnetAta : ephemeralAta)?.amount) / 10 ** 6 || 0
-                : '***'}
+              {!accessDenied || isMainnet ? Number(displayAmount) / 10 ** 6 || 0 : '***'}
             </div>
 
-            {token && depositUser && !accessDenied ? (
+            {token && owner && !accessDenied ? (
               <DepositActions
                 token={token}
-                depositUser={depositUser}
+                owner={owner}
                 isMainnet={isMainnet}
                 isDelegated={isDelegated}
                 isWalletOwner={isWalletOwner}
