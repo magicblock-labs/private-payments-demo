@@ -3,7 +3,7 @@
 ### Npm
 
 ```bash
-npm run install
+npm install
 ```
 
 ```bash
