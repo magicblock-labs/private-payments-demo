@@ -3,9 +3,9 @@ import { useBlockhashCache } from '@/contexts/BlockhashCacheContext';
 import { useTokenAccountContext } from '@/contexts/TokenAccountContext';
 import {
   AUTHORITY_FLAG,
+  DEFAULT_PRIVATE_VALIDATOR,
   createEataPermissionIx,
   createUpdatePermissionInstruction,
-  DEFAULT_PRIVATE_VALIDATOR,
   delegateEataPermissionIx,
   delegateIx,
   deriveEphemeralAta,
@@ -50,7 +50,11 @@ export function useProgram() {
 
       const signedTransaction = await wallet.signTransaction(transaction);
       const signature = await conn.sendRawTransaction(signedTransaction.serialize());
-      await conn.confirmTransaction(signature);
+      const status = await conn.confirmTransaction(signature, 'confirmed');
+      if (status.value?.err !== null) {
+        console.error('Transaction failed:', status);
+        throw new Error(`Transaction failed: ${JSON.stringify(status.value.err)}`);
+      }
       return signature;
     },
     [wallet, connection, ephemeralConnection, mainnet?.blockhash, ephemeral?.blockhash],
@@ -158,12 +162,12 @@ export function useProgram() {
   );
 
   const delegate = useCallback(
-    async (user: PublicKey, tokenMint: PublicKey, validator?: PublicKey) => {
+    async (user: PublicKey, tokenMint: PublicKey) => {
       if (!wallet?.publicKey) return;
 
       const [eata, eataBump] = deriveEphemeralAta(user, tokenMint);
 
-      const ix = delegateIx(wallet.publicKey, eata, eataBump, validator);
+      const ix = delegateIx(wallet.publicKey, eata, eataBump, DEFAULT_PRIVATE_VALIDATOR);
       const permissionIx = delegateEataPermissionIx(
         wallet.publicKey,
         eata,

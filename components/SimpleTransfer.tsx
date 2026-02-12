@@ -100,6 +100,8 @@ export default function SimpleTransfer({ token }: TransferProps) {
     setIsTransferring(true);
     try {
       await transfer(amount);
+      walletAccounts.getAtas();
+      recipientAccounts.getAtas();
       toast.success(`Transferred ${amount} tokens to ${selectedAddress}`);
     } catch (error) {
       console.error(error);
@@ -107,13 +109,14 @@ export default function SimpleTransfer({ token }: TransferProps) {
     } finally {
       setIsTransferring(false);
     }
-  }, [token, transfer, amount, selectedAddress]);
+  }, [token, transfer, amount, selectedAddress, walletAccounts, recipientAccounts]);
 
   const handleWithdraw = useCallback(async () => {
     if (!token) return;
     setIsWithdrawing(true);
     try {
       await withdraw(withdrawAmount);
+      walletAccounts.getAtas();
       toast.success(`Withdrawn ${withdrawAmount} tokens`);
     } catch (error) {
       console.error(error);
@@ -121,7 +124,7 @@ export default function SimpleTransfer({ token }: TransferProps) {
     } finally {
       setIsWithdrawing(false);
     }
-  }, [token, withdraw, withdrawAmount]);
+  }, [token, withdraw, withdrawAmount, walletAccounts]);
 
   const handleTogglePrivate = useCallback(async () => {
     if (!token?.mint) return;

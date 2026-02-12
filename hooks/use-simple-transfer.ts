@@ -1,6 +1,7 @@
 import { useEphemeralConnection } from './use-ephemeral-connection';
 import { TokenAccounts } from './use-token-account';
 import { useBlockhashCache } from '@/contexts/BlockhashCacheContext';
+import { logger } from '@/lib/log';
 import {
   DEFAULT_PRIVATE_VALIDATOR,
   DELEGATION_PROGRAM_ID,
@@ -22,6 +23,7 @@ import {
   createAssociatedTokenAccountIdempotentInstruction,
   createTransferCheckedInstruction,
   getAssociatedTokenAddressSync,
+  unpackAccount,
 } from '@solana/spl-token';
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
 import { useConnection } from '@solana/wallet-adapter-react';
@@ -84,9 +86,31 @@ export default function useSimpleTransfer({
       )
         throw new Error('Transfer prerequisites not ready');
 
+      logger.debug('Starting transfer:', senderAccounts, recipientAccounts);
+
       const tokenAmount = BigInt(Math.round(10 ** 6 * amount));
       const recipientPk = recipientAccounts.user;
       const tokenMintPk = tokenMint;
+
+      const waitForEphemeralAtaBalance = async (expectedAmount: bigint) => {
+        let retries = 20;
+        while (retries > 0) {
+          try {
+            const accountInfo = await ephemeralConnection.getAccountInfo(senderAta);
+            if (accountInfo) {
+              const decoded = unpackAccount(senderAta, accountInfo);
+              if (decoded.amount === expectedAmount) {
+                return;
+              }
+            }
+          } catch (error) {
+            console.error('Error getting ephemeral ATA balance:', error);
+          }
+          retries--;
+          await new Promise(resolve => setTimeout(resolve, 400));
+        }
+        throw new Error('Timed out waiting for ephemeral ATA balance');
+      };
 
       let preliminaryTx: Transaction | undefined;
       let initTx: Transaction | undefined;
@@ -268,7 +292,11 @@ export default function useSimpleTransfer({
           signedTx: delegateTx,
           blockhash: mainnet.blockhash,
           connection,
-          callback: (signature: string) => connection.confirmTransaction(signature),
+          callback: async (signature: string) => {
+            await connection.confirmTransaction(signature);
+            await senderAccounts.getAtas();
+            await recipientAccounts.getAtas();
+          },
         },
         {
           name: 'ephemeralTx',
@@ -295,6 +323,10 @@ export default function useSimpleTransfer({
       }
 
       for (const action of actions) {
+        logger.debug(`Sending transaction ${action.name}:`, action);
+        if (action.name === 'ephemeralTx') {
+          await waitForEphemeralAtaBalance(tokenAmount);
+        }
         const signature = await action.connection.sendRawTransaction(action.signedTx!.serialize());
         await action.callback?.(signature);
       }

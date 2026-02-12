@@ -4,7 +4,6 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { useProgram } from '@/hooks/use-program';
 import { TokenListEntry } from '@/lib/types';
-import { DEFAULT_PRIVATE_VALIDATOR } from '@magicblock-labs/ephemeral-rollups-sdk';
 import { PublicKey } from '@solana/web3.js';
 import { Loader2Icon } from 'lucide-react';
 import { useState } from 'react';
@@ -63,7 +62,7 @@ export default function DepositActions({
     if (!token || !owner) return;
     setIsDelegating(true);
     try {
-      await delegate(owner, new PublicKey(token.mint), DEFAULT_PRIVATE_VALIDATOR);
+      await delegate(owner, new PublicKey(token.mint));
       toast.success(`Delegated successfully`);
     } catch (error) {
       toast.error(`Failed to delegate: ${error}`);

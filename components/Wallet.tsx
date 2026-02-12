@@ -1,5 +1,6 @@
 'use client';
 
+import { DEVNET_RPC_URL } from '@/lib/constants';
 import { Provider } from '@coral-xyz/anchor';
 import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
@@ -7,7 +8,7 @@ import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import '@solana/wallet-adapter-react-ui/styles.css';
 import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets';
 import { Connection, PublicKey } from '@solana/web3.js';
-import React, { FC, ReactNode, useMemo } from 'react';
+import { FC, ReactNode, useMemo } from 'react';
 
 interface WalletProps {
   children: ReactNode;
@@ -24,8 +25,7 @@ export class SimpleProvider implements Provider {
 }
 
 export const Wallet: FC<WalletProps> = ({ children }) => {
-  // const endpoint = "https://rpc.magicblock.app/devnet";
-  const endpoint = 'https://rpc.magicblock.app/devnet';
+  const endpoint = DEVNET_RPC_URL;
 
   const wallets = useMemo(() => [new PhantomWalletAdapter(), new SolflareWalletAdapter()], []);
 

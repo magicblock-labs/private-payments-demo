@@ -16,16 +16,19 @@ export function usePrivateRollupAuth() {
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const isMountedRef = useRef(true);
 
+  const walletPublicKey = useMemo(() => {
+    return wallet?.publicKey?.toBase58() ?? null;
+  }, [wallet?.publicKey]);
+
   const authToken = useMemo(() => {
-    const pk = wallet?.publicKey?.toBase58();
-    if (pk) {
-      const token = tokens[pk] ?? null;
+    if (walletPublicKey) {
+      const token = tokens[walletPublicKey] ?? null;
       if (token?.expiresAt > Date.now()) {
         return token.token;
       }
     }
     return null;
-  }, [tokens, wallet]);
+  }, [tokens, walletPublicKey]);
 
   // Track component lifecycle
   useEffect(() => {

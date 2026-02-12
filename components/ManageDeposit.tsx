@@ -1,10 +1,10 @@
-import { useTokenAccountContext } from '@/contexts/TokenAccountContext';
 import DepositActions from './DepositActions';
 import DepositDialog from './DepositDialog';
 import { Separator } from './ui/separator';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { H3 } from '@/components/ui/typography';
+import { useTokenAccountContext } from '@/contexts/TokenAccountContext';
 import { useProgram } from '@/hooks/use-program';
 import { TokenListEntry } from '@/lib/types';
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
@@ -46,12 +46,10 @@ const ManageDeposit: React.FC<DepositProps> = ({ user, token, isMainnet }) => {
   const displayAmount = useMemo(() => {
     if (isMainnet) {
       return mainnetEata?.amount ?? 0n;
-    }
-    if (isDelegated) {
+    } else {
       return ephemeralAta?.amount ?? 0n;
     }
-    return mainnetEata?.amount ?? 0n;
-  }, [isMainnet, isDelegated, mainnetEata, ephemeralAta]);
+  }, [isMainnet, mainnetEata, ephemeralAta]);
 
   const handleCreateEata = useCallback(async () => {
     if (!token || !owner) return;
