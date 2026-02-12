@@ -1,9 +1,9 @@
 import { useEphemeralConnection } from './use-ephemeral-connection';
 import { useBlockhashCache } from '@/contexts/BlockhashCacheContext';
 import { useTokenAccountContext } from '@/contexts/TokenAccountContext';
+import { VALIDATOR_PUBKEY } from '@/lib/constants';
 import {
   AUTHORITY_FLAG,
-  DEFAULT_PRIVATE_VALIDATOR,
   createEataPermissionIx,
   createUpdatePermissionInstruction,
   delegateEataPermissionIx,
@@ -167,12 +167,12 @@ export function useProgram() {
 
       const [eata, eataBump] = deriveEphemeralAta(user, tokenMint);
 
-      const ix = delegateIx(wallet.publicKey, eata, eataBump, DEFAULT_PRIVATE_VALIDATOR);
+      const ix = delegateIx(wallet.publicKey, eata, eataBump, VALIDATOR_PUBKEY);
       const permissionIx = delegateEataPermissionIx(
         wallet.publicKey,
         eata,
         eataBump,
-        DEFAULT_PRIVATE_VALIDATOR,
+        VALIDATOR_PUBKEY,
       );
       const transaction = new Transaction();
       transaction.add(ix);

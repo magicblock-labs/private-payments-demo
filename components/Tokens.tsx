@@ -16,9 +16,9 @@ import {
 import { H3 } from '@/components/ui/typography';
 import { useTokenAccountContext } from '@/contexts/TokenAccountContext';
 import { useTokens } from '@/hooks/use-tokens';
+import { VALIDATOR_PUBKEY } from '@/lib/constants';
 import { shortKey } from '@/lib/utils';
 import {
-  DEFAULT_PRIVATE_VALIDATOR,
   createEataPermissionIx,
   delegateEataPermissionIx,
   deriveEphemeralAta,
@@ -126,7 +126,7 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
           wallet.publicKey,
           eata,
           eataBump,
-          DEFAULT_PRIVATE_VALIDATOR,
+          VALIDATOR_PUBKEY,
         );
 
         let depositIx = null;

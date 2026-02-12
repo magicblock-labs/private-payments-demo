@@ -1,9 +1,9 @@
 import { useEphemeralConnection } from './use-ephemeral-connection';
 import { TokenAccounts } from './use-token-account';
 import { useBlockhashCache } from '@/contexts/BlockhashCacheContext';
+import { VALIDATOR_PUBKEY } from '@/lib/constants';
 import { logger } from '@/lib/log';
 import {
-  DEFAULT_PRIVATE_VALIDATOR,
   DELEGATION_PROGRAM_ID,
   createEataPermissionIx,
   delegateEataPermissionIx,
@@ -192,12 +192,7 @@ export default function useSimpleTransfer({
 
       // Make sure both deposits are delegated
       if (!senderIsDelegated || preliminaryTx) {
-        const delegIx = delegateIx(
-          wallet.publicKey,
-          senderEata,
-          senderEataBump,
-          DEFAULT_PRIVATE_VALIDATOR,
-        );
+        const delegIx = delegateIx(wallet.publicKey, senderEata, senderEataBump, VALIDATOR_PUBKEY);
         delegateTx = delegateTx || new Transaction();
         delegateTx.add(delegIx);
       }
@@ -208,7 +203,7 @@ export default function useSimpleTransfer({
           wallet.publicKey,
           senderEata,
           senderEataBump,
-          DEFAULT_PRIVATE_VALIDATOR,
+          VALIDATOR_PUBKEY,
         );
         delegateTx = delegateTx || new Transaction();
         delegateTx.add(delegIx);
@@ -220,7 +215,7 @@ export default function useSimpleTransfer({
           wallet.publicKey,
           recipientEata,
           recipientEataBump,
-          DEFAULT_PRIVATE_VALIDATOR,
+          VALIDATOR_PUBKEY,
         );
         delegateTx = delegateTx || new Transaction();
         delegateTx.add(delegIx);
@@ -232,7 +227,7 @@ export default function useSimpleTransfer({
           wallet.publicKey,
           recipientEata,
           recipientEataBump,
-          DEFAULT_PRIVATE_VALIDATOR,
+          VALIDATOR_PUBKEY,
         );
         delegateTx = delegateTx || new Transaction();
         delegateTx.add(delegIx);
