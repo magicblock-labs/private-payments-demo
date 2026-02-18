@@ -176,6 +176,12 @@ export function useTokenAccount({ user, tokenMint }: TokenAccountProps): TokenAc
 
   const handleEataChange = useCallback(
     async (notification: AccountInfo<Buffer>) => {
+      if (notification.owner.equals(new PublicKey(DELEGATION_PROGRAM_ID))) {
+        setIsDelegated(true);
+      } else {
+        setIsDelegated(false);
+      }
+
       try {
         const decoded = decodeEphemeralAta(notification);
         logger.debug(
@@ -188,12 +194,6 @@ export function useTokenAccount({ user, tokenMint }: TokenAccountProps): TokenAc
         }
       } catch (error) {
         console.error('Error getting account info:', error);
-      }
-
-      if (notification.owner.equals(new PublicKey(DELEGATION_PROGRAM_ID))) {
-        setIsDelegated(true);
-      } else {
-        setIsDelegated(false);
       }
     },
     [userKey],
