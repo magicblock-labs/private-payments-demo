@@ -153,7 +153,7 @@ export function useProgram() {
 
   const transfer = useCallback(
     async (token: TokenListEntry, amount: number, to: PublicKey, delegated: boolean) => {
-      if (!wallet?.publicKey) return;
+      if (!wallet?.publicKey) throw new Error('Wallet not connected');
 
       const tokenMint = new PublicKey(token.mint);
       const amountBn = BigInt(Math.round(amount * 10 ** token.decimals));
@@ -183,7 +183,7 @@ export function useProgram() {
 
   const delegate = useCallback(
     async (user: PublicKey, tokenMint: PublicKey) => {
-      if (!wallet?.publicKey) return;
+      if (!wallet?.publicKey) throw new Error('Wallet not connected');
 
       const [eata, eataBump] = deriveEphemeralAta(user, tokenMint);
 
@@ -219,7 +219,7 @@ export function useProgram() {
 
   const undelegate = useCallback(
     async (tokenMint: PublicKey) => {
-      if (!wallet?.publicKey) return;
+      if (!wallet?.publicKey) throw new Error('Wallet not connected');
 
       const ix = undelegateIx(wallet.publicKey, tokenMint);
       const transaction = new Transaction();
@@ -238,7 +238,7 @@ export function useProgram() {
 
   const updatePermission = useCallback(
     async (tokenMint: PublicKey, isPublic: boolean) => {
-      if (!wallet?.publicKey) return;
+      if (!wallet?.publicKey) throw new Error('Wallet not connected');
 
       const [eata, eataBump] = deriveEphemeralAta(wallet.publicKey, tokenMint);
       let ix;
