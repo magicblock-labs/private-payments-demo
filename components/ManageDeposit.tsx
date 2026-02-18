@@ -44,12 +44,12 @@ const ManageDeposit: React.FC<DepositProps> = ({ user, token, isMainnet }) => {
   }, [walletAccounts, recipientAccounts, isWalletOwner]);
 
   const displayAmount = useMemo(() => {
-    if (isMainnet) {
-      return mainnetEata?.amount ?? 0n;
+    if (isDelegated) {
+      return (isMainnet ? mainnetEata?.amount : ephemeralAta?.amount) ?? 0n;
     } else {
-      return ephemeralAta?.amount ?? 0n;
+      return (isMainnet ? mainnetAta?.amount : 0n) ?? 0n;
     }
-  }, [isMainnet, mainnetEata, ephemeralAta]);
+  }, [isMainnet, isDelegated, mainnetEata, ephemeralAta, mainnetAta]);
 
   const handleCreateEata = useCallback(async () => {
     if (!token || !owner) throw new Error('Token or owner not found');
