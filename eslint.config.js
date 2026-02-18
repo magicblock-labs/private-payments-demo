@@ -17,7 +17,7 @@ const flatconf = [
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
-          vars: "all",
+          vars: 'all',
           args: 'after-used',
           argsIgnorePattern: '^_',
           varsIgnorePattern: '^_',
