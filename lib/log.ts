@@ -1,12 +1,5 @@
 type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'none';
 
-const LOG_LEVEL: LogLevel = (() => {
-  if (typeof process !== 'undefined' && process.env && process.env.NEXT_PUBLIC_LOG_LEVEL) {
-    return (process.env.NEXT_PUBLIC_LOG_LEVEL as LogLevel) || 'none';
-  }
-  return 'none';
-})();
-
 const LEVELS: Record<LogLevel, number> = {
   debug: 0,
   info: 1,
@@ -14,6 +7,15 @@ const LEVELS: Record<LogLevel, number> = {
   error: 3,
   none: 4,
 };
+
+const LOG_LEVEL: LogLevel = (() => {
+  if (typeof process !== 'undefined' && process.env && process.env.NEXT_PUBLIC_LOG_LEVEL) {
+    return (process.env.NEXT_PUBLIC_LOG_LEVEL as LogLevel) || 'none';
+  }
+  const level = process.env.NEXT_PUBLIC_LOG_LEVEL;
+  if (level && level in LEVELS) return level as LogLevel;
+  return 'none';
+})();
 
 function getTimestamp() {
   return new Date().toISOString();

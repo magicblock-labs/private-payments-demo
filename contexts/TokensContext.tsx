@@ -18,7 +18,7 @@ const LAST_SELECTED_TOKEN_STORAGE_KEY = 'last-selected-token';
 interface TokensContextValue {
   tokens: TokenListEntry[];
   selectedToken: TokenListEntry | undefined;
-  setSelectedToken: (token: TokenListEntry | undefined) => void;
+  setSelectedToken: (_token: TokenListEntry | undefined) => void;
   fetchTokenAccounts: () => Promise<void>;
 }
 
