@@ -46,7 +46,7 @@ export function useTokens() {
       }
     };
     const handleSelectedTokenChange = (e: CustomEvent) => {
-      if (isMountedRef.current && e.detail && typeof e.detail === 'object') {
+      if (isMountedRef.current && (e.detail === undefined || typeof e.detail === 'object')) {
         setSelectedToken(e.detail);
       }
     };
