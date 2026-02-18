@@ -28,7 +28,7 @@ interface TokenAccountContextValue {
   recipient?: PublicKey;
   mint?: PublicKey;
   selectedAddress?: string;
-  setSelectedAddress: (address: string | undefined) => void;
+  setSelectedAddress: (_address: string | undefined) => void;
   vault?: PublicKey;
   vaultAta?: PublicKey;
   vaultInfo?: AccountInfo<Buffer>;
