@@ -45,7 +45,7 @@ export default function DepositDialog({
           </DialogHeader>
           <div className='grid gap-4'>
             <div className='grid gap-3'>
-              <Label htmlFor='deposit-address'>ATA address</Label>
+              <Label htmlFor='ata-address'>ATA address</Label>
               <div className='flex flex-row'>
                 <Input
                   id='ata-address'
@@ -67,7 +67,7 @@ export default function DepositDialog({
               </div>
             </div>
             <div className='grid gap-3'>
-              <Label htmlFor='deposit-address'>EATA address</Label>
+              <Label htmlFor='eata-address'>EATA address</Label>
               <div className='flex flex-row'>
                 <Input
                   id='eata-address'
