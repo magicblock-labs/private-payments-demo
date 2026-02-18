@@ -178,9 +178,9 @@ export function useProgram() {
       transaction.add(ix);
 
       const accounts =
-        user === walletAccounts.user
+        walletAccounts.user && user.equals(walletAccounts.user)
           ? walletAccounts
-          : user === recipientAccounts.user
+          : recipientAccounts.user && user.equals(recipientAccounts.user)
             ? recipientAccounts
             : undefined;
       if (accounts && !accounts.isPermissionDelegated) {
