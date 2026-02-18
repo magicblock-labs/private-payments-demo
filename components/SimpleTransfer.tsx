@@ -30,6 +30,10 @@ interface TransferProps {
   token?: TokenListEntry;
 }
 
+const shadow = (condition: boolean) => {
+  return condition ? 'shadow-[0_0_10px_rgba(255,255,255,0.2)]' : '';
+};
+
 export default function SimpleTransfer({ token }: TransferProps) {
   const { connection } = useConnection();
   const wallet = useAnchorWallet();
@@ -168,10 +172,6 @@ export default function SimpleTransfer({ token }: TransferProps) {
       setBalance(Number(account.amount) / 10 ** selectedToken.decimals);
     }
   });
-
-  const shadow = (condition: boolean) => {
-    return condition ? 'shadow-[0_0_10px_rgba(255,255,255,0.2)]' : '';
-  };
 
   return (
     <div className='space-y-4'>
