@@ -6,7 +6,7 @@ import { Loader2, ShieldCheck, ShieldOff, ShieldQuestion } from 'lucide-react';
 import React from 'react';
 
 const VerificationToast: React.FC = () => {
-  const { isVerified, isLoading, resetVerification } = useTdxQuoteVerification();
+  const { isVerified, isLoading, verifyQuote } = useTdxQuoteVerification();
 
   const ToastContent = () => {
     if (isLoading) {
@@ -57,7 +57,7 @@ const VerificationToast: React.FC = () => {
           <Button
             variant='destructive'
             className='w-full'
-            onClick={resetVerification}
+            onClick={verifyQuote}
             disabled={isLoading}
           >
             Reset
