@@ -59,7 +59,12 @@ export function useTokenAccount({ user, tokenMint }: TokenAccountProps): TokenAc
 
   const tokenMintKey = useMemo(() => {
     if (!tokenMint) return;
-    return new PublicKey(tokenMint);
+    try {
+      return new PublicKey(tokenMint);
+    } catch (error) {
+      console.error('Error parsing token mint:', error);
+      return undefined;
+    }
   }, [tokenMint]);
 
   const ata = useMemo(() => {
@@ -120,16 +125,9 @@ export function useTokenAccount({ user, tokenMint }: TokenAccountProps): TokenAc
           if (eataInfo?.owner.equals(new PublicKey(DELEGATION_PROGRAM_ID))) {
             setIsDelegated(true);
 
-            let ephemeralAtaInfo = null;
-            try {
-              ephemeralAtaInfo = ephemAtaInfo;
-            } catch (error) {
-              console.error('Error getting ephemeral account info:', error);
-            }
-
-            if (ephemeralAtaInfo) {
+            if (ephemAtaInfo) {
               if (requestId.current !== currentRequestId) return;
-              const decodedEphemeralAta = unpackAccount(ata, ephemeralAtaInfo);
+              const decodedEphemeralAta = unpackAccount(ata, ephemAtaInfo);
               setEphemeralAta(decodedEphemeralAta);
             } else {
               setEphemeralAta(null);
