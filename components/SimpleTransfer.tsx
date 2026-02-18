@@ -102,8 +102,8 @@ export default function SimpleTransfer({ token }: TransferProps) {
     setIsTransferring(true);
     try {
       await transfer(amount);
-      walletAccounts.getAtas();
-      recipientAccounts.getAtas();
+      await walletAccounts.getAtas();
+      await recipientAccounts.getAtas();
       toast.success(`Transferred ${amount} tokens to ${selectedAddress}`);
     } catch (error) {
       console.error(error);
@@ -118,7 +118,7 @@ export default function SimpleTransfer({ token }: TransferProps) {
     setIsWithdrawing(true);
     try {
       await withdraw(withdrawAmount);
-      walletAccounts.getAtas();
+      await walletAccounts.getAtas();
       toast.success(`Withdrawn ${withdrawAmount} tokens`);
     } catch (error) {
       console.error(error);
