@@ -228,7 +228,10 @@ export function useProgram() {
       const signature = await sendTransaction(true, transaction);
 
       // Refresh data of the undelegate account
-      const accounts = wallet.publicKey === walletAccounts.user ? walletAccounts : undefined;
+      const accounts =
+        walletAccounts.user && wallet.publicKey.equals(walletAccounts.user)
+          ? walletAccounts
+          : undefined;
       await accounts?.getAtas();
 
       return signature;
