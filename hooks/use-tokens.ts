@@ -69,7 +69,7 @@ export function useTokens() {
 
   // Save tokens to localStorage whenever they change
   const setTokens = useCallback(
-    (newTokens: TokenListEntry[] | ((prev: TokenListEntry[]) => TokenListEntry[])) => {
+    (newTokens: TokenListEntry[] | ((_prev: TokenListEntry[]) => TokenListEntry[])) => {
       if (!isMountedRef.current) {
         return;
       }
@@ -85,7 +85,7 @@ export function useTokens() {
       newToken:
         | TokenListEntry
         | undefined
-        | ((prev: TokenListEntry | undefined) => TokenListEntry | undefined),
+        | ((_prev: TokenListEntry | undefined) => TokenListEntry | undefined),
     ) => {
       if (!isMountedRef.current) {
         return;

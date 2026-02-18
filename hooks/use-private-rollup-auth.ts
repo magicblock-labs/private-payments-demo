@@ -69,7 +69,7 @@ export function usePrivateRollupAuth() {
     (
       newTokens:
         | Record<string, AuthToken>
-        | ((prev: Record<string, AuthToken>) => Record<string, AuthToken>),
+        | ((_prev: Record<string, AuthToken>) => Record<string, AuthToken>),
     ) => {
       if (!isMountedRef.current) {
         return;

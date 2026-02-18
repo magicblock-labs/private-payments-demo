@@ -1,5 +1,4 @@
 {
-  "homepage": ".",
   "name": "private-payments",
   "version": "0.1.0",
   "private": true,
@@ -22,7 +21,6 @@
     "@solana/wallet-adapter-react-ui": "^0.9.35",
     "@solana/wallet-adapter-wallets": "^0.19.37",
     "@solana/web3.js": "^1.98.0",
-    "@tailwindcss/postcss": "^4.1.11",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.29.2",
@@ -31,7 +29,6 @@
     "next-themes": "^0.4.6",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "sass": "^1.97.3",
     "semver": "^7.7.2",
     "sonner": "^2.0.5",
     "tailwind-merge": "^3.3.1",
@@ -60,6 +57,8 @@
     ]
   },
   "devDependencies": {
+    "sass": "^1.97.3",
+    "@tailwindcss/postcss": "^4.1.11",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
