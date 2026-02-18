@@ -1,4 +1,3 @@
-import { useTokenAccountContext } from '@/contexts/TokenAccountContext';
 import { usePrivateRollupAuth } from '../hooks/use-private-rollup-auth';
 import ManageDeposit from './ManageDeposit';
 import MissingAddressCard from './MissingAddressCard';
@@ -6,7 +5,8 @@ import Transfer from './Transfer';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader } from './ui/card';
 import { H2 } from '@/components/ui/typography';
-import { useTokens } from '@/hooks/use-tokens';
+import { useTokenAccountContext } from '@/contexts/TokenAccountContext';
+import { useTokensContext } from '@/contexts/TokensContext';
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
 import { Loader2Icon } from 'lucide-react';
@@ -14,7 +14,7 @@ import React from 'react';
 
 const Deposit: React.FC = () => {
   const { authToken, isAuthenticating, getToken } = usePrivateRollupAuth();
-  const { selectedToken: token } = useTokens();
+  const { selectedToken: token } = useTokensContext();
   const wallet = useAnchorWallet();
   const { selectedAddress } = useTokenAccountContext();
 

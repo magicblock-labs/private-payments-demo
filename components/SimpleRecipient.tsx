@@ -3,16 +3,14 @@
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { H3, Muted } from '@/components/ui/typography';
 import { useTokenAccountContext } from '@/contexts/TokenAccountContext';
+import { useTokensContext } from '@/contexts/TokensContext';
 import { shortKey } from '@/lib/utils';
 import { Shield, User, Wallet } from 'lucide-react';
 import { useMemo } from 'react';
 
-interface TransferProps {
-  user?: string;
-}
-
-export default function SimpleRecipient({ user }: TransferProps) {
+export default function SimpleRecipient() {
   const { recipientAccounts } = useTokenAccountContext();
+  const { selectedToken } = useTokensContext();
   const { ephemeralAta, mainnetAta, mainnetPermission, ephemeralPermission } = recipientAccounts;
   const isPublic = useMemo(() => {
     if (ephemeralPermission) return ephemeralPermission.members === undefined;
@@ -21,16 +19,16 @@ export default function SimpleRecipient({ user }: TransferProps) {
   }, [mainnetPermission, ephemeralPermission]);
 
   function mainnetBalance(): string {
-    if (mainnetAta) {
-      return (Number(mainnetAta.amount) / 10 ** 6).toFixed(2);
+    if (mainnetAta && selectedToken) {
+      return (Number(mainnetAta.amount) / 10 ** selectedToken.decimals).toFixed(2);
     } else {
       return '0.00';
     }
   }
 
   function ephemeralBalance(): string {
-    if (ephemeralAta) {
-      return (Number(ephemeralAta.amount) / 10 ** 6).toFixed(2);
+    if (ephemeralAta && selectedToken) {
+      return (Number(ephemeralAta.amount) / 10 ** selectedToken.decimals).toFixed(2);
     } else {
       return '***';
     }
@@ -46,7 +44,7 @@ export default function SimpleRecipient({ user }: TransferProps) {
           <div className='flex-1'>
             <H3 className='border-none! pb-0! text-foreground'>Recipient</H3>
             <Muted className='text-emerald-700! dark:text-emerald-300!'>
-              {user ? shortKey(user) : 'None selected'}
+              {recipientAccounts.user ? shortKey(recipientAccounts.user) : 'None selected'}
             </Muted>
           </div>
         </div>

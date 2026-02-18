@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { H3, Muted } from '@/components/ui/typography';
 import { useTokenAccountContext } from '@/contexts/TokenAccountContext';
+import { useTokensContext } from '@/contexts/TokensContext';
 import { useProgram } from '@/hooks/use-program';
 import useSimpleTransfer from '@/hooks/use-simple-transfer';
 import { useSubscription } from '@/hooks/use-subscription';
@@ -32,6 +33,7 @@ interface TransferProps {
 export default function SimpleTransfer({ token }: TransferProps) {
   const { connection } = useConnection();
   const wallet = useAnchorWallet();
+  const { selectedToken } = useTokensContext();
   const [isTransferring, setIsTransferring] = useState(false);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [isUpdatingPermission, setIsUpdatingPermission] = useState(false);
@@ -39,7 +41,6 @@ export default function SimpleTransfer({ token }: TransferProps) {
   const [withdrawAmount, setWithdrawAmount] = useState(0);
   const [balance, setBalance] = useState<number | undefined>();
   const {
-    mint,
     walletAccounts,
     recipientAccounts,
     selectedAddress,
@@ -51,7 +52,7 @@ export default function SimpleTransfer({ token }: TransferProps) {
   const { transfer, withdraw } = useSimpleTransfer({
     senderAccounts: walletAccounts,
     recipientAccounts,
-    tokenMint: mint,
+    token,
     vaultInfo,
     vaultAtaAccount,
   });
@@ -68,12 +69,13 @@ export default function SimpleTransfer({ token }: TransferProps) {
   }, [token, wallet]);
 
   const withdrawableBalance = useMemo(() => {
+    if (!selectedToken) return 0;
     if (isDelegated) {
-      return Number(ephemeralAta?.amount ?? 0n) / 10 ** 6;
+      return Number(ephemeralAta?.amount ?? 0n) / 10 ** selectedToken.decimals;
     } else {
-      return Number(mainnetEata?.amount ?? 0n) / 10 ** 6;
+      return Number(mainnetEata?.amount ?? 0n) / 10 ** selectedToken.decimals;
     }
-  }, [isDelegated, ephemeralAta, mainnetEata]);
+  }, [isDelegated, ephemeralAta, mainnetEata, selectedToken]);
 
   const isPublic = useMemo(() => {
     if (!walletAccounts?.isPermissionDelegated && walletAccounts?.mainnetPermission)
@@ -162,7 +164,9 @@ export default function SimpleTransfer({ token }: TransferProps) {
 
   useSubscription(connection, userTokenAccount, notification => {
     const account = AccountLayout.decode(Uint8Array.from(notification.data));
-    setBalance(Number(account.amount) / 10 ** 6);
+    if (selectedToken) {
+      setBalance(Number(account.amount) / 10 ** selectedToken.decimals);
+    }
   });
 
   const shadow = (condition: boolean) => {

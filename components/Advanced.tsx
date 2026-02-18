@@ -6,17 +6,16 @@ import Deposit from '@/components/Deposit';
 import Tokens from '@/components/Tokens';
 import VerificationToast from '@/components/VerificationToast';
 import { TokenAccountProvider } from '@/contexts/TokenAccountContext';
-import { useTokens } from '@/hooks/use-tokens';
+import { useTokensContext } from '@/contexts/TokensContext';
 import magicBlockLogo from '@/public/magicblock_white.png';
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
 import { Settings } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import React from 'react';
 
 export default function HomePage() {
   const wallet = useAnchorWallet();
-  const { selectedToken: token } = useTokens();
+  const { selectedToken: token } = useTokensContext();
 
   return (
     <div className='min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800'>
@@ -51,7 +50,7 @@ export default function HomePage() {
 
         {/* Main Content */}
         <div className='flex flex-col gap-8 max-w-6xl mx-auto w-full'>
-          <TokenAccountProvider mint={token?.mint}>
+          <TokenAccountProvider token={token}>
             {wallet?.publicKey && (
               <>
                 <Tokens deposit />

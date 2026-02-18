@@ -1,6 +1,5 @@
 'use client';
 
-import { useTokenAccountContext } from '@/contexts/TokenAccountContext';
 import { useProgram } from '../hooks/use-program';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader } from './ui/card';
@@ -8,6 +7,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Separator } from './ui/separator';
 import { H3 } from './ui/typography';
+import { useTokenAccountContext } from '@/contexts/TokenAccountContext';
 import { TokenListEntry } from '@/lib/types';
 import { PublicKey } from '@solana/web3.js';
 import { Loader2Icon } from 'lucide-react';
@@ -31,12 +31,7 @@ const Transfer: React.FC<TransferProps> = ({ token, user, isMainnet }) => {
       if (!token || !selectedAddress) return;
       setIsTransferring(true);
       try {
-        await transfer(
-          new PublicKey(token.mint),
-          amount,
-          new PublicKey(selectedAddress),
-          delegated,
-        );
+        await transfer(token, amount, new PublicKey(selectedAddress), delegated);
         toast.success(`Transferred ${amount} tokens to ${selectedAddress}`);
       } catch (error) {
         toast.error(`Error transferring tokens: ${error}`);

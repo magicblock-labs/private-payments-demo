@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/select';
 import { H3 } from '@/components/ui/typography';
 import { useTokenAccountContext } from '@/contexts/TokenAccountContext';
-import { useTokens } from '@/hooks/use-tokens';
+import { useTokensContext } from '@/contexts/TokensContext';
 import { VALIDATOR_PUBKEY } from '@/lib/constants';
 import { shortKey } from '@/lib/utils';
 import {
@@ -47,7 +47,7 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
   const { connection } = useConnection();
   const wallet = useAnchorWallet();
   const [amount, setAmount] = useState(1000);
-  const { tokenList, setTokens, selectedToken, setToken } = useTokens();
+  const { tokens, selectedToken, setSelectedToken, fetchTokenAccounts } = useTokensContext();
   const {
     walletAccounts: { mainnetAta },
   } = useTokenAccountContext();
@@ -58,6 +58,8 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
       if (!wallet?.publicKey) return;
 
       setIsCreating(true);
+
+      const decimals = 6;
 
       try {
         const { blockhash } = await connection.getLatestBlockhash();
@@ -72,7 +74,7 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
 
         const createMintIx = createInitializeMint2Instruction(
           mintKp.publicKey,
-          6,
+          decimals,
           wallet.publicKey,
           null,
           TOKEN_PROGRAM_ID,
@@ -97,8 +99,8 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
           mintKp.publicKey,
           associatedTokenAccount,
           wallet.publicKey,
-          amount * 10 ** 6,
-          6,
+          amount * 10 ** decimals,
+          decimals,
           [],
           TOKEN_PROGRAM_ID,
         );
@@ -138,7 +140,7 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
             associatedTokenAccount,
             vaultAta,
             wallet.publicKey,
-            BigInt(Math.round(amount * 10 ** 6)),
+            BigInt(Math.round(amount * 10 ** decimals)),
           );
         }
 
@@ -178,19 +180,16 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
 
         await new Promise(resolve => setTimeout(resolve, 1000));
 
-        setTokens([
-          ...tokenList,
-          {
-            mint: mintKp.publicKey.toString(),
-            creator: wallet.publicKey.toString(),
-          },
-        ]);
-        // Reset token to refresh components
-        setToken(undefined);
-        setToken({
+        const newToken = {
           mint: mintKp.publicKey.toString(),
           creator: wallet.publicKey.toString(),
-        });
+          decimals,
+        };
+
+        fetchTokenAccounts();
+        // Reset token to refresh components
+        setSelectedToken(undefined);
+        setSelectedToken(newToken);
         toast.success(`Token ${mintKp.publicKey.toString()} created successfully`);
       } catch (error) {
         toast.error(`Failed to create token: ${error}`);
@@ -198,15 +197,15 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
         setIsCreating(false);
       }
     },
-    [amount, wallet, connection, tokenList, setTokens, setToken],
+    [amount, wallet, connection, fetchTokenAccounts, setSelectedToken],
   );
 
   // Set default selected token
   useEffect(() => {
-    if (tokenList.length > 0 && !selectedToken) {
-      setToken(tokenList[0]);
+    if (tokens.length > 0 && !selectedToken) {
+      setSelectedToken(tokens[0]);
     }
-  }, [tokenList, setToken, selectedToken]);
+  }, [tokens, setSelectedToken, selectedToken]);
 
   const EmptyState = () => (
     <div className='text-center py-6 px-6'>
@@ -228,7 +227,7 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
       <div className='text-center'>
         <div className='flex items-center justify-center mb-2'>
           <Coins className='w-5 h-5 text-blue-600 mr-2' />
-          <span className='text-2xl font-bold text-foreground'>{tokenList.length}</span>
+          <span className='text-2xl font-bold text-foreground'>{tokens.length}</span>
         </div>
         <p className='text-sm text-muted-foreground'>Total Tokens</p>
       </div>
@@ -250,23 +249,24 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
   );
 
   const TokenSelect = () => {
-    if (tokenList.length > 0) {
+    if (tokens.length > 0) {
       return (
         <div className='flex flex-col gap-3'>
           <Label className='text-sm font-medium text-foreground'>
             Select Token{' '}
             {mainnetAta !== null && (
               <span className='text-muted-foreground font-normal'>
-                (Balance: {Number(mainnetAta.amount) / 10 ** 6})
+                (Balance:{' '}
+                {selectedToken ? Number(mainnetAta.amount) / 10 ** selectedToken.decimals : 0})
               </span>
             )}
           </Label>
           <Select
             defaultValue={selectedToken?.mint}
             onValueChange={value => {
-              const token = tokenList.find(token => token.mint === value);
+              const token = tokens.find(token => token.mint === value);
               if (token) {
-                setToken(token);
+                setSelectedToken(token);
               }
             }}
           >
@@ -276,12 +276,11 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
             <SelectContent>
               <SelectGroup>
                 <SelectLabel>Your Tokens</SelectLabel>
-                {tokenList.map(token => (
+                {tokens.map(token => (
                   <SelectItem key={token.mint} value={token.mint}>
                     <div className='flex items-center gap-2'>
                       <div className='w-6 h-6 bg-linear-to-br from-blue-500 to-purple-500 rounded-full'></div>
                       <span>{shortKey(token.mint)}</span>
-                      <span className='text-muted-foreground'>({shortKey(token.creator)})</span>
                     </div>
                   </SelectItem>
                 ))}
@@ -349,7 +348,7 @@ const Tokens: React.FC<{ deposit?: boolean }> = ({ deposit = false }) => {
         </div>
       </CardHeader>
       <CardContent className='p-0'>
-        {tokenList.length > 0 ? (
+        {tokens.length > 0 ? (
           <div className='p-6'>
             <div className='flex flex-col md:flex-row gap-2 md:items-end'>
               <TokenSelect />

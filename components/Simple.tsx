@@ -6,7 +6,7 @@ import { Muted } from './ui/typography';
 import Tokens from '@/components/Tokens';
 import VerificationToast from '@/components/VerificationToast';
 import { TokenAccountProvider } from '@/contexts/TokenAccountContext';
-import { useTokens } from '@/hooks/use-tokens';
+import { useTokensContext } from '@/contexts/TokensContext';
 import magicBlockLogo from '@/public/magicblock_white.png';
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
 import Image from 'next/image';
@@ -15,7 +15,7 @@ import React from 'react';
 
 export default function SimplePage() {
   const wallet = useAnchorWallet();
-  const { selectedToken: token } = useTokens();
+  const { selectedToken: token } = useTokensContext();
 
   return (
     <div className='min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800'>
@@ -47,7 +47,7 @@ export default function SimplePage() {
         </div>
 
         {/* Main Content */}
-        <TokenAccountProvider mint={token?.mint}>
+        <TokenAccountProvider token={token}>
           <div className='flex flex-col gap-8 max-w-6xl mx-auto w-full'>
             <Tokens />
             {token && wallet?.publicKey && (

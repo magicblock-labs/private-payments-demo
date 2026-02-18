@@ -5,14 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { H3, Muted } from '@/components/ui/typography';
 import { useTokenAccountContext } from '@/contexts/TokenAccountContext';
+import { useTokensContext } from '@/contexts/TokensContext';
 import { usePrivateRollupAuth } from '@/hooks/use-private-rollup-auth';
-import { useTokens } from '@/hooks/use-tokens';
 import { Info, Loader2Icon, Send, Shield } from 'lucide-react';
-import React from 'react';
 
 export default function SimpleDeposit() {
   const { authToken, isAuthenticating, getToken } = usePrivateRollupAuth();
-  const { selectedToken: token } = useTokens();
+  const { selectedToken: token } = useTokensContext();
   const { selectedAddress } = useTokenAccountContext();
 
   return (
@@ -77,11 +76,7 @@ export default function SimpleDeposit() {
             </div>
 
             <div className='lg:col-span-1'>
-              {selectedAddress ? (
-                <SimpleRecipient user={selectedAddress} />
-              ) : (
-                <MissingAddressCard />
-              )}
+              {selectedAddress ? <SimpleRecipient /> : <MissingAddressCard />}
             </div>
           </div>
         )}

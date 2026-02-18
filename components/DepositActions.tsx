@@ -36,7 +36,7 @@ export default function DepositActions({
     if (!token || !owner) return;
     setIsDepositing(true);
     try {
-      await depositTokens(owner, new PublicKey(token.mint), amount);
+      await depositTokens(owner, token, amount);
       toast.success(`Deposited ${amount} tokens`);
     } catch (error) {
       toast.error(`Failed to deposit ${amount} tokens: ${error}`);
@@ -49,7 +49,7 @@ export default function DepositActions({
     if (!token || !owner) return;
     setIsWithdrawing(true);
     try {
-      await withdraw(owner, new PublicKey(token.mint), amount);
+      await withdraw(owner, token, amount);
       toast.success(`Withdrawn ${amount} tokens`);
     } catch (error) {
       toast.error(`Failed to withdraw ${amount} tokens: ${error}`);

@@ -3,6 +3,7 @@
 import { useSubscription } from '@/hooks/use-subscription';
 import { TokenAccounts } from '@/hooks/use-token-account';
 import { useTokenAccounts } from '@/hooks/use-token-accounts';
+import { TokenListEntry } from '@/lib/types';
 import { deriveVault } from '@magicblock-labs/ephemeral-rollups-sdk';
 import {
   Account,
@@ -39,7 +40,7 @@ interface TokenAccountContextValue {
 const TokenAccountContext = createContext<TokenAccountContextValue | undefined>(undefined);
 
 interface TokenAccountProviderProps {
-  mint?: PublicKey | string;
+  token?: TokenListEntry;
   initialSelectedAddress?: string;
   children: ReactNode;
 }
@@ -55,7 +56,7 @@ function toPublicKey(value?: PublicKey | string) {
 }
 
 export function TokenAccountProvider({
-  mint,
+  token,
   initialSelectedAddress,
   children,
 }: TokenAccountProviderProps) {
@@ -65,7 +66,7 @@ export function TokenAccountProvider({
     initialSelectedAddress,
   );
   const recipientKey = useMemo(() => toPublicKey(selectedAddress), [selectedAddress]);
-  const mintKey = useMemo(() => toPublicKey(mint), [mint]);
+  const mintKey = useMemo(() => toPublicKey(token?.mint), [token]);
   const [vaultInfo, setVaultInfo] = useState<AccountInfo<Buffer> | undefined>(undefined);
   const [vaultAtaAccount, setVaultAtaAccount] = useState<Account | undefined>(undefined);
 

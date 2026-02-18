@@ -2,6 +2,7 @@ import { useEphemeralConnection } from './use-ephemeral-connection';
 import { useBlockhashCache } from '@/contexts/BlockhashCacheContext';
 import { useTokenAccountContext } from '@/contexts/TokenAccountContext';
 import { VALIDATOR_PUBKEY } from '@/lib/constants';
+import { TokenListEntry } from '@/lib/types';
 import {
   AUTHORITY_FLAG,
   createEataPermissionIx,
@@ -37,13 +38,13 @@ export function useProgram() {
 
   const sendTransaction = useCallback(
     async (isEphemeral: boolean, transaction: Transaction) => {
-      if (!wallet?.publicKey) return;
+      if (!wallet?.publicKey) throw new Error('Wallet not connected');
 
       const conn = isEphemeral ? ephemeralConnection : connection;
-      if (!conn) return;
+      if (!conn) throw new Error('Connection not found');
 
       const blockhash = isEphemeral ? ephemeral?.blockhash : mainnet?.blockhash;
-      if (!blockhash) return;
+      if (!blockhash) throw new Error('Blockhash not found');
 
       transaction.recentBlockhash = blockhash;
       transaction.feePayer = wallet.publicKey;
@@ -62,39 +63,57 @@ export function useProgram() {
 
   const initializeEata = useCallback(
     async (user: PublicKey, tokenMint: PublicKey) => {
-      if (!wallet?.publicKey) return;
+      if (!wallet?.publicKey) throw new Error('Wallet not connected');
 
+      const accounts = wallet.publicKey.equals(user) ? walletAccounts : recipientAccounts;
+
+      const [vault, vaultBump] = deriveVault(tokenMint);
       const [eata, eataBump] = deriveEphemeralAta(user, tokenMint)!;
+      const vaultAta = getAssociatedTokenAddressSync(tokenMint, vault, true, TOKEN_PROGRAM_ID);
 
-      const ataIx = createAssociatedTokenAccountIdempotentInstruction(
-        wallet.publicKey,
-        getAssociatedTokenAddressSync(tokenMint, user, true),
-        user,
-        tokenMint,
-      );
-      const initIx = initEphemeralAtaIx(eata, user, tokenMint, wallet.publicKey, eataBump);
-      const createPermissionIx = createEataPermissionIx(eata, wallet.publicKey, eataBump);
+      const isVaultCreated = await connection.getAccountInfo(vault);
 
       const transaction = new Transaction();
-      transaction.add(ataIx);
-      transaction.add(initIx);
-      transaction.add(createPermissionIx);
+      if (!isVaultCreated) {
+        transaction.add(initVaultIx(vault, tokenMint, wallet.publicKey, vaultBump));
+        transaction.add(initVaultAtaIx(wallet.publicKey, vaultAta, vault, tokenMint));
+      }
+      if (!accounts.mainnetAta) {
+        transaction.add(
+          createAssociatedTokenAccountIdempotentInstruction(
+            wallet.publicKey,
+            getAssociatedTokenAddressSync(tokenMint, user, true),
+            user,
+            tokenMint,
+          ),
+        );
+      }
+      if (!accounts.mainnetEata) {
+        transaction.add(initEphemeralAtaIx(eata, user, tokenMint, wallet.publicKey, eataBump));
+      }
+      if (!accounts.permissionPda) {
+        transaction.add(createEataPermissionIx(eata, wallet.publicKey, eataBump));
+      }
+      if (!accounts.isDelegated) {
+        transaction.add(delegateIx(wallet.publicKey, eata, eataBump, VALIDATOR_PUBKEY));
+      }
 
       return sendTransaction(false, transaction);
     },
-    [wallet, sendTransaction],
+    [wallet, sendTransaction, walletAccounts, recipientAccounts, connection],
   );
 
   const modifyEataBalance = useCallback(
-    async (user: PublicKey, tokenMint: PublicKey, amount: number, isIncrease: boolean) => {
-      if (!wallet?.publicKey) return;
+    async (user: PublicKey, token: TokenListEntry, amount: number, isIncrease: boolean) => {
+      if (!wallet?.publicKey) throw new Error('Wallet not connected');
 
+      const tokenMint = new PublicKey(token.mint);
       const [eata] = deriveEphemeralAta(user, tokenMint);
       const [vault, vaultBump] = deriveVault(tokenMint);
       const userAta = getAssociatedTokenAddressSync(tokenMint, user, true, TOKEN_PROGRAM_ID);
       const vaultAta = getAssociatedTokenAddressSync(tokenMint, vault, true, TOKEN_PROGRAM_ID);
 
-      const amountBn = BigInt(Math.round(amount * 10 ** 6));
+      const amountBn = BigInt(Math.round(amount * 10 ** token.decimals));
 
       let ix: TransactionInstruction;
       if (isIncrease) {
@@ -119,24 +138,25 @@ export function useProgram() {
   );
 
   const deposit = useCallback(
-    async (user: PublicKey, tokenMint: PublicKey, amount: number) => {
-      return modifyEataBalance(user, tokenMint, amount, true);
+    async (user: PublicKey, token: TokenListEntry, amount: number) => {
+      return modifyEataBalance(user, token, amount, true);
     },
     [modifyEataBalance],
   );
 
   const withdraw = useCallback(
-    async (user: PublicKey, tokenMint: PublicKey, amount: number) => {
-      return modifyEataBalance(user, tokenMint, amount, false);
+    async (user: PublicKey, token: TokenListEntry, amount: number) => {
+      return modifyEataBalance(user, token, amount, false);
     },
     [modifyEataBalance],
   );
 
   const transfer = useCallback(
-    async (tokenMint: PublicKey, amount: number, to: PublicKey, delegated: boolean) => {
+    async (token: TokenListEntry, amount: number, to: PublicKey, delegated: boolean) => {
       if (!wallet?.publicKey) return;
 
-      const amountBn = BigInt(Math.round(amount * 10 ** 6));
+      const tokenMint = new PublicKey(token.mint);
+      const amountBn = BigInt(Math.round(amount * 10 ** token.decimals));
 
       const fromAta = getAssociatedTokenAddressSync(
         tokenMint,
@@ -151,7 +171,7 @@ export function useProgram() {
         toAta,
         wallet.publicKey,
         amountBn,
-        6,
+        token.decimals,
       );
       const transaction = new Transaction();
       transaction.add(ix);

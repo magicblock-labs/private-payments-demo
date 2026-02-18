@@ -3,6 +3,7 @@ import { TokenAccounts } from './use-token-account';
 import { useBlockhashCache } from '@/contexts/BlockhashCacheContext';
 import { VALIDATOR_PUBKEY } from '@/lib/constants';
 import { logger } from '@/lib/log';
+import { TokenListEntry } from '@/lib/types';
 import {
   DELEGATION_PROGRAM_ID,
   createEataPermissionIx,
@@ -58,13 +59,13 @@ interface SimpleTransferProps {
   recipientAccounts: TokenAccounts;
   vaultInfo?: AccountInfo<Buffer>;
   vaultAtaAccount?: Account;
-  tokenMint?: PublicKey;
+  token?: TokenListEntry;
 }
 
 export default function useSimpleTransfer({
   senderAccounts,
   recipientAccounts,
-  tokenMint,
+  token,
   vaultInfo,
   vaultAtaAccount,
 }: SimpleTransferProps) {
@@ -80,7 +81,7 @@ export default function useSimpleTransfer({
         !connection ||
         !ephemeralConnection ||
         !recipientAccounts.user ||
-        !tokenMint ||
+        !token ||
         !ephemeral.blockhash ||
         !mainnet.blockhash
       )
@@ -88,9 +89,9 @@ export default function useSimpleTransfer({
 
       logger.debug('Starting transfer:', senderAccounts, recipientAccounts);
 
-      const tokenAmount = BigInt(Math.round(10 ** 6 * amount));
+      const tokenAmount = BigInt(Math.round(amount * 10 ** token.decimals));
       const recipientPk = recipientAccounts.user;
-      const tokenMintPk = tokenMint;
+      const tokenMintPk = new PublicKey(token.mint);
 
       const waitForEphemeralAtaBalance = async (expectedAmount: bigint) => {
         let retries = 20;
@@ -242,7 +243,7 @@ export default function useSimpleTransfer({
           recipientAta,
           wallet.publicKey,
           tokenAmount,
-          6,
+          token.decimals,
         ),
       );
 
@@ -332,7 +333,7 @@ export default function useSimpleTransfer({
       ephemeralConnection,
       senderAccounts,
       recipientAccounts,
-      tokenMint,
+      token,
       vaultInfo,
       vaultAtaAccount,
       ephemeral.blockhash,
@@ -346,14 +347,15 @@ export default function useSimpleTransfer({
         !wallet?.publicKey ||
         !connection ||
         !ephemeralConnection ||
-        !tokenMint ||
+        !token ||
         !ephemeral.blockhash ||
         !mainnet.blockhash
       )
         throw new Error('Withdraw prerequisites not ready');
 
-      const tokenAmount = BigInt(Math.round(10 ** 6 * amount));
+      const tokenAmount = BigInt(Math.round(amount * 10 ** token.decimals));
 
+      const tokenMint = new PublicKey(token.mint);
       const [withdrawerEata] = deriveEphemeralAta(wallet.publicKey, tokenMint);
       const isDelegated = senderAccounts?.isDelegated;
 
@@ -416,9 +418,7 @@ export default function useSimpleTransfer({
         await connection.confirmTransaction(signature);
       } else {
         const [signedWithdrawTx] = await wallet.signAllTransactions([withdrawTx]);
-        const signature = await connection.sendRawTransaction(signedWithdrawTx.serialize(), {
-          skipPreflight: true,
-        });
+        const signature = await connection.sendRawTransaction(signedWithdrawTx.serialize());
         await connection.confirmTransaction(signature);
       }
     },
@@ -426,7 +426,7 @@ export default function useSimpleTransfer({
       wallet,
       connection,
       ephemeralConnection,
-      tokenMint,
+      token,
       senderAccounts,
       mainnet.blockhash,
       ephemeral.blockhash,

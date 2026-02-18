@@ -27,7 +27,7 @@ const ManageDeposit: React.FC<DepositProps> = ({ user, token, isMainnet }) => {
     return user || wallet?.publicKey;
   }, [user, wallet]);
   const isWalletOwner = useMemo(() => {
-    return owner && wallet?.publicKey?.equals(owner);
+    return !!(owner && wallet?.publicKey?.equals(owner));
   }, [wallet, owner]);
   const { walletAccounts, recipientAccounts } = useTokenAccountContext();
   const {
@@ -52,7 +52,7 @@ const ManageDeposit: React.FC<DepositProps> = ({ user, token, isMainnet }) => {
   }, [isMainnet, mainnetEata, ephemeralAta]);
 
   const handleCreateEata = useCallback(async () => {
-    if (!token || !owner) return;
+    if (!token || !owner) throw new Error('Token or owner not found');
     setIsCreating(true);
     try {
       await initializeEata(owner, new PublicKey(token.mint));
@@ -89,9 +89,13 @@ const ManageDeposit: React.FC<DepositProps> = ({ user, token, isMainnet }) => {
         </div>
         <Separator />
       </CardHeader>
-      {!mainnetAta && isMainnet ? (
+      {(!mainnetAta || !mainnetEata) && isMainnet ? (
         <CardContent className='flex flex-row items-center justify-center h-full '>
-          <Button className='w-full' onClick={handleCreateEata} disabled={isCreating}>
+          <Button
+            className='w-full'
+            onClick={handleCreateEata}
+            disabled={isCreating || !wallet?.publicKey}
+          >
             Create
             {isCreating && <Loader2Icon className='animate-spin' />}
           </Button>
@@ -101,7 +105,9 @@ const ManageDeposit: React.FC<DepositProps> = ({ user, token, isMainnet }) => {
           <CardContent className='flex flex-col gap-4 h-full justify-between'>
             <div />
             <div className='flex flex-row gap-2 items-center justify-center-safe text-5xl font-bold text-center hyphens-auto'>
-              {!accessDenied || isMainnet ? Number(displayAmount) / 10 ** 6 || 0 : '***'}
+              {!accessDenied || isMainnet
+                ? Number(displayAmount) / 10 ** (token?.decimals ?? 0)
+                : '***'}
             </div>
 
             {token && owner && !accessDenied ? (
