@@ -320,11 +320,13 @@ export default function useSimpleTransfer({
 
       for (const action of actions) {
         logger.debug(`Sending transaction ${action.name}:`, action);
+        
+        const signature = await action.connection.sendRawTransaction(action.signedTx!.serialize());
+        await action.callback?.(signature);
+
         if (action.name === 'ephemeralTx') {
           await waitForEphemeralAtaBalance(tokenAmount);
         }
-        const signature = await action.connection.sendRawTransaction(action.signedTx!.serialize());
-        await action.callback?.(signature);
       }
     },
     [
