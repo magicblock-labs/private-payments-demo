@@ -100,7 +100,7 @@ export default function useSimpleTransfer({
             const accountInfo = await ephemeralConnection.getAccountInfo(senderAta);
             if (accountInfo) {
               const decoded = unpackAccount(senderAta, accountInfo);
-              if (decoded.amount === expectedAmount) {
+              if (decoded.amount >= expectedAmount) {
                 return;
               }
             }

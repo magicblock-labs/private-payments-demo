@@ -1,6 +1,5 @@
 import { useEphemeralConnection } from '@/hooks/use-ephemeral-connection';
 import { useSubscription } from '@/hooks/use-subscription';
-import { logger } from '@/lib/log';
 import {
   DELEGATION_PROGRAM_ID,
   EphemeralAta,
@@ -71,7 +70,6 @@ export function useTokenAccount({ user, tokenMint }: TokenAccountProps): TokenAc
     if (!user || !ata || !eata || !permissionPda || !ephemeralConnection) return;
     const currentRequestId = ++requestId.current;
 
-    logger.debug('getAtas0', { requestId: requestId.current, currentRequestId });
     if (requestId.current !== currentRequestId) return;
 
     const mainnetSlot = await connection.getSlot();
@@ -91,12 +89,6 @@ export function useTokenAccount({ user, tokenMint }: TokenAccountProps): TokenAc
         setIsPermissionDelegated(false);
         setMainnetPermission(null);
       }
-
-      logger.debug('getAtas1', {
-        ataInfo,
-        eataInfo,
-        permissionPdaInfo,
-      });
 
       try {
         if (ataInfo) {
@@ -122,12 +114,6 @@ export function useTokenAccount({ user, tokenMint }: TokenAccountProps): TokenAc
             if (requestId.current !== currentRequestId) return;
             setEphemeralPermission(deserializePermission(ephemPermissionPdaInfo.data));
           }
-
-          logger.debug('getAtas', {
-            eataInfo,
-            ephemAtaInfo,
-            ephemPermissionPdaInfo,
-          });
 
           if (eataInfo?.owner.equals(new PublicKey(DELEGATION_PROGRAM_ID))) {
             setIsDelegated(true);
@@ -176,30 +162,22 @@ export function useTokenAccount({ user, tokenMint }: TokenAccountProps): TokenAc
     [ata],
   );
 
-  const handleEataChange = useCallback(
-    async (notification: AccountInfo<Buffer>) => {
-      if (notification.owner.equals(new PublicKey(DELEGATION_PROGRAM_ID))) {
-        setIsDelegated(true);
-      } else {
-        setIsDelegated(false);
-      }
+  const handleEataChange = useCallback(async (notification: AccountInfo<Buffer>) => {
+    if (notification.owner.equals(new PublicKey(DELEGATION_PROGRAM_ID))) {
+      setIsDelegated(true);
+    } else {
+      setIsDelegated(false);
+    }
 
-      try {
-        const decoded = decodeEphemeralAta(notification);
-        logger.debug(
-          `Received notification for EATA of user ${user?.toBase58()}:`,
-          notification,
-          decoded,
-        );
-        if (decoded) {
-          setMainnetEata(decoded);
-        }
-      } catch (error) {
-        console.error('Error getting account info:', error);
+    try {
+      const decoded = decodeEphemeralAta(notification);
+      if (decoded) {
+        setMainnetEata(decoded);
       }
-    },
-    [user],
-  );
+    } catch (error) {
+      console.error('Error getting account info:', error);
+    }
+  }, []);
 
   const handlePermissionChange = useCallback(
     (mainnet: boolean, notification: AccountInfo<Buffer>) => {
