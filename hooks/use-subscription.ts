@@ -21,7 +21,8 @@ export function useSubscription(
 
       try {
         const publicKey = new PublicKey(account);
-        subscriptionId.current = connection.onAccountChange(publicKey, onAccountChange);
+        const id = connection.onAccountChange(publicKey, onAccountChange);
+        subscriptionId.current = id;
       } catch (error) {
         console.error('Error getting account info:', error);
       }
@@ -30,7 +31,7 @@ export function useSubscription(
     subscribe();
 
     return () => {
-      if (subscriptionId.current) {
+      if (subscriptionId.current !== null) {
         try {
           connection.removeAccountChangeListener(subscriptionId.current);
           subscriptionId.current = null;
